@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky 精霊同行ポイント計算機</title>
+    <style>
+        /* 🎨 カラー変数の定義（ライトモード標準） */
+        :root {
+            --bg-color: #f2f2f7;
+            --card-bg: #ffffff;
+            --text-color: #000000;
+            --text-gray: #8e8e93;
+            --accent-blue: #007aff;
+            --accent-orange: #ff9500;
+            --accent-purple: #af52de;
+            --accent-green: #34c759;
+            --border-color: #e5e5ea;
+            --input-bg: #fafafa;
+            --tab-bg: #e5e5ea;
+            --tab-btn-active: #ffffff;
+            --stat-box-bg: #fdfdfd;
+        }
+
+        /* 🌙 ダークモード用のカラー上書き設定 */
+        [data-theme="dark"] {
+            --bg-color: #0c081a;
+            --card-bg: #1b1535;
+            --text-color: #ffffff;
+            --text-gray: #aaa4c4;
+            --border-color: rgba(255, 255, 255, 0.15);
+            --input-bg: rgba(0, 0, 0, 0.25);
+            --tab-bg: rgba(255, 255, 255, 0.1);
+            --tab-btn-active: rgba(255, 255, 255, 0.15);
+            --stat-box-bg: rgba(255, 255, 255, 0.04);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            line-height: 1.5;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            transition: max-width 0.3s ease;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin: 0 0 4px 0;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 14px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-outline-blue {
+            background: transparent;
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* 🌓 モード切替ボタン */
+        .theme-toggle-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .left-column, .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1050px;
+            }
+            .main-layout {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+            .left-column {
+                flex: 1;
+                position: sticky;
+                top: 16px;
+            }
+            .right-column {
+                flex: 2;
+            }
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: background-color 0.3s ease;
+        }
+
+        .spirit-tabs {
+            background: var(--tab-bg);
+            padding: 2px;
+            border-radius: 9px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-color);
+        }
+
+        .tab-btn.active {
+            background: var(--tab-btn-active);
+            color: var(--text-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab-p-sub {
+            font-size: 10px;
+            font-weight: normal;
+            color: var(--text-gray);
+        }
+        .tab-btn.active .tab-p-sub {
+            color: var(--accent-orange);
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .stat-box {
+            background: var(--stat-box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .progress-container {
+            background: var(--border-color);
+            border-radius: 8px;
+            height: 12px;
+            width: 100%;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--accent-orange), #ffcc00);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .preset-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            flex: 1;
+            min-width: 90px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-sm:hover { filter: brightness(0.95); }
+        .btn-active { background: rgba(255, 149, 0, 0.1); border-color: var(--accent-orange); color: var(--accent-orange); }
+
+        .walk-input-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin: 12px 0 4px 0;
+        }
+
+        .btn-counter {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--accent-blue);
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-counter:active { filter: brightness(0.9); transform: scale(0.95); }
+        .btn-counter:disabled { color: var(--text-gray); background: var(--border-color); cursor: not-allowed; box-shadow: none; }
+
+        .counter-value { text-align: center; min-width: 100px; }
+        .days-num { font-size: 32px; font-weight: bold; color: var(--accent-blue); font-variant-numeric: tabular-nums; }
+        .days-unit { font-size: 14px; color: var(--text-gray); margin-left: 4px; font-weight: bold; }
+
+        .advice-box { background: rgba(0, 122, 255, 0.05); border: 1px solid rgba(0, 122, 255, 0.2); border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 13px; color: var(--accent-blue); }
+        
+        .info-memo { font-size: 12px; color: var(--text-gray); margin-top: 24px; padding-left: 4px; line-height: 1.6; }
+        
+        .total-goal-banner {
+            background: linear-gradient(135deg, #ff2d55, #ff9500);
+            color: white;
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(255, 45, 85, 0.15);
+        }
+
+        .calc-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+        .calc-input:focus { background: var(--card-bg); border-color: var(--accent-blue); outline: none; }
+        
+        .memo-textarea {
+            width: 100%;
+            box-sizing: border-box;
+            height: 64px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            resize: none;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+        .memo-textarea:focus { background: var(--card-bg); border-color: var(--accent-blue); outline: none; }
+
+        /* --------------------------------------------------------------------------------- */
+        /* 🗺️ 精霊ツリーエリア */
+        /* --------------------------------------------------------------------------------- */
+
+        .tree-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        [data-theme="dark"] .tree-card {
+            background: linear-gradient(180deg, #1b1535 0%, #0c081a 100%);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tree-container {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 24px;
+            position: relative;
+            padding: 15px 0;
+        }
+        
+        .tree-tier {
+            position: relative;
+            z-index: 2;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .tree-tier {
+            border-top: 1px dashed rgba(255, 255, 255, 0.12);
+        }
+
+        .tree-container .tree-tier:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: var(--text-gray);
+            padding: 0 4px;
+            transition: color 0.3s ease;
+        }
+
+        [data-theme="dark"] .tier-header {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .tier-title { font-weight: bold; letter-spacing: 0.5px; }
+        
+        .tier-req { font-size: 11px; color: #ff9500; background: rgba(255, 149, 0, 0.1); padding: 2px 8px; border-radius: 4px; font-weight: bold; transition: background-color 0.3s ease; }
+        .tier-unlocked .tier-req { color: #34c759; background: rgba(52, 199, 89, 0.1); }
+
+        [data-theme="dark"] .tier-req { background: rgba(255, 149, 0, 0.12); }
+        [data-theme="dark"] .tier-unlocked .tier-req { background: rgba(52, 199, 89, 0.18); }
+
+        /* 🎮 ゲーム風ノード */
+        .game-node-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 36px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .game-node-btn {
+            width: 84px;
+            height: 84px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px;
+            box-sizing: border-box;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.1, 0.8, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            user-select: none;
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .game-node-btn {
+            background: rgba(25, 22, 38, 0.85);
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            color: #fff;
+        }
+
+        .game-node-btn:hover {
+            background: var(--border-color);
+            transform: scale(1.04);
+        }
+
+        [data-theme="dark"] .game-node-btn:hover {
+            background: rgba(45, 40, 70, 0.9);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .game-node-btn.node-checked {
+            border-color: var(--accent-orange);
+            background: rgba(255, 149, 0, 0.08);
+        }
+
+        [data-theme="dark"] .game-node-btn.node-checked {
+            border-color: #ff9500;
+            background: rgba(255, 149, 0, 0.15);
+            box-shadow: 0 0 16px rgba(255, 149, 0, 0.5), inset 0 0 8px rgba(255, 149, 0, 0.25);
+        }
+
+        /* 🔒 未解放状態（ロック時の濃さ調整版） */
+        .game-node-btn.node-disabled {
+            opacity: 0.65;
+            pointer-events: none;
+            filter: grayscale(40%);
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .game-node-btn.node-disabled {
+            opacity: 0.45;
+            filter: grayscale(30%);
+            box-shadow: none;
+        }
+
+        .node-level {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 9px;
+            color: var(--text-color);
+            font-weight: bold;
+            background: var(--border-color);
+            padding: 1px 4px;
+            border-radius: 3px;
+            line-height: 1;
+            transition: color 0.3s ease, background-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .node-level {
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .node-icon {
+            font-size: 26px;
+            margin-top: auto;
+            margin-bottom: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: filter 0.3s ease;
+        }
+
+        [data-theme="dark"] .node-icon {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+        }
+        [data-theme="dark"] .game-node-btn.node-checked .node-icon {
+            filter: drop-shadow(0 0 5px rgba(255, 149, 0, 0.7));
+        }
+
+        .node-name {
+            font-size: 9px;
+            color: var(--text-gray);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            margin-bottom: 1px;
+            transition: color 0.3s ease;
+        }
+
+        [data-theme="dark"] .node-name {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .node-cost {
+            font-size: 10px;
+            color: var(--accent-orange);
+            font-weight: bold;
+            line-height: 1;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        [data-theme="dark"] .node-cost {
+            color: #ffcc00;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        /* 🧡 最上層シーズンハート */
+        .heart-goal-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            margin-top: 12px;
+        }
+        .heart-node {
+            width: 96px;
+            height: 96px;
+            border-color: rgba(255, 45, 85, 0.3);
+            background: rgba(255, 45, 85, 0.03);
+            color: #ff2d55;
+        }
+        .heart-node.node-checked {
+            border-color: #ff2d55;
+            background: rgba(255, 45, 85, 0.1);
+        }
+
+        [data-theme="dark"] .heart-node {
+            border-color: rgba(255, 45, 85, 0.25);
+            background: rgba(25, 22, 38, 0.85);
+            color: #fff;
+        }
+        [data-theme="dark"] .heart-node.node-checked {
+            border-color: #ff2d55;
+            background: rgba(255, 45, 85, 0.15);
+            box-shadow: 0 0 18px rgba(255, 45, 85, 0.6), inset 0 0 8px rgba(255, 45, 85, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="container">
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="width: 80px;"></div>
+            <h1>✨ Sky 精霊同行ポイント計算機</h1>
+            <button class="theme-toggle-btn" @click="toggleTheme">
+                <span v-if="isDarkMode">🌙 ダーク</span>
+                <span v-else>☀️ ライト</span>
+            </button>
+        </div>
+        <div class="subtitle">連れ歩き日数とアイテム交換の最適化シミュレーター</div>
+        
+        <div class="header-nav">
+            <a href="index.html" class="btn-outline-blue">📊 キャンドル計算機</a>
+            <a href="share.html" class="btn-outline-blue">📍 創作物期限管理</a>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        
+        <div class="left-column">
+            <div class="total-goal-banner">
+                <div style="font-size: 22px; font-weight: bold; margin: 0;">🧡 シーズンハート獲得: {{ totalHearts }} / 4 個</div>
+            </div>
+
+            <div class="spirit-tabs">
+                <button v-for="(spirit, index) in spirits" :key="spirit.id" 
+                        class="tab-btn" :class="{ active: activeIndex === index }"
+                        @click="activeIndex = index">
+                    <span>{{ spirit.name }}</span>
+                    <span class="tab-p-sub">
+                        <template v-if="getSpiritPoints(spirit) >= 280">🧡 完了</template>
+                        <template v-else>{{ getSpiritPoints(spirit) }} p</template>
+                    </span>
+                </button>
+            </div>
+
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: bold; font-size: 15px;">{{ activeSpirit.name }} の進行度</span>
+                    <span style="font-weight: bold; color: var(--accent-orange);">{{ activePoints }} / 280 p</span>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" :style="{ width: (activePoints / 280 * 100) + '%' }"></div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div style="font-size: 11px; color: var(--text-gray);">現在の状態</div>
+                        <div class="stat-val" :style="{ color: activePoints >= 280 ? '#ff2d55' : 'var(--accent-orange)' }">
+                            {{ activeStatusText }}
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div style="font-size: 11px; color: var(--text-gray);">ハートまでの残り</div>
+                        <div class="stat-val">
+                            {{ Math.max(0, 280 - activePoints) }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">p</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advice-box" :style="activePoints >= 280 ? 'background:rgba(52,197,89,0.08); color:#1e7e34; border-color:rgba(52,197,89,0.2);' : ''">
+                    <div v-if="activePoints >= 280">
+                        🎉 <strong>おめでとうございます！</strong> 必要ポイントを満たしました。
+                    </div>
+                    <div v-else>
+                        💡 <strong>アドバイス:</strong> あと <strong>{{ activeRemainingDays }} 日</strong> 連れ歩けば、280pに到達します！
+                        <span v-if="activeSpirit.walkDays + activeRemainingDays > 77" style="color: #ff3b30; display: block; margin-top: 4px; font-weight: bold;">
+                            ⚠️ 注意: 季節の残り日数を超えてしまうため、魔法などの追加交換が必要です。
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preset-group">
+                <button class="btn-sm" :class="{'btn-active': activeSpirit.currentPreset === 'custom'}" @click="activeSpirit.currentPreset = 'custom'">自由入力</button>
+                <button class="btn-sm" @click="applyPreset('no-magic')">🧪 魔法スルー</button>
+                <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">💥 リセット</button>
+            </div>
+
+            <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0, 122, 255, 0.01);">
+                <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px; color: var(--accent-blue);">
+                    📝 {{ activeSpirit.name }} の交換計画・メモ
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
+                        💰 必要キャンドル計算 (+で自動合計)
+                    </label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input type="text" v-model="activeSpirit.candleFormula" class="calc-input" placeholder="例: 15+20+35+100">
+                        <div style="font-size: 16px; font-weight: bold; min-width: 80px; text-align: right;">
+                            ＝ {{ activeCandleTotal }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">本</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
+                        📌 この精霊独自のメモ欄
+                    </label>
+                    <textarea v-model="activeSpirit.notes" class="memo-textarea" placeholder="例: まずはエモート解放優先、残りは連れ歩き。"></textarea>
+                </div>
+            </div>
+
+            <div class="section-card" style="border: 1px solid var(--accent-purple); background: rgba(175, 82, 222, 0.01);">
+                <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px; color: var(--accent-purple);">
+                    📌 全精霊共通のメモ・目標
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
+                        📋 シーズン全体のタスクや、現在の総所持キャンドルなどの記録に
+                    </label>
+                    <textarea v-model="sharedNotes" class="memo-textarea" style="height: 100px;" 
+                              placeholder="例: シーズンパス購入済み。毎日デイリー切り替わったら連れ歩き忘れないように！全体の残り必要キャンドル数など自由記入..."
+                              onfocus="this.style.borderColor='var(--accent-purple)'" 
+                              onblur="this.style.borderColor='var(--border-color)'"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="right-column">
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: bold; font-size: 14px;">👣 {{ activeSpirit.name }} との連れ歩き（同行）日数</span>
+                    <span style="font-weight: bold; color: var(--accent-blue);">+{{ activeSpirit.walkDays * 10 }} p</span>
+                </div>
+                
+                <div class="walk-input-area">
+                    <button class="btn-counter" @click="decrementWalkDays" :disabled="activeSpirit.walkDays <= 0">−</button>
+                    <div class="counter-value">
+                        <span class="days-num">{{ activeSpirit.walkDays }}</span>
+                        <span class="days-unit">/ 77 日</span>
+                    </div>
+                    <button class="btn-counter" @click="incrementWalkDays" :disabled="activeSpirit.walkDays >= 77">+</button>
+                </div>
+            </div>
+
+            <div class="tree-card" style="padding-bottom: 30px;">
+                <div style="font-size: 12px; color: var(--text-gray); margin-bottom: 16px; font-weight: bold; text-transform: uppercase;">🌳 {{ activeSpirit.name }} のツリー</div>
+                
+                <div class="tree-container">
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 40}">
+                        <div class="tier-header">
+                            <span class="tier-title">第1層（基礎ティア）</span>
+                            <span class="tier-req">{{ activePoints >= 40 ? '🎉 解放完了' : 'あと ' + (40 - activePoints) + 'p' }}</span>
+                        </div>
+                        <div class="game-node-wrapper">
+                            <div v-for="item in activeSpirit.treeData.tier1" :key="item.id" 
+                                 class="game-node-btn" :class="{'node-checked': item.checked}"
+                                 @click="item.checked = !item.checked; activeSpirit.currentPreset = 'custom'">
+                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 100}">
+                        <div class="tier-header">
+                            <span class="tier-title">第2層（必要累計: 40p）</span>
+                            <span class="tier-req">{{ activePoints >= 100 ? '🎉 解放完了' : 'あと ' + (activePoints < 40 ? 60 : 100 - activePoints) + 'p' }}</span>
+                        </div>
+                        <div class="game-node-wrapper">
+                            <div v-for="item in activeSpirit.treeData.tier2" :key="item.id" 
+                                 class="game-node-btn" 
+                                 :class="{'node-checked': item.checked, 'node-disabled': activePoints < 40 && !item.checked}"
+                                 @click="if(!(activePoints < 40 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 180}">
+                        <div class="tier-header">
+                            <span class="tier-title">第3層（必要累計: 100p）</span>
+                            <span class="tier-req">{{ activePoints >= 180 ? '🎉 解放完了' : 'あと ' + (activePoints < 100 ? 80 : 180 - activePoints) + 'p' }}</span>
+                        </div>
+                        <div class="game-node-wrapper">
+                            <div v-for="item in activeSpirit.treeData.tier3" :key="item.id" 
+                                 class="game-node-btn" 
+                                 :class="{'node-checked': item.checked, 'node-disabled': activePoints < 100 && !item.checked}"
+                                 @click="if(!(activePoints < 100 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 280}">
+                        <div class="tier-header">
+                            <span class="tier-title">第4層（必要累計: 180p）</span>
+                            <span class="tier-req">{{ activePoints >= 280 ? '🎉 解放完了' : 'あと ' + (activePoints < 180 ? 100 : 280 - activePoints) + 'p' }}</span>
+                        </div>
+                        <div class="game-node-wrapper">
+                            <div v-for="item in activeSpirit.treeData.tier4" :key="item.id" 
+                                 class="game-node-btn" 
+                                 :class="{'node-checked': item.checked, 'node-disabled': activePoints < 180 && !item.checked}"
+                                 @click="if(!(activePoints < 180 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="heart-goal-container">
+                        <div class="game-node-btn heart-node" :class="{'node-checked': activePoints >= 280}">
+                            <div class="node-level" style="color: #ff2d55;">MAX</div>
+                            <div class="node-icon">🧡</div>
+                            <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">最上層ハート</div>
+                            <div class="node-cost" style="color: #ff5e7e;">{{ activePoints >= 280 ? '🎉 獲得!' : '280p' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-memo">
+        <strong>📌 連れ歩きシステムの仕様メモ:</strong><br>
+        ・連れ歩きをしなくても、各層のアイテムをすべて取得すれば次の層へ進めます。<br>
+        ・先にポイントを貯めて上の層を開放した後から、スルーしたアイテムを回収してもポイントは反映されます。
+    </div>
+
+    <footer style="text-align: center; padding: 24px 16px; color: var(--text-gray); font-size: 13px; line-height: 1.6; border-top: 1px solid var(--border-color); margin-top: 40px;">
+        © 2026 精霊同行ポイント計算機 | 関連ツール: 
+        <a href="index.html" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">📊 キャンドル計算機</a> | 
+        <a href="share.html" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">📍 創作物期限管理</a>
+        <br>作成・ご意見: <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a>
+        <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
+            参考データ: 
+            <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer">季節精霊 (Sky Wiki 日本語)</a>
+        </span>
+    </footer>
+
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+
+    const createInitialTree = (prefix) => ({
+        tier1: [
+            { id: prefix + '_em1', name: '💨 エモートLv1 (初回解放)', points: 20, checked: true },
+            { id: prefix + '_mag1', name: '🧪 魔法①', points: 20, checked: false }
+        ],
+        tier2: [
+            { id: prefix + '_it1', name: '✨ 季節アイテム①', points: 30, checked: false },
+            { id: prefix + '_mag2', name: '🧪 魔法②', points: 30, checked: false }
+        ],
+        tier3: [
+            { id: prefix + '_em2', name: '💨 エモートLv2', points: 40, checked: false },
+            { id: prefix + '_mag3', name: '🧪 魔法③', points: 40, checked: false }
+        ],
+        tier4: [
+            { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, checked: false }
+        ]
+    });
+
+    createApp({
+        setup() {
+            const activeIndex = ref(0);
+            const isDarkMode = ref(false);
+            const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
+
+            const spirits = ref([
+                { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s1') },
+                { id: 2, name: '精霊②', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s2') },
+                { id: 3, name: '精霊③', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s3') },
+                { id: 4, name: '精霊④', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s4') }
+            ]);
+
+            const activeSpirit = computed(() => spirits.value[activeIndex.value]);
+
+            const getSpiritPoints = (spirit) => {
+                let points = 0;
+                Object.values(spirit.treeData).forEach(tier => {
+                    tier.forEach(item => { if (item.checked) points += item.points; });
+                });
+                points += (spirit.walkDays * 10);
+                return Math.min(280, points);
+            };
+
+            const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
+            const totalHearts = computed(() => spirits.value.filter(s => getSpiritPoints(s) >= 280).length);
+
+            const activeCandleTotal = computed(() => {
+                if (!activeSpirit.value.candleFormula) return 0;
+                const parts = activeSpirit.value.candleFormula.replace(/＋/g, '+').split('+');
+                let sum = 0;
+                parts.forEach(part => {
+                    const num = parseInt(part.trim(), 10);
+                    if (!isNaN(num)) sum += num;
+                });
+                return sum;
+            });
+
+            const activeStatusText = computed(() => {
+                const p = activePoints.value;
+                if (p >= 280) return "完了！";
+                if (p >= 180) return "第4層";
+                if (p >= 100) return "第3層";
+                if (p >= 40) return "第2層";
+                return "第1層";
+            });
+
+            const activeRemainingDays = computed(() => {
+                let itemPoints = 0;
+                Object.values(activeSpirit.value.treeData).forEach(tier => {
+                    tier.forEach(item => { if (item.checked) itemPoints += item.points; });
+                });
+                const totalDaysNeeded = Math.max(0, Math.ceil((280 - itemPoints) / 10));
+                return Math.max(0, totalDaysNeeded - activeSpirit.value.walkDays);
+            });
+
+            const getIcon = (name) => {
+                if (name.includes('💨')) return '💨';
+                if (name.includes('🧪')) return '🧪';
+                if (name.includes('✨')) return '✨';
+                return '🎁';
+            };
+
+            const getLevel = (name) => {
+                const match = name.match(/Lv\.?\d+/);
+                return match ? match[0] : '';
+            };
+
+            const cleanName = (name) => {
+                return name.replace(/[💨🧪✨]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
+            };
+
+            const incrementWalkDays = () => {
+                if (activeSpirit.value.walkDays < 77) {
+                    activeSpirit.value.walkDays++;
+                    activeSpirit.value.currentPreset = 'custom';
+                }
+            };
+
+            const decrementWalkDays = () => {
+                if (activeSpirit.value.walkDays > 0) {
+                    activeSpirit.value.walkDays--;
+                    activeSpirit.value.currentPreset = 'custom';
+                }
+            };
+
+            const applyPreset = (type) => {
+                activeSpirit.value.currentPreset = type;
+                if (type === 'reset') {
+                    activeSpirit.value.walkDays = 0;
+                    setSpiritItems(activeSpirit.value, false);
+                    activeSpirit.value.treeData.tier1[0].checked = true;
+                    activeSpirit.value.candleFormula = '';
+                    activeSpirit.value.notes = '';
+                    activeSpirit.value.currentPreset = 'custom';
+                } else if (type === 'no-magic') {
+                    activeSpirit.value.walkDays = 9;
+                    setSpiritItems(activeSpirit.value, true);
+                    activeSpirit.value.treeData.tier1[1].checked = false;
+                    activeSpirit.value.treeData.tier2[1].checked = false;
+                    activeSpirit.value.treeData.tier3[1].checked = false;
+                }
+            };
+
+            const setSpiritItems = (spirit, status) => {
+                Object.values(spirit.treeData).forEach(tier => {
+                    tier.forEach(item => { item.checked = status; });
+                });
+            };
+
+            const toggleTheme = () => {
+                isDarkMode.value = !isDarkMode.value;
+                localStorage.setItem('sky_app_theme', isDarkMode.value ? 'dark' : 'light');
+            };
+
+            const applyThemeToDOM = () => {
+                document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
+            };
+
+            watch(isDarkMode, () => { applyThemeToDOM(); });
+
+            // 💾 保存処理（共通メモも一緒に保存オブジェクトに追加）
+            const save = () => {
+                const data = { 
+                    activeIndex: activeIndex.value, 
+                    spirits: spirits.value,
+                    sharedNotes: sharedNotes.value // 保存対象に共通メモを追加
+                };
+                localStorage.setItem('sky_companion_v4_data', JSON.stringify(data));
+            };
+
+            // 📂 読み込み処理
+            const load = () => {
+                const savedTheme = localStorage.getItem('sky_app_theme');
+                if (savedTheme) {
+                    isDarkMode.value = (savedTheme === 'dark');
+                } else {
+                    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+                applyThemeToDOM();
+
+                const saved = localStorage.getItem('sky_companion_v4_data');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        if (parsed.activeIndex !== undefined) activeIndex.value = parsed.activeIndex;
+                        if (parsed.sharedNotes !== undefined) sharedNotes.value = parsed.sharedNotes; // 共通メモの復元
+                        
+                        if (parsed.spirits && Array.isArray(parsed.spirits)) {
+                            parsed.spirits.forEach((savedSpirit, sIdx) => {
+                                if (spirits.value[sIdx]) {
+                                    if (savedSpirit.walkDays !== undefined) spirits.value[sIdx].walkDays = savedSpirit.walkDays;
+                                    if (savedSpirit.currentPreset) spirits.value[sIdx].currentPreset = savedSpirit.currentPreset;
+                                    if (savedSpirit.candleFormula !== undefined) spirits.value[sIdx].candleFormula = savedSpirit.candleFormula;
+                                    if (savedSpirit.notes !== undefined) spirits.value[sIdx].notes = savedSpirit.notes;
+                                    
+                                    Object.keys(savedSpirit.treeData).forEach(tierKey => {
+                                        if (spirits.value[sIdx].treeData[tierKey]) {
+                                            savedSpirit.treeData[tierKey].forEach((savedItem, iIdx) => {
+                                                if (spirits.value[sIdx].treeData[tierKey][iIdx]) {
+                                                    spirits.value[sIdx].treeData[tierKey][iIdx].checked = savedItem.checked;
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    } catch (e) { console.error(e); }
+                }
+            };
+
+            onMounted(() => { load(); });
+            // 共通メモ（sharedNotes）の変更も監視して自動保存
+            watch([activeIndex, spirits, sharedNotes], () => { save(); }, { deep: true });
+
+            return {
+                activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeCandleTotal,
+                activeStatusText, activeRemainingDays, getSpiritPoints,
+                incrementWalkDays, decrementWalkDays, applyPreset,
+                getIcon, getLevel, cleanName, isDarkMode, toggleTheme,
+                sharedNotes // HTML側で使えるように追加
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
