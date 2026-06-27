@@ -674,6 +674,38 @@
             .sidebar-toggle-btn { display: none; }
             .sidebar-close-btn  { display: none; }
         }
+
+        /* 🚧 ダミーサイドバー用スタイル（一時的） */
+        .sidebar-nav-link--dummy {
+            cursor: not-allowed;
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .dummy-badge {
+            margin-left: auto;
+            font-size: 10px;
+            background: rgba(255, 149, 0, 0.15);
+            color: var(--accent-orange);
+            border: 1px solid rgba(255, 149, 0, 0.35);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .sidebar-coming-soon {
+            background: rgba(255, 149, 0, 0.08);
+            border: 1px dashed rgba(255, 149, 0, 0.5);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            color: var(--accent-orange);
+            text-align: center;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -698,20 +730,27 @@
 
         <!-- ═══ サイドバー ═══ -->
         <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                 <div class="sidebar-section-label" style="margin-bottom: 0;">🔗 関連ツール</div>
                 <button class="sidebar-close-btn" @click="showSidebar = false">×</button>
             </div>
+            <!-- 🚧 準備中バナー（一時的） -->
+            <div class="sidebar-coming-soon">
+                🚧 <strong>リンクは現在準備中です</strong><br>近日公開予定
+            </div>
             <nav>
-                <a href="https://taipak5000.github.io/skyzztai.management.tool/" class="sidebar-nav-link">
+                <span class="sidebar-nav-link sidebar-nav-link--dummy">
                     🕯️ キャンドル計算機
-                </a>
-                <a href="https://taipak5000.github.io/companion/" class="sidebar-nav-link current-tool">
+                    <span class="dummy-badge">準備中</span>
+                </span>
+                <span class="sidebar-nav-link sidebar-nav-link--dummy current-tool">
                     ✨ 精霊同行ツール
-                </a>
-                <a href="https://taipak5000.github.io/share/" class="sidebar-nav-link">
+                    <span class="dummy-badge">準備中</span>
+                </span>
+                <span class="sidebar-nav-link sidebar-nav-link--dummy">
                     📍 創作物管理ツール
-                </a>
+                    <span class="dummy-badge">準備中</span>
+                </span>
             </nav>
         </aside>
 
