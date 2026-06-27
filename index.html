@@ -398,7 +398,7 @@
             width: 84px;
             height: 84px;
             background: var(--input-bg);
-            border: 1px solid var(--border-color);
+            border: 2px solid rgba(0, 0, 0, 0.18);
             border-radius: 12px;
             display: flex;
             flex-direction: column;
@@ -415,19 +415,20 @@
 
         [data-theme="dark"] .game-node-btn {
             background: rgba(25, 22, 38, 0.85);
-            border: 2px solid rgba(255, 255, 255, 0.22);
+            border: 2px solid rgba(255, 255, 255, 0.38);
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             color: #fff;
         }
 
         .game-node-btn:hover {
             background: var(--border-color);
+            border-color: rgba(0, 0, 0, 0.32);
             transform: scale(1.04);
         }
 
         [data-theme="dark"] .game-node-btn:hover {
             background: rgba(45, 40, 70, 0.9);
-            border-color: rgba(255, 255, 255, 0.5);
+            border-color: rgba(255, 255, 255, 0.58);
         }
 
         .game-node-btn.node-checked {
@@ -457,12 +458,12 @@
 
         /* 💜 右列（ポイント外ボーナス）アイテムのスタイル */
         .game-node-btn.no-points-node {
-            border-color: rgba(175, 82, 222, 0.45);
-            background: rgba(175, 82, 222, 0.03);
+            border-color: rgba(175, 82, 222, 0.7);
+            background: rgba(175, 82, 222, 0.04);
         }
 
         [data-theme="dark"] .game-node-btn.no-points-node {
-            border-color: rgba(175, 82, 222, 0.5);
+            border-color: rgba(175, 82, 222, 0.75);
             background: rgba(25, 22, 38, 0.9);
         }
 
@@ -1088,8 +1089,8 @@
         ],
         tier4: [
             { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, checked: false },
-            { id: prefix + '_bonus4a', name: 'フリー④', points: 0, noPoints: true, firstBonus: true, checked: false },
-            { id: prefix + '_bonus4b', name: 'フリー⑤', points: 0, noPoints: true, checked: false }
+            { id: prefix + '_bonus4a', name: '♡ モーメント', points: 0, noPoints: true, firstBonus: true, checked: false },
+            { id: prefix + '_bonus4b', name: 'フリー④', points: 0, noPoints: true, checked: false }
         ]
     });
 
@@ -1162,6 +1163,7 @@
                 if (name.includes('💨')) return '💨';
                 if (name.includes('🧪')) return '🧪';
                 if (name.includes('✨')) return '✨';
+                if (name.includes('♡')) return '♡';
                 return '🎁';
             };
 
@@ -1171,7 +1173,7 @@
             };
 
             const cleanName = (name) => {
-                return name.replace(/[💨🧪✨]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
+                return name.replace(/[💨🧪✨♡]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
             };
 
             const incrementWalkDays = () => {
