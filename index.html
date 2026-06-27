@@ -389,7 +389,7 @@
         .game-node-wrapper {
             display: flex;
             justify-content: center;
-            gap: 36px;
+            gap: 16px;
             position: relative;
             z-index: 2;
         }
@@ -453,6 +453,61 @@
             opacity: 0.45;
             filter: grayscale(30%);
             box-shadow: none;
+        }
+
+        /* 💜 右列（ポイント外ボーナス）アイテムのスタイル */
+        .game-node-btn.no-points-node {
+            border-color: rgba(175, 82, 222, 0.45);
+            background: rgba(175, 82, 222, 0.03);
+        }
+
+        [data-theme="dark"] .game-node-btn.no-points-node {
+            border-color: rgba(175, 82, 222, 0.5);
+            background: rgba(25, 22, 38, 0.9);
+        }
+
+        .game-node-btn.no-points-node.node-checked {
+            border-color: var(--accent-purple);
+            background: rgba(175, 82, 222, 0.1);
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .game-node-btn.no-points-node.node-checked {
+            border-color: #af52de;
+            background: rgba(175, 82, 222, 0.18);
+            box-shadow: 0 0 14px rgba(175, 82, 222, 0.45), inset 0 0 8px rgba(175, 82, 222, 0.2);
+        }
+
+        [data-theme="dark"] .game-node-btn.no-points-node.node-checked .node-icon {
+            filter: drop-shadow(0 0 5px rgba(175, 82, 222, 0.7));
+        }
+
+        .node-cost.no-points-cost {
+            color: var(--accent-purple);
+            font-size: 9px;
+        }
+
+        [data-theme="dark"] .node-cost.no-points-cost {
+            color: #bf7ce8;
+            text-shadow: none;
+        }
+
+        /* 右列との区切り線（最初のボーナスノードの左に表示） */
+        .game-node-btn.first-bonus-node::before {
+            content: '';
+            position: absolute;
+            left: -9px;
+            top: 12%;
+            height: 76%;
+            width: 1px;
+            background: var(--border-color);
+            opacity: 0.7;
+        }
+
+        /* 📱 小さい画面でのノードサイズ調整 */
+        @media (max-width: 360px) {
+            .game-node-btn { width: 72px; height: 72px; }
+            .node-icon { font-size: 22px; }
         }
 
         .node-level {
@@ -880,7 +935,10 @@
             </div>
 
             <div class="tree-card" style="padding-bottom: 30px;">
-                <div style="font-size: 12px; color: var(--text-gray); margin-bottom: 16px; font-weight: bold; text-transform: uppercase;">🌳 {{ activeSpirit.name }} のツリー</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                    <div style="font-size: 12px; color: var(--text-gray); font-weight: bold; text-transform: uppercase;">🌳 {{ activeSpirit.name }} のツリー</div>
+                    <div style="font-size: 10px; color: var(--accent-purple); opacity: 0.85;">💜 右列はポイント外</div>
+                </div>
                 
                 <div class="tree-container">
                     <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 40}">
@@ -890,12 +948,16 @@
                         </div>
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier1" :key="item.id" 
-                                 class="game-node-btn" :class="{'node-checked': item.checked}"
+                                 class="game-node-btn"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus}"
                                  @click="item.checked = !item.checked; activeSpirit.currentPreset = 'custom'">
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
                                 <div class="node-icon">{{ getIcon(item.name) }}</div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
-                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                                <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
+                                    <template v-if="item.noPoints">P外</template>
+                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -908,12 +970,15 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier2" :key="item.id" 
                                  class="game-node-btn" 
-                                 :class="{'node-checked': item.checked, 'node-disabled': activePoints < 40 && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 40 && !item.checked}"
                                  @click="if(!(activePoints < 40 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
                                 <div class="node-icon">{{ getIcon(item.name) }}</div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
-                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                                <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
+                                    <template v-if="item.noPoints">P外</template>
+                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -926,12 +991,15 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier3" :key="item.id" 
                                  class="game-node-btn" 
-                                 :class="{'node-checked': item.checked, 'node-disabled': activePoints < 100 && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 100 && !item.checked}"
                                  @click="if(!(activePoints < 100 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
                                 <div class="node-icon">{{ getIcon(item.name) }}</div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
-                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                                <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
+                                    <template v-if="item.noPoints">P外</template>
+                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -944,12 +1012,15 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier4" :key="item.id" 
                                  class="game-node-btn" 
-                                 :class="{'node-checked': item.checked, 'node-disabled': activePoints < 180 && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
                                  @click="if(!(activePoints < 180 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
                                 <div class="node-icon">{{ getIcon(item.name) }}</div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
-                                <div class="node-cost">🕯️ +{{ item.points }}p</div>
+                                <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
+                                    <template v-if="item.noPoints">P外</template>
+                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -999,18 +1070,23 @@
     const createInitialTree = (prefix) => ({
         tier1: [
             { id: prefix + '_em1', name: '💨 エモートLv1 (初回解放)', points: 20, checked: true },
-            { id: prefix + '_mag1', name: '🧪 魔法①', points: 20, checked: false }
+            { id: prefix + '_mag1', name: '🧪 魔法①', points: 20, checked: false },
+            { id: prefix + '_bonus1', name: 'フリー①', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier2: [
             { id: prefix + '_it1', name: '✨ 季節アイテム①', points: 30, checked: false },
-            { id: prefix + '_mag2', name: '🧪 魔法②', points: 30, checked: false }
+            { id: prefix + '_mag2', name: '🧪 魔法②', points: 30, checked: false },
+            { id: prefix + '_bonus2', name: 'フリー②', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier3: [
             { id: prefix + '_em2', name: '💨 エモートLv2', points: 40, checked: false },
-            { id: prefix + '_mag3', name: '🧪 魔法③', points: 40, checked: false }
+            { id: prefix + '_mag3', name: '🧪 魔法③', points: 40, checked: false },
+            { id: prefix + '_bonus3', name: 'フリー③', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier4: [
-            { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, checked: false }
+            { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, checked: false },
+            { id: prefix + '_bonus4a', name: 'モーメント', points: 0, noPoints: true, firstBonus: true, checked: false },
+            { id: prefix + '_bonus4b', name: 'フリー④', points: 0, noPoints: true, checked: false }
         ]
     });
 
@@ -1033,7 +1109,7 @@
             const getSpiritPoints = (spirit) => {
                 let points = 0;
                 Object.values(spirit.treeData).forEach(tier => {
-                    tier.forEach(item => { if (item.checked) points += item.points; });
+                    tier.forEach(item => { if (item.checked && !item.noPoints) points += item.points; });
                 });
                 points += (spirit.walkDays * 10);
                 return Math.min(280, points);
