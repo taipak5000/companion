@@ -875,42 +875,45 @@
                 <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">💥 リセット</button>
             </div>
 
-            <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0, 122, 255, 0.01);">
-                <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px; color: var(--accent-blue);">
-                    📝 {{ activeSpirit.name }} の交換計画・メモ
+            <div class="section-card" style="border: 1px solid var(--accent-purple); background: rgba(175, 82, 222, 0.01);">
+                <div style="font-weight: bold; font-size: 14px; margin-bottom: 14px; color: var(--accent-purple);">
+                    📌 全精霊共通のメモ・計算
                 </div>
-                
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
-                        💰 必要キャンドル計算 (+で自動合計)
+
+                <!-- 🧮 計算欄 -->
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
+                        🧮 計算式 <span style="font-weight: normal;">（＋ － × ÷ と半角記号・カッコが使えます）</span>
                     </label>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <input type="text" v-model="activeSpirit.candleFormula" class="calc-input" placeholder="例: 15+20+35+100">
-                        <div style="font-size: 16px; font-weight: bold; min-width: 80px; text-align: right;">
-                            ＝ {{ activeCandleTotal }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">本</span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" v-model="sharedCalcFormula" class="calc-input"
+                               style="border-color: rgba(175,82,222,0.35);"
+                               onfocus="this.style.borderColor='var(--accent-purple)'"
+                               onblur="this.style.borderColor='rgba(175,82,222,0.35)'"
+                               placeholder="例: 100+30+20　や　(15+7)×4÷2">
+                        <div style="min-width: 80px; text-align: right; flex-shrink: 0;">
+                            <template v-if="sharedCalcTotal !== null">
+                                <span style="font-size: 18px; font-weight: bold; color: var(--accent-purple);">{{ sharedCalcTotal }}</span>
+                                <span style="font-size: 11px; color: var(--text-gray); margin-left: 2px;">本</span>
+                            </template>
+                            <template v-else-if="sharedCalcFormula.trim()">
+                                <span style="font-size: 12px; color: #ff3b30; font-weight: bold;">⚠️ 式エラー</span>
+                            </template>
+                            <template v-else>
+                                <span style="font-size: 14px; color: var(--text-gray);">＝ —</span>
+                            </template>
                         </div>
                     </div>
                 </div>
 
+                <!-- 📋 メモ欄 -->
                 <div>
                     <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
-                        📌 この精霊独自のメモ欄
+                        📋 シーズン全体のメモ・目標
                     </label>
-                    <textarea v-model="activeSpirit.notes" class="memo-textarea" placeholder="例: まずはエモート解放優先、残りは連れ歩き。"></textarea>
-                </div>
-            </div>
-
-            <div class="section-card" style="border: 1px solid var(--accent-purple); background: rgba(175, 82, 222, 0.01);">
-                <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px; color: var(--accent-purple);">
-                    📌 全精霊共通のメモ・目標
-                </div>
-                <div>
-                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
-                        📋 シーズン全体のタスクや、現在の総所持キャンドルなどの記録に
-                    </label>
-                    <textarea v-model="sharedNotes" class="memo-textarea" style="height: 100px;" 
-                              placeholder="例: シーズンパス購入済み。毎日デイリー切り替わったら連れ歩き忘れないように！全体の残り必要キャンドル数など自由記入..."
-                              onfocus="this.style.borderColor='var(--accent-purple)'" 
+                    <textarea v-model="sharedNotes" class="memo-textarea" style="height: 108px;"
+                              placeholder="例: シーズンパス購入済み。毎日連れ歩き忘れずに！残り必要キャンドルなど自由記入..."
+                              onfocus="this.style.borderColor='var(--accent-purple)'"
                               onblur="this.style.borderColor='var(--border-color)'"></textarea>
                 </div>
             </div>
@@ -1071,22 +1074,22 @@
         tier1: [
             { id: prefix + '_em1', name: '💨 エモートLv1 (初回解放)', points: 20, checked: true },
             { id: prefix + '_mag1', name: '🧪 魔法①', points: 20, checked: false },
-            { id: prefix + '_bonus1', name: 'アドパス①', points: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus1', name: 'フリー①', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier2: [
             { id: prefix + '_it1', name: '✨ 季節アイテム①', points: 30, checked: false },
             { id: prefix + '_mag2', name: '🧪 魔法②', points: 30, checked: false },
-            { id: prefix + '_bonus2', name: 'アドパス②', points: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus2', name: 'フリー②', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier3: [
             { id: prefix + '_em2', name: '💨 エモートLv2', points: 40, checked: false },
             { id: prefix + '_mag3', name: '🧪 魔法③', points: 40, checked: false },
-            { id: prefix + '_bonus3', name: 'アドパス③', points: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus3', name: 'フリー③', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier4: [
             { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, checked: false },
-            { id: prefix + '_bonus4a', name: 'モーメント', points: 0, noPoints: true, firstBonus: true, checked: false },
-            { id: prefix + '_bonus4b', name: 'アドパス④', points: 0, noPoints: true, checked: false }
+            { id: prefix + '_bonus4a', name: 'フリー④', points: 0, noPoints: true, firstBonus: true, checked: false },
+            { id: prefix + '_bonus4b', name: 'フリー⑤', points: 0, noPoints: true, checked: false }
         ]
     });
 
@@ -1098,10 +1101,10 @@
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
 
             const spirits = ref([
-                { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s1') },
-                { id: 2, name: '精霊②', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s2') },
-                { id: 3, name: '精霊③', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s3') },
-                { id: 4, name: '精霊④', walkDays: 0, currentPreset: 'custom', candleFormula: '', notes: '', treeData: createInitialTree('s4') }
+                { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1') },
+                { id: 2, name: '精霊②', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2') },
+                { id: 3, name: '精霊③', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3') },
+                { id: 4, name: '精霊④', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4') }
             ]);
 
             const activeSpirit = computed(() => spirits.value[activeIndex.value]);
@@ -1118,15 +1121,23 @@
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
             const totalHearts = computed(() => spirits.value.filter(s => getSpiritPoints(s) >= 280).length);
 
-            const activeCandleTotal = computed(() => {
-                if (!activeSpirit.value.candleFormula) return 0;
-                const parts = activeSpirit.value.candleFormula.replace(/＋/g, '+').split('+');
-                let sum = 0;
-                parts.forEach(part => {
-                    const num = parseInt(part.trim(), 10);
-                    if (!isNaN(num)) sum += num;
-                });
-                return sum;
+            // 🧮 共通計算欄（+−×÷・全角対応）
+            const sharedCalcFormula = ref('');
+            const sharedCalcTotal = computed(() => {
+                const raw = sharedCalcFormula.value;
+                if (!raw.trim()) return null;
+                try {
+                    const expr = raw
+                        .replace(/＋/g, '+').replace(/－/g, '-')
+                        .replace(/×/g, '*').replace(/÷/g, '/')
+                        .replace(/[^0-9+\-*/.()\s]/g, '');
+                    if (!expr.trim()) return null;
+                    const result = Function('"use strict"; return (' + expr + ')')();
+                    if (typeof result === 'number' && isFinite(result)) {
+                        return Math.round(result * 100) / 100;
+                    }
+                    return null;
+                } catch { return null; }
             });
 
             const activeStatusText = computed(() => {
@@ -1183,8 +1194,6 @@
                     activeSpirit.value.walkDays = 0;
                     setSpiritItems(activeSpirit.value, false);
                     activeSpirit.value.treeData.tier1[0].checked = true;
-                    activeSpirit.value.candleFormula = '';
-                    activeSpirit.value.notes = '';
                     activeSpirit.value.currentPreset = 'custom';
                 } else if (type === 'no-magic') {
                     activeSpirit.value.walkDays = 9;
@@ -1212,12 +1221,13 @@
 
             watch(isDarkMode, () => { applyThemeToDOM(); });
 
-            // 💾 保存処理（共通メモも一緒に保存オブジェクトに追加）
+            // 💾 保存処理
             const save = () => {
                 const data = { 
                     activeIndex: activeIndex.value, 
                     spirits: spirits.value,
-                    sharedNotes: sharedNotes.value // 保存対象に共通メモを追加
+                    sharedNotes: sharedNotes.value,
+                    sharedCalcFormula: sharedCalcFormula.value
                 };
                 localStorage.setItem('sky_companion_v4_data', JSON.stringify(data));
             };
@@ -1239,13 +1249,13 @@
                         if (parsed.activeIndex !== undefined) activeIndex.value = parsed.activeIndex;
                         if (parsed.sharedNotes !== undefined) sharedNotes.value = parsed.sharedNotes; // 共通メモの復元
                         
+                        if (parsed.sharedCalcFormula !== undefined) sharedCalcFormula.value = parsed.sharedCalcFormula;
+
                         if (parsed.spirits && Array.isArray(parsed.spirits)) {
                             parsed.spirits.forEach((savedSpirit, sIdx) => {
                                 if (spirits.value[sIdx]) {
                                     if (savedSpirit.walkDays !== undefined) spirits.value[sIdx].walkDays = savedSpirit.walkDays;
                                     if (savedSpirit.currentPreset) spirits.value[sIdx].currentPreset = savedSpirit.currentPreset;
-                                    if (savedSpirit.candleFormula !== undefined) spirits.value[sIdx].candleFormula = savedSpirit.candleFormula;
-                                    if (savedSpirit.notes !== undefined) spirits.value[sIdx].notes = savedSpirit.notes;
                                     
                                     Object.keys(savedSpirit.treeData).forEach(tierKey => {
                                         if (spirits.value[sIdx].treeData[tierKey]) {
@@ -1264,16 +1274,15 @@
             };
 
             onMounted(() => { load(); });
-            // 共通メモ（sharedNotes）の変更も監視して自動保存
-            watch([activeIndex, spirits, sharedNotes], () => { save(); }, { deep: true });
+            watch([activeIndex, spirits, sharedNotes, sharedCalcFormula], () => { save(); }, { deep: true });
 
             return {
-                activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeCandleTotal,
+                activeIndex, spirits, activeSpirit, activePoints, totalHearts,
+                sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
                 getIcon, getLevel, cleanName, isDarkMode, toggleTheme,
-                showSidebar,
-                sharedNotes // HTML側で使えるように追加
+                showSidebar, sharedNotes
             };
         }
     }).mount('#app');
