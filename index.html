@@ -872,7 +872,7 @@
 
             <div class="preset-group">
                 <button class="btn-sm" :class="{'btn-active': activeSpirit.currentPreset === 'custom'}" @click="activeSpirit.currentPreset = 'custom'">自由入力</button>
-                <button class="btn-sm" @click="applyPreset('no-magic')">🧪 魔法スルー</button>
+                <button class="btn-sm" @click="applyPreset('no-magic')">✡️ 魔法スルー</button>
                 <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">💥 リセット</button>
             </div>
 
@@ -1074,17 +1074,17 @@
     const createInitialTree = (prefix) => ({
         tier1: [
             { id: prefix + '_em1', name: '💨 エモートLv1 (初回解放)', points: 20, checked: true },
-            { id: prefix + '_mag1', name: '🧪 魔法①', points: 20, checked: false },
+            { id: prefix + '_mag1', name: '✡️ 魔法①', points: 20, checked: false },
             { id: prefix + '_bonus1', name: 'フリー①', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier2: [
             { id: prefix + '_it1', name: '✨ 季節アイテム①', points: 30, checked: false },
-            { id: prefix + '_mag2', name: '🧪 魔法②', points: 30, checked: false },
+            { id: prefix + '_mag2', name: '✡️ 魔法②', points: 30, checked: false },
             { id: prefix + '_bonus2', name: 'フリー②', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier3: [
             { id: prefix + '_em2', name: '💨 エモートLv2', points: 40, checked: false },
-            { id: prefix + '_mag3', name: '🧪 魔法③', points: 40, checked: false },
+            { id: prefix + '_mag3', name: '✡️ 魔法③', points: 40, checked: false },
             { id: prefix + '_bonus3', name: 'フリー③', points: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier4: [
@@ -1161,7 +1161,7 @@
 
             const getIcon = (name) => {
                 if (name.includes('💨')) return '💨';
-                if (name.includes('🧪')) return '🧪';
+                if (name.includes('✡️')) return '✡️';
                 if (name.includes('✨')) return '✨';
                 if (name.includes('♡')) return '♡';
                 return '🎁';
@@ -1173,7 +1173,7 @@
             };
 
             const cleanName = (name) => {
-                return name.replace(/[💨🧪✨♡]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
+                return name.replace(/[💨✡️✨♡]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
             };
 
             const incrementWalkDays = () => {
