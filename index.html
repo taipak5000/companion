@@ -396,25 +396,39 @@
         .candle-edit-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            gap: 6px;
             padding: 7px 2px;
             border-bottom: 1px dashed var(--border-color);
         }
         .candle-edit-row:last-child { border-bottom: none; }
 
-        .candle-edit-row .item-label {
-            font-size: 12.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .type-select {
+            flex: 0 0 auto;
+            max-width: 74px;
+            box-sizing: border-box;
+            padding: 6px 2px;
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
+            font-size: 11.5px;
+            background: var(--input-bg);
             color: var(--text-color);
+        }
+        .type-select:focus { border-color: var(--accent-orange); outline: none; background: var(--card-bg); }
+
+        .candle-edit-row .item-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 12.5px;
+            color: var(--text-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .candle-edit-input {
-            width: 58px;
+            width: 52px;
             box-sizing: border-box;
-            padding: 6px 8px;
+            padding: 6px 4px;
             border: 1px solid var(--border-color);
             border-radius: 7px;
             font-size: 13px;
@@ -1084,8 +1098,17 @@
 
                 <div v-if="showCandleEdit" class="candle-edit-panel">
                     <div v-for="item in activeCandleItems" :key="item.id" class="candle-edit-row">
-                        <span class="item-label">{{ getIcon(item.name) }} {{ cleanName(item.name) }}</span>
+                        <select v-model="item.type" class="type-select">
+                            <option value="walk">💨 エモート</option>
+                            <option value="magic">🪄 魔法</option>
+                            <option value="seasonal">✨ 季節アイテム</option>
+                            <option value="dye">🎨 染料</option>
+                        </select>
+                        <span class="item-label">{{ getItemLabel(item) }}</span>
                         <input type="number" min="0" v-model.number="item.candles" class="candle-edit-input">
+                    </div>
+                    <div style="font-size: 10px; color: var(--text-gray); padding: 6px 2px 0;">
+                        ※ 種別を変えるとアイコンと名前（①②③…）が自動で振り直されます。下の層から数えて同じ種別の何個目かで番号が決まります。
                     </div>
                 </div>
                 
@@ -1101,9 +1124,9 @@
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus}"
                                  @click="item.checked = !item.checked; activeSpirit.currentPreset = 'custom'">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
-                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
                                         <defs>
                                             <mask :id="'moonmask-' + item.id">
                                                 <rect width="100" height="100" fill="#fff"/>
@@ -1116,9 +1139,9 @@
                                         <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
                                         <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
                                     </svg>
-                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                    <template v-else>{{ getIcon(item) }}</template>
                                 </div>
-                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ item.points }}p</template>
@@ -1138,9 +1161,9 @@
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 40 && !item.checked}"
                                  @click="if(!(activePoints < 40 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
-                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
                                         <defs>
                                             <mask :id="'moonmask-' + item.id">
                                                 <rect width="100" height="100" fill="#fff"/>
@@ -1153,9 +1176,9 @@
                                         <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
                                         <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
                                     </svg>
-                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                    <template v-else>{{ getIcon(item) }}</template>
                                 </div>
-                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ item.points }}p</template>
@@ -1175,9 +1198,9 @@
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 100 && !item.checked}"
                                  @click="if(!(activePoints < 100 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
-                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
                                         <defs>
                                             <mask :id="'moonmask-' + item.id">
                                                 <rect width="100" height="100" fill="#fff"/>
@@ -1190,9 +1213,9 @@
                                         <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
                                         <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
                                     </svg>
-                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                    <template v-else>{{ getIcon(item) }}</template>
                                 </div>
-                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ item.points }}p</template>
@@ -1212,9 +1235,9 @@
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
                                  @click="if(!(activePoints < 180 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
-                                <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
+                                <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
                                         <defs>
                                             <mask :id="'moonmask-' + item.id">
                                                 <rect width="100" height="100" fill="#fff"/>
@@ -1227,9 +1250,9 @@
                                         <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
                                         <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
                                     </svg>
-                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                    <template v-else>{{ getIcon(item) }}</template>
                                 </div>
-                                <div class="node-name">{{ cleanName(item.name) }}</div>
+                                <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ item.points }}p</template>
@@ -1283,22 +1306,22 @@
 
     const createInitialTree = (prefix) => ({
         tier1: [
-            { id: prefix + '_em1', name: '💨 エモートLv1 (初回解放)', points: 20, candles: 3, checked: true },
-            { id: prefix + '_mag1', name: '🪄 魔法①', points: 20, candles: 4, checked: false },
+            { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: 3, checked: true },
+            { id: prefix + '_mag1', type: 'magic', name: '魔法①', points: 20, candles: 4, checked: false },
             { id: prefix + '_bonus1', name: 'フリー①', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier2: [
-            { id: prefix + '_it1', name: '✨ 季節アイテム①', points: 30, candles: 14, checked: false },
-            { id: prefix + '_mag2', name: '🪄 魔法②', points: 30, candles: 6, checked: false },
+            { id: prefix + '_it1', type: 'seasonal', name: '季節アイテム①', points: 30, candles: 14, checked: false },
+            { id: prefix + '_mag2', type: 'magic', name: '魔法②', points: 30, candles: 6, checked: false },
             { id: prefix + '_bonus2', name: 'フリー②', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier3: [
-            { id: prefix + '_em2', name: '💨 エモートLv2', points: 40, candles: 20, checked: false },
-            { id: prefix + '_mag3', name: '🪄 魔法③', points: 40, candles: 8, checked: false },
+            { id: prefix + '_em2', type: 'walk', name: 'エモートLv2', points: 40, candles: 20, checked: false },
+            { id: prefix + '_mag3', type: 'magic', name: '魔法③', points: 40, candles: 8, checked: false },
             { id: prefix + '_bonus3', name: 'フリー③', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier4: [
-            { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, candles: 24, checked: false },
+            { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: 24, checked: false },
             { id: prefix + '_bonus4a', name: '♡ モーメント', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false },
             { id: prefix + '_bonus4b', name: 'フリー④', points: 0, candles: 0, noPoints: true, checked: false }
         ]
@@ -1414,12 +1437,43 @@
                 return Math.max(0, totalDaysNeeded - activeSpirit.value.walkDays);
             });
 
-            const getIcon = (name) => {
+            // 🔁 アイテムの種別（type）ごとのアイコン対応表。
+            // 「魔法③」の枠が精霊によっては季節アイテムや染料になることがあるため、
+            // アイコンは name の絵文字ではなく item.type から決定する。
+            const TYPE_ICONS = { walk: '💨', seasonal: '✨', dye: '🎨', magic: '🪄' };
+            const TYPE_LABELS = { walk: 'エモート', magic: '魔法', seasonal: '季節アイテム', dye: '染料' };
+
+            const getIcon = (item) => {
+                const obj = (typeof item === 'string') ? { name: item } : (item || {});
+                if (obj.type && TYPE_ICONS[obj.type]) return TYPE_ICONS[obj.type];
+                const name = obj.name || '';
+                // 旧データ（type未設定で保存されたアイテム）向けのフォールバック
                 if (name.includes('💨')) return '💨';
                 if (name.includes('🪄')) return '🪄';
                 if (name.includes('✨')) return '✨';
+                if (name.includes('🎨')) return '🎨';
                 if (name.includes('♡')) return '♡';
                 return '🎁';
+            };
+
+            const CIRCLED_NUMS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
+
+            // 🔢 種別（type）を選ぶと、下の層（第1層）から数えて同じ種別が何個目かを自動で番号に反映する。
+            // 例: 第3層の枠を「染料」に変更 → その時点で最も下にある染料なら「染料①」になる。
+            const getItemLabel = (item) => {
+                if (!item.type) return item.name; // フリー系などタイプを持たないものは既存の名前をそのまま使用
+                const ordered = activeCandleItems.value;
+                let count = 0;
+                for (const i of ordered) {
+                    if (i.type === item.type) {
+                        count++;
+                        if (i.id === item.id) break;
+                    }
+                }
+                const base = item.type === 'walk'
+                    ? TYPE_LABELS.walk + 'Lv' + count
+                    : (TYPE_LABELS[item.type] || item.type) + (CIRCLED_NUMS[count - 1] || ('#' + count));
+                return item.firstUnlock ? base + ' (初回解放)' : base;
             };
 
             const getLevel = (name) => {
@@ -1527,6 +1581,11 @@
                                                     if (savedItem.candles !== undefined) {
                                                         spirits.value[sIdx].treeData[tierKey][iIdx].candles = savedItem.candles;
                                                     }
+                                                    // 🔁 種別（魔法⇄季節アイテム⇄染料など）の変更を復元。
+                                                    // 名前は type と層の位置から自動計算されるため保存不要。
+                                                    if (savedItem.type !== undefined) {
+                                                        spirits.value[sIdx].treeData[tierKey][iIdx].type = savedItem.type;
+                                                    }
                                                 }
                                             });
                                         }
@@ -1546,7 +1605,7 @@
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
-                getIcon, getLevel, cleanName, isDarkMode, toggleTheme,
+                getIcon, getLevel, cleanName, getItemLabel, isDarkMode, toggleTheme,
                 showSidebar, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles,
