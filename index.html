@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sky 精霊同行ポイント計算機</title>
+    <script>
+        // 🌓 描画前にテーマを確定させ、ダークモード時に一瞬でも明るい背景が
+        // 表示されてしまう「ちらつき」を防止する（Vue読み込み前に同期実行）
+        (function () {
+            try {
+                var saved = localStorage.getItem('sky_app_theme');
+                var isDark = saved ? (saved === 'dark') : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <style>
         /* 🎨 カラー変数の定義（ライトモード標準） */
         :root {
@@ -20,6 +33,8 @@
             --tab-bg: #e5e5ea;
             --tab-btn-active: #ffffff;
             --stat-box-bg: #fdfdfd;
+            --magic-star-fill: #c9a3ac;
+            --magic-star-accent: #8a4658;
         }
 
         /* 🌙 ダークモード用のカラー上書き設定 */
@@ -33,6 +48,8 @@
             --tab-bg: rgba(255, 255, 255, 0.1);
             --tab-btn-active: rgba(255, 255, 255, 0.15);
             --stat-box-bg: rgba(255, 255, 255, 0.04);
+            --magic-star-fill: #ffffff;
+            --magic-star-accent: #c17b82;
         }
 
         body {
@@ -317,6 +334,98 @@
         .memo-textarea:focus { background: var(--card-bg); border-color: var(--accent-blue); outline: none; }
 
         /* --------------------------------------------------------------------------------- */
+        /* 🕯️ シーズンキャンドル計算機 */
+        /* --------------------------------------------------------------------------------- */
+
+        /* ツリーノード左上に載る、そのアイテムのキャンドルコストのバッジ */
+        .node-candle-badge {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 9px;
+            font-weight: bold;
+            color: var(--accent-orange);
+            background: rgba(255, 149, 0, 0.14);
+            padding: 1px 4px;
+            border-radius: 3px;
+            line-height: 1.3;
+            transition: color 0.3s ease, background-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .node-candle-badge {
+            color: #ffcc00;
+            background: rgba(255, 204, 0, 0.16);
+        }
+
+        .tree-subtotal-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 11.5px;
+            color: var(--text-gray);
+            background: var(--stat-box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+        }
+
+        .tree-subtotal-bar b { color: var(--accent-orange); font-size: 13px; }
+        [data-theme="dark"] .tree-subtotal-bar b { color: #ffcc00; }
+
+        .candle-edit-toggle-btn {
+            font-size: 11px;
+            color: var(--accent-blue);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 4px 0;
+            white-space: nowrap;
+        }
+
+        .candle-edit-panel {
+            padding-top: 2px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .candle-edit-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 7px 2px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .candle-edit-row:last-child { border-bottom: none; }
+
+        .candle-edit-row .item-label {
+            font-size: 12.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-color);
+        }
+
+        .candle-edit-input {
+            width: 58px;
+            box-sizing: border-box;
+            padding: 6px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
+            font-size: 13px;
+            text-align: right;
+            background: var(--input-bg);
+            color: var(--text-color);
+            flex-shrink: 0;
+        }
+        .candle-edit-input:focus { border-color: var(--accent-orange); outline: none; background: var(--card-bg); }
+
+        /* --------------------------------------------------------------------------------- */
         /* 🗺️ 精霊ツリーエリア */
         /* --------------------------------------------------------------------------------- */
 
@@ -538,6 +647,17 @@
             align-items: center;
             justify-content: center;
             transition: filter 0.3s ease;
+        }
+
+        .magic-star-icon {
+            width: 26px;
+            height: 26px;
+            display: block;
+            overflow: visible;
+        }
+
+        @media (max-width: 360px) {
+            .magic-star-icon { width: 22px; height: 22px; }
         }
 
         [data-theme="dark"] .node-icon {
@@ -786,6 +906,53 @@
                 <div style="font-size: 22px; font-weight: bold; margin: 0;">🧡 シーズンハート獲得: {{ totalHearts }} / 4 個</div>
             </div>
 
+            <div class="section-card" style="border: 1px solid var(--accent-orange); background: rgba(255, 149, 0, 0.02);">
+                <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px;">
+                    🕯️ シーズンキャンドル計算機
+                </div>
+
+                <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
+                    シーズンパス
+                </label>
+                <div class="preset-group" style="margin-bottom: 12px;">
+                    <button class="btn-sm" :class="{'btn-active': hasSeasonPass}" @click="hasSeasonPass = true">あり（1日6本）</button>
+                    <button class="btn-sm" :class="{'btn-active': !hasSeasonPass}" @click="hasSeasonPass = false">なし（1日5本）</button>
+                </div>
+
+                <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
+                    🕯️ 現在の所持キャンドル数
+                </label>
+                <input type="number" min="0" v-model.number="ownedCandles" class="calc-input" placeholder="例: 20">
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div style="font-size: 11px; color: var(--text-gray);">全精霊の残り必要数</div>
+                        <div class="stat-val" style="color: var(--accent-orange);">
+                            {{ totalRemainingCandles }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">本</span>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div style="font-size: 11px; color: var(--text-gray);">到達まで</div>
+                        <div class="stat-val" :style="{ color: candleDaysNeeded <= 0 ? '#34c759' : 'var(--accent-blue)' }">
+                            <template v-if="candleDaysNeeded <= 0">達成✓</template>
+                            <template v-else>{{ candleDaysNeeded }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">日</span></template>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advice-box" style="margin-top: 12px;" :style="candleDaysNeeded <= 0 ? 'background:rgba(52,197,89,0.08); color:#1e7e34; border-color:rgba(52,197,89,0.2); margin-top:12px;' : ''">
+                    <template v-if="candleDaysNeeded <= 0">
+                        🎉 今の所持数で、全精霊ツリーの残りコストをまかなえます！
+                    </template>
+                    <template v-else>
+                        💡 1日 <strong>{{ candlesPerDay }}本</strong> ペースなら、<strong>{{ candleTargetDateText }}</strong> 頃に必要数へ到達する見込みです。
+                    </template>
+                </div>
+                <div style="font-size: 10px; color: var(--text-gray); margin-top: 8px; line-height: 1.5;">
+                    ※ キャンドルは精霊間で共通の所持数として計算されます。各アイテムのコストはツリー内の「コストを編集」から精霊ごとに調整できます。
+                </div>
+            </div>
+
             <div class="spirit-tabs">
                 <button v-for="(spirit, index) in spirits" :key="spirit.id" 
                         class="tab-btn" :class="{ active: activeIndex === index }"
@@ -838,7 +1005,7 @@
 
             <div class="preset-group">
                 <button class="btn-sm" :class="{'btn-active': activeSpirit.currentPreset === 'custom'}" @click="activeSpirit.currentPreset = 'custom'">自由入力</button>
-                <button class="btn-sm" @click="applyPreset('no-magic')">✡️ 魔法スルー</button>
+                <button class="btn-sm" @click="applyPreset('no-magic')">🪄 魔法スルー</button>
                 <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">💥 リセット</button>
             </div>
 
@@ -909,6 +1076,18 @@
                     <div style="font-size: 12px; color: var(--text-gray); font-weight: bold; text-transform: uppercase;">🌳 {{ activeSpirit.name }} のツリー</div>
                     <div style="font-size: 10px; color: var(--accent-purple); opacity: 0.85;">💜 右列はポイント外</div>
                 </div>
+
+                <div class="tree-subtotal-bar">
+                    <span>🕯️ このツリーの残り: <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} 本</span>
+                    <button class="candle-edit-toggle-btn" @click="showCandleEdit = !showCandleEdit">{{ showCandleEdit ? '編集を閉じる ▲' : '🕯️ コストを編集 ▼' }}</button>
+                </div>
+
+                <div v-if="showCandleEdit" class="candle-edit-panel">
+                    <div v-for="item in activeCandleItems" :key="item.id" class="candle-edit-row">
+                        <span class="item-label">{{ getIcon(item.name) }} {{ cleanName(item.name) }}</span>
+                        <input type="number" min="0" v-model.number="item.candles" class="candle-edit-input">
+                    </div>
+                </div>
                 
                 <div class="tree-container">
                     <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 40}">
@@ -921,12 +1100,28 @@
                                  class="game-node-btn"
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus}"
                                  @click="item.checked = !item.checked; activeSpirit.currentPreset = 'custom'">
+                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
-                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-icon">
+                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                        <defs>
+                                            <mask :id="'moonmask-' + item.id">
+                                                <rect width="100" height="100" fill="#fff"/>
+                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
+                                            </mask>
+                                        </defs>
+                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
+                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
+                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
+                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
+                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
+                                    </svg>
+                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                </div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ item.points }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -942,12 +1137,28 @@
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 40 && !item.checked}"
                                  @click="if(!(activePoints < 40 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
-                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-icon">
+                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                        <defs>
+                                            <mask :id="'moonmask-' + item.id">
+                                                <rect width="100" height="100" fill="#fff"/>
+                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
+                                            </mask>
+                                        </defs>
+                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
+                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
+                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
+                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
+                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
+                                    </svg>
+                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                </div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ item.points }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -963,12 +1174,28 @@
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 100 && !item.checked}"
                                  @click="if(!(activePoints < 100 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
-                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-icon">
+                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                        <defs>
+                                            <mask :id="'moonmask-' + item.id">
+                                                <rect width="100" height="100" fill="#fff"/>
+                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
+                                            </mask>
+                                        </defs>
+                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
+                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
+                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
+                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
+                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
+                                    </svg>
+                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                </div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ item.points }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -984,12 +1211,28 @@
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
                                  @click="if(!(activePoints < 180 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(item.name)" class="node-level">{{ getLevel(item.name) }}</div>
-                                <div class="node-icon">{{ getIcon(item.name) }}</div>
+                                <div class="node-icon">
+                                    <svg v-if="item.name.includes('🪄')" class="magic-star-icon" viewBox="0 0 100 100">
+                                        <defs>
+                                            <mask :id="'moonmask-' + item.id">
+                                                <rect width="100" height="100" fill="#fff"/>
+                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
+                                            </mask>
+                                        </defs>
+                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
+                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
+                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
+                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
+                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
+                                    </svg>
+                                    <template v-else>{{ getIcon(item.name) }}</template>
+                                </div>
                                 <div class="node-name">{{ cleanName(item.name) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>🕯️ +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ item.points }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -1011,7 +1254,8 @@
     <div class="info-memo">
         <strong>📌 連れ歩きシステムの仕様メモ:</strong><br>
         ・連れ歩きをしなくても、各層のアイテムをすべて取得すれば次の層へ進めます。<br>
-        ・先にポイントを貯めて上の層を開放した後から、スルーしたアイテムを回収してもポイントは反映されます。
+        ・先にポイントを貯めて上の層を開放した後から、スルーしたアイテムを回収してもポイントは反映されます。<br>
+        ・🕯️ 各アイテムのキャンドルコストは目安です。実際の精霊に合わせて、ツリー内の「コストを編集」から精霊ごとに調整してください。
     </div>
 
         </div> <!-- /.main-content-wrapper -->
@@ -1039,24 +1283,24 @@
 
     const createInitialTree = (prefix) => ({
         tier1: [
-            { id: prefix + '_em1', name: '💨 エモートLv1 (初回解放)', points: 20, checked: true },
-            { id: prefix + '_mag1', name: '✡️ 魔法①', points: 20, checked: false },
-            { id: prefix + '_bonus1', name: 'フリー①', points: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_em1', name: '💨 エモートLv1 (初回解放)', points: 20, candles: 3, checked: true },
+            { id: prefix + '_mag1', name: '🪄 魔法①', points: 20, candles: 4, checked: false },
+            { id: prefix + '_bonus1', name: 'フリー①', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier2: [
-            { id: prefix + '_it1', name: '✨ 季節アイテム①', points: 30, checked: false },
-            { id: prefix + '_mag2', name: '✡️ 魔法②', points: 30, checked: false },
-            { id: prefix + '_bonus2', name: 'フリー②', points: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_it1', name: '✨ 季節アイテム①', points: 30, candles: 14, checked: false },
+            { id: prefix + '_mag2', name: '🪄 魔法②', points: 30, candles: 6, checked: false },
+            { id: prefix + '_bonus2', name: 'フリー②', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier3: [
-            { id: prefix + '_em2', name: '💨 エモートLv2', points: 40, checked: false },
-            { id: prefix + '_mag3', name: '✡️ 魔法③', points: 40, checked: false },
-            { id: prefix + '_bonus3', name: 'フリー③', points: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_em2', name: '💨 エモートLv2', points: 40, candles: 20, checked: false },
+            { id: prefix + '_mag3', name: '🪄 魔法③', points: 40, candles: 8, checked: false },
+            { id: prefix + '_bonus3', name: 'フリー③', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier4: [
-            { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, checked: false },
-            { id: prefix + '_bonus4a', name: '♡ モーメント', points: 0, noPoints: true, firstBonus: true, checked: false },
-            { id: prefix + '_bonus4b', name: 'フリー④', points: 0, noPoints: true, checked: false }
+            { id: prefix + '_it2', name: '✨ 季節アイテム②', points: 100, candles: 24, checked: false },
+            { id: prefix + '_bonus4a', name: '♡ モーメント', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false },
+            { id: prefix + '_bonus4b', name: 'フリー④', points: 0, candles: 0, noPoints: true, checked: false }
         ]
     });
 
@@ -1066,6 +1310,11 @@
             const isDarkMode = ref(false);
             const showSidebar = ref(false);
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
+
+            // 🕯️ シーズンキャンドル計算機の状態管理変数
+            const hasSeasonPass = ref(true);
+            const ownedCandles = ref(0);
+            const showCandleEdit = ref(false);
 
             const spirits = ref([
                 { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1') },
@@ -1087,6 +1336,46 @@
 
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
             const totalHearts = computed(() => spirits.value.filter(s => getSpiritPoints(s) >= 280).length);
+
+            // 🕯️ キャンドルコスト関連のロジック
+            // ポイント対象外(noPoints)のフリーアイテムを除いた「実際にキャンドルを使うアイテム」一覧を取得
+            const getSpiritCandleItems = (spirit) => {
+                const items = [];
+                Object.values(spirit.treeData).forEach(tier => {
+                    tier.forEach(item => { if (!item.noPoints) items.push(item); });
+                });
+                return items;
+            };
+
+            const getSpiritTotalCandles = (spirit) => getSpiritCandleItems(spirit).reduce((sum, item) => sum + (item.candles || 0), 0);
+            const getSpiritRemainingCandles = (spirit) => getSpiritCandleItems(spirit)
+                .filter(item => !item.checked)
+                .reduce((sum, item) => sum + (item.candles || 0), 0);
+
+            const activeCandleItems = computed(() => getSpiritCandleItems(activeSpirit.value));
+            const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value));
+            const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value));
+
+            // シーズンパスの有無で1日の獲得本数を切り替え（あり:6本 / なし:5本）
+            const candlesPerDay = computed(() => hasSeasonPass.value ? 6 : 5);
+
+            // 4体すべての精霊で、まだチェックしていないアイテムのキャンドルコスト合計
+            const totalRemainingCandles = computed(() => spirits.value.reduce((sum, s) => sum + getSpiritRemainingCandles(s), 0));
+
+            // 現在の所持数から、あと何日で全精霊分の残りコストを賄えるか
+            const candleDaysNeeded = computed(() => {
+                const need = totalRemainingCandles.value - (ownedCandles.value || 0);
+                if (need <= 0) return 0;
+                return Math.ceil(need / candlesPerDay.value);
+            });
+
+            const candleTargetDateText = computed(() => {
+                const days = candleDaysNeeded.value;
+                if (days <= 0) return '達成済み';
+                const target = new Date();
+                target.setDate(target.getDate() + days);
+                return `${target.getFullYear()}年${target.getMonth() + 1}月${target.getDate()}日`;
+            });
 
             // 🧮 共通計算欄（+−×÷・全角対応）
             const sharedCalcFormula = ref('');
@@ -1127,7 +1416,7 @@
 
             const getIcon = (name) => {
                 if (name.includes('💨')) return '💨';
-                if (name.includes('✡️')) return '✡️';
+                if (name.includes('🪄')) return '🪄';
                 if (name.includes('✨')) return '✨';
                 if (name.includes('♡')) return '♡';
                 return '🎁';
@@ -1139,7 +1428,7 @@
             };
 
             const cleanName = (name) => {
-                return name.replace(/[💨✡️✨♡]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
+                return name.replace(/[💨🪄✨♡]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
             };
 
             const incrementWalkDays = () => {
@@ -1195,7 +1484,9 @@
                     activeIndex: activeIndex.value, 
                     spirits: spirits.value,
                     sharedNotes: sharedNotes.value,
-                    sharedCalcFormula: sharedCalcFormula.value
+                    sharedCalcFormula: sharedCalcFormula.value,
+                    hasSeasonPass: hasSeasonPass.value,
+                    ownedCandles: ownedCandles.value
                 };
                 localStorage.setItem('sky_companion_v4_data', JSON.stringify(data));
             };
@@ -1218,6 +1509,8 @@
                         if (parsed.sharedNotes !== undefined) sharedNotes.value = parsed.sharedNotes; // 共通メモの復元
                         
                         if (parsed.sharedCalcFormula !== undefined) sharedCalcFormula.value = parsed.sharedCalcFormula;
+                        if (parsed.hasSeasonPass !== undefined) hasSeasonPass.value = parsed.hasSeasonPass;
+                        if (parsed.ownedCandles !== undefined) ownedCandles.value = parsed.ownedCandles;
 
                         if (parsed.spirits && Array.isArray(parsed.spirits)) {
                             parsed.spirits.forEach((savedSpirit, sIdx) => {
@@ -1230,6 +1523,10 @@
                                             savedSpirit.treeData[tierKey].forEach((savedItem, iIdx) => {
                                                 if (spirits.value[sIdx].treeData[tierKey][iIdx]) {
                                                     spirits.value[sIdx].treeData[tierKey][iIdx].checked = savedItem.checked;
+                                                    // 🕯️ 精霊ごとに調整したキャンドルコストがあれば復元
+                                                    if (savedItem.candles !== undefined) {
+                                                        spirits.value[sIdx].treeData[tierKey][iIdx].candles = savedItem.candles;
+                                                    }
                                                 }
                                             });
                                         }
@@ -1242,7 +1539,7 @@
             };
 
             onMounted(() => { load(); });
-            watch([activeIndex, spirits, sharedNotes, sharedCalcFormula], () => { save(); }, { deep: true });
+            watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
             return {
                 activeIndex, spirits, activeSpirit, activePoints, totalHearts,
@@ -1250,7 +1547,10 @@
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
                 getIcon, getLevel, cleanName, isDarkMode, toggleTheme,
-                showSidebar, sharedNotes
+                showSidebar, sharedNotes,
+                hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
+                activeCandleItems, activeTotalCandles, activeRemainingCandles,
+                totalRemainingCandles, candleDaysNeeded, candleTargetDateText
             };
         }
     }).mount('#app');
