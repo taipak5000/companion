@@ -393,6 +393,57 @@
             flex-direction: column;
         }
 
+        /* 🚀 優先順位チャート */
+        .priority-chart {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+            margin-top: 8px;
+            padding: 2px;
+        }
+        .priority-step {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 66px;
+            min-height: 74px;
+            background: var(--stat-box-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            padding: 7px 3px 5px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .priority-step-heart {
+            border-color: #ff5e7e;
+            background: rgba(255, 94, 126, 0.08);
+        }
+        .priority-step-num {
+            position: absolute;
+            top: -7px;
+            left: -7px;
+            background: var(--accent-orange);
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+        }
+        .priority-step-heart .priority-step-num { background: #ff5e7e; }
+        .priority-step-icon { font-size: 17px; line-height: 1; margin-bottom: 3px; }
+        .priority-step-name { font-size: 9px; line-height: 1.25; color: var(--text-color); font-weight: bold; word-break: break-all; }
+        .priority-step-cost { font-size: 10px; font-weight: bold; color: var(--accent-orange); margin-top: 3px; }
+        .priority-step-day { font-size: 8px; color: var(--text-gray); margin-top: 1px; }
+        .priority-arrow { color: var(--text-gray); font-size: 13px; flex-shrink: 0; opacity: 0.6; }
+
         .candle-edit-row {
             display: flex;
             align-items: center;
@@ -1015,6 +1066,55 @@
                         </span>
                     </div>
                 </div>
+
+                <div class="advice-box" style="margin-top: 10px; border-color: rgba(255,149,0,0.3); background: rgba(255,149,0,0.05); color: var(--text-color);">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: var(--accent-orange);">🚀 最短ハート交換シミュレーション</div>
+                    <template v-if="activeFastestHeartPlan.alreadyDone">
+                        🎉 すでにハートと交換済みです！
+                    </template>
+                    <template v-else-if="activeFastestHeartPlan.unreachable">
+                        ⚠️ 現在の設定では見込みを計算できませんでした。連れ歩き日数やキャンドル所持数を確認してください。
+                    </template>
+                    <template v-else>
+                        <template v-if="activeFastestHeartPlan.day === 0">
+                            🎉 ポイント・キャンドルともに、ハート交換の条件をすでに満たしています！
+                        </template>
+                        <template v-else>
+                            連れ歩き（毎日この精霊を選択）とキャンドル購入をこの精霊に集中させた場合、
+                            最短 <strong>{{ activeFastestHeartPlan.day }} 日後</strong> にハートと交換できる見込みです。
+                            <div style="margin-top: 6px;">
+                                🕯️ ここから必要なキャンドル合計: <strong style="color: var(--accent-orange); font-size: 14px;">{{ activeFastestHeartPlan.totalCost }}本</strong>
+                                <span style="color: var(--text-gray); font-size: 10.5px;">（ハート交換分 🕯️{{ activeSpirit.treeData.tier4[2].candles }}を含む／現在の所持数 {{ ownedCandles }}本は別）</span>
+                            </div>
+                        </template>
+                        <div v-if="activeFastestHeartPlan.readyExceptPass" style="color: #ff3b30; margin-top: 6px; font-weight: bold;">
+                            ⚠️ ハートとの交換にはシーズンパスが必要です（現在: 未保有）。
+                        </div>
+
+                        <div v-if="activeFastestHeartPlan.order && activeFastestHeartPlan.order.length" style="margin-top: 10px;">
+                            <div style="font-size: 10.5px; color: var(--text-gray); font-weight: bold; margin-bottom: 2px;">📋 交換の優先順位（ハート到達に必要な分のみ）</div>
+                            <div class="priority-chart">
+                                <template v-for="(step, idx) in activeFastestHeartPlan.order" :key="idx">
+                                    <div class="priority-step" :class="{ 'priority-step-heart': step.isHeart }">
+                                        <div class="priority-step-num">{{ idx + 1 }}</div>
+                                        <div class="priority-step-icon">{{ step.icon }}</div>
+                                        <div class="priority-step-name">{{ step.name }}</div>
+                                        <div class="priority-step-cost">🕯️{{ step.candles }}</div>
+                                        <div class="priority-step-day">{{ step.day }}日目</div>
+                                    </div>
+                                    <div v-if="idx < activeFastestHeartPlan.order.length - 1" class="priority-arrow">→</div>
+                                </template>
+                            </div>
+                            <div style="font-size: 10px; color: var(--text-gray); margin-top: 4px;">
+                                ※ 280p到達に不要なアイテム（例: 季節アイテム②など）は最短ルートでは省略されます。見た目も揃えたい場合は、そのアイテムも追加で交換してください。
+                            </div>
+                        </div>
+
+                        <div style="font-size: 10.5px; color: var(--text-gray); margin-top: 8px; line-height: 1.4;">
+                            ※ 連れ歩きは1日1体までのため、他の精霊とも連れ歩きを分け合う場合はこの日数より遅くなります。キャンドルも他の精霊に使わずこの精霊に全て使った想定の最短見込みです。
+                        </div>
+                    </template>
+                </div>
             </div>
 
             <div class="preset-group">
@@ -1023,46 +1123,51 @@
                 <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">💥 リセット</button>
             </div>
 
-            <div class="section-card" style="border: 1px solid var(--accent-purple); background: rgba(175, 82, 222, 0.01);">
-                <div style="font-weight: bold; font-size: 14px; margin-bottom: 14px; color: var(--accent-purple);">
-                    📌 全精霊共通のメモ・計算
+            <div class="section-card" style="border: 1px solid var(--accent-purple); background: rgba(175, 82, 222, 0.01); padding-bottom: 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showSharedTools = !showSharedTools">
+                    <span style="font-weight: bold; font-size: 14px; color: var(--accent-purple);">
+                        📌 全精霊共通のメモ・計算
+                    </span>
+                    <span style="font-size: 11px; color: var(--accent-purple); font-weight: bold; white-space: nowrap;">{{ showSharedTools ? '閉じる ▲' : '開く ▼' }}</span>
                 </div>
 
-                <!-- 🧮 計算欄 -->
-                <div style="margin-bottom: 14px;">
-                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
-                        🧮 計算式 <span style="font-weight: normal;">（＋ － × ÷ と半角記号・カッコが使えます）</span>
-                    </label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" v-model="sharedCalcFormula" class="calc-input"
-                               style="border-color: rgba(175,82,222,0.35);"
-                               onfocus="this.style.borderColor='var(--accent-purple)'"
-                               onblur="this.style.borderColor='rgba(175,82,222,0.35)'"
-                               placeholder="例: 100+30+20　や　(15+7)×4÷2">
-                        <div style="min-width: 80px; text-align: right; flex-shrink: 0;">
-                            <template v-if="sharedCalcTotal !== null">
-                                <span style="font-size: 18px; font-weight: bold; color: var(--accent-purple);">{{ sharedCalcTotal }}</span>
-                                <span style="font-size: 11px; color: var(--text-gray); margin-left: 2px;">本</span>
-                            </template>
-                            <template v-else-if="sharedCalcFormula.trim()">
-                                <span style="font-size: 12px; color: #ff3b30; font-weight: bold;">⚠️ 式エラー</span>
-                            </template>
-                            <template v-else>
-                                <span style="font-size: 14px; color: var(--text-gray);">＝ —</span>
-                            </template>
+                <div v-if="showSharedTools" style="margin-top: 14px;">
+                    <!-- 🧮 計算欄 -->
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
+                            🧮 計算式 <span style="font-weight: normal;">（＋ － × ÷ と半角記号・カッコが使えます）</span>
+                        </label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" v-model="sharedCalcFormula" class="calc-input"
+                                   style="border-color: rgba(175,82,222,0.35);"
+                                   onfocus="this.style.borderColor='var(--accent-purple)'"
+                                   onblur="this.style.borderColor='rgba(175,82,222,0.35)'"
+                                   placeholder="例: 100+30+20　や　(15+7)×4÷2">
+                            <div style="min-width: 80px; text-align: right; flex-shrink: 0;">
+                                <template v-if="sharedCalcTotal !== null">
+                                    <span style="font-size: 18px; font-weight: bold; color: var(--accent-purple);">{{ sharedCalcTotal }}</span>
+                                    <span style="font-size: 11px; color: var(--text-gray); margin-left: 2px;">本</span>
+                                </template>
+                                <template v-else-if="sharedCalcFormula.trim()">
+                                    <span style="font-size: 12px; color: #ff3b30; font-weight: bold;">⚠️ 式エラー</span>
+                                </template>
+                                <template v-else>
+                                    <span style="font-size: 14px; color: var(--text-gray);">＝ —</span>
+                                </template>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 📋 メモ欄 -->
-                <div>
-                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
-                        📋 シーズン全体のメモ・目標
-                    </label>
-                    <textarea v-model="sharedNotes" class="memo-textarea" style="height: 108px;"
-                              placeholder="例: シーズンパス購入済み。毎日連れ歩き忘れずに！残り必要キャンドルなど自由記入..."
-                              onfocus="this.style.borderColor='var(--accent-purple)'"
-                              onblur="this.style.borderColor='var(--border-color)'"></textarea>
+                    <!-- 📋 メモ欄 -->
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 4px;">
+                            📋 シーズン全体のメモ・目標
+                        </label>
+                        <textarea v-model="sharedNotes" class="memo-textarea" style="height: 108px;"
+                                  placeholder="例: シーズンパス購入済み。毎日連れ歩き忘れずに！残り必要キャンドルなど自由記入..."
+                                  onfocus="this.style.borderColor='var(--accent-purple)'"
+                                  onblur="this.style.borderColor='var(--border-color)'"></textarea>
+                    </div>
                 </div>
             </div>
 
@@ -1094,6 +1199,9 @@
                 <div class="tree-subtotal-bar">
                     <span>🕯️ このツリーの残り: <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} 本</span>
                     <button class="candle-edit-toggle-btn" @click="showCandleEdit = !showCandleEdit">{{ showCandleEdit ? '編集を閉じる ▲' : '🕯️ コストを編集 ▼' }}</button>
+                </div>
+                <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : '#ff3b30' }">
+                    ♡ 第4層最上位の<b>ハートとの交換</b>（🕯️{{ activeSpirit.treeData.tier4[2].candles }}）は<b>シーズンパス保有者のみ</b>可能です{{ hasSeasonPass ? '（現在: 保有）' : '（現在: 未保有 — 左側で切替できます）' }}
                 </div>
 
                 <div v-if="showCandleEdit" class="candle-edit-panel">
@@ -1304,34 +1412,52 @@
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
 
-    const createInitialTree = (prefix) => ({
+    // 🕯️ costs は精霊ごとのキャンドルコスト表（次イベント予想ツリー画像より反映）
+    // ツリーは下から第1層→第4層の順（画像の一番下が第1層、一番上のハートが最終報酬）。
+    // em1/mag1=第1層, it1/mag2=第2層, em2/mag3=第3層, it2/extra4=第4層季節アイテム, heart=最上位のハートとの交換（要シーズンパス）
+    const createInitialTree = (prefix, costs) => ({
         tier1: [
-            { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: 3, checked: true },
-            { id: prefix + '_mag1', type: 'magic', name: '魔法①', points: 20, candles: 4, checked: false },
+            { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: costs.em1, checked: true },
+            { id: prefix + '_mag1', type: 'magic', name: '魔法①', points: 20, candles: costs.mag1, checked: false },
             { id: prefix + '_bonus1', name: 'フリー①', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier2: [
-            { id: prefix + '_it1', type: 'seasonal', name: '季節アイテム①', points: 30, candles: 14, checked: false },
-            { id: prefix + '_mag2', type: 'magic', name: '魔法②', points: 30, candles: 6, checked: false },
+            { id: prefix + '_it1', type: 'seasonal', name: '季節アイテム①', points: 30, candles: costs.it1, checked: false },
+            { id: prefix + '_mag2', type: 'magic', name: '魔法②', points: 30, candles: costs.mag2, checked: false },
             { id: prefix + '_bonus2', name: 'フリー②', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier3: [
-            { id: prefix + '_em2', type: 'walk', name: 'エモートLv2', points: 40, candles: 20, checked: false },
-            { id: prefix + '_mag3', type: 'magic', name: '魔法③', points: 40, candles: 8, checked: false },
+            { id: prefix + '_em2', type: 'walk', name: 'エモートLv2', points: 40, candles: costs.em2, checked: false },
+            { id: prefix + '_mag3', type: 'magic', name: '魔法③', points: 40, candles: costs.mag3, checked: false },
             { id: prefix + '_bonus3', name: 'フリー③', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier4: [
-            { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: 24, checked: false },
-            { id: prefix + '_bonus4a', name: '♡ モーメント', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false },
-            { id: prefix + '_bonus4b', name: 'フリー④', points: 0, candles: 0, noPoints: true, checked: false }
+            { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: costs.it2, checked: false },
+            { id: prefix + '_extra4', type: 'magic', name: '魔法④', points: 0, candles: costs.extra, checked: false },
+            { id: prefix + '_heart', name: '♡ ハートと交換', points: 0, candles: costs.heart, requiresSeasonPass: true, firstBonus: true, checked: false }
         ]
     });
+
+    // 📊 次回イベント精霊ツリー予想（画像より）のキャンドルコスト一覧
+    // ツリー合計: 精霊①=87 / 精霊②=105 / 精霊③=93 / 精霊④=107 （最上位ハートとの交換 🕯️3・要シーズンパス を含む）
+    // ※ エモートLv1（初回解放）は0コスト、魔法①側にコストがかかる
+    const SPIRIT_TREE_COSTS = {
+        s1: { em1: 0, mag1: 4, it1: 18, mag2: 6,  em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計87
+        s2: { em1: 0, mag1: 4, it1: 16, mag2: 6,  em2: 22, mag3: 20, it2: 26, extra: 8,  heart: 3 }, // 合計105
+        s3: { em1: 0, mag1: 4, it1: 18, mag2: 8,  em2: 22, mag3: 10, it2: 28, extra: 0,  heart: 3 }, // 合計93
+        s4: { em1: 0, mag1: 4, it1: 14, mag2: 6,  em2: 20, mag3: 8,  it2: 28, extra: 24, heart: 3 }  // 合計107
+    };
+    // 🔖 上記コストの表を書き換えたら、この番号を+1すること。
+    // ブラウザに保存済みの古いキャンドルコスト（localStorage）を無効化し、
+    // 新しいデフォルト値が確実に反映されるようにするためのバージョン番号。
+    const TREE_COST_VERSION = 2;
 
     createApp({
         setup() {
             const activeIndex = ref(0);
             const isDarkMode = ref(false);
             const showSidebar = ref(false);
+            const showSharedTools = ref(false); // 📌 メモ・計算欄はデフォルトで折りたたみ
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
 
             // 🕯️ シーズンキャンドル計算機の状態管理変数
@@ -1340,10 +1466,10 @@
             const showCandleEdit = ref(false);
 
             const spirits = ref([
-                { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1') },
-                { id: 2, name: '精霊②', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2') },
-                { id: 3, name: '精霊③', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3') },
-                { id: 4, name: '精霊④', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4') }
+                { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
+                { id: 2, name: '精霊②', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2', SPIRIT_TREE_COSTS.s2) },
+                { id: 3, name: '精霊③', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3', SPIRIT_TREE_COSTS.s3) },
+                { id: 4, name: '精霊④', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4', SPIRIT_TREE_COSTS.s4) }
             ]);
 
             const activeSpirit = computed(() => spirits.value[activeIndex.value]);
@@ -1398,6 +1524,82 @@
                 const target = new Date();
                 target.setDate(target.getDate() + days);
                 return `${target.getFullYear()}年${target.getMonth() + 1}月${target.getDate()}日`;
+            });
+
+            // 🚀 最短ハート到達シミュレーション
+            // 「連れ歩きは1日1回・1体だけ」という前提のもと、このツリーに毎日連れ歩き(+10p)を
+            // 割り当て続けたと仮定し、キャンドルも全てこの精霊のツリーに使った場合に
+            // 最短何日でポイント280&ハート交換分のキャンドルが揃うかをシミュレーションする。
+            // 併せて「どのアイテムから交換すべきか」の優先順位(order)も記録する。
+            // （他の精霊のキャンドル消費は考慮しないため、あくまで「この精霊に集中した場合」の目安）
+            const activeFastestHeartPlan = computed(() => {
+                const spirit = activeSpirit.value;
+                const heartItem = spirit.treeData.tier4[2];
+                const tierThreshold = { tier1: 0, tier2: 40, tier3: 100, tier4: 180 };
+
+                // まだ購入していない、フリー枠でもハートでもない通常アイテムを集める
+                let remaining = [];
+                Object.keys(spirit.treeData).forEach(tierKey => {
+                    spirit.treeData[tierKey].forEach(item => {
+                        if (item === heartItem || item.noPoints || item.checked || !item.points) return; // 0ptアイテムは280p到達に寄与しないため候補から除外
+                        remaining.push({
+                            name: cleanName(getItemLabel(item)),
+                            icon: getIcon(item),
+                            candles: item.candles || 0,
+                            points: item.points || 0,
+                            threshold: tierThreshold[tierKey]
+                        });
+                    });
+                });
+
+                let points = getSpiritPoints(spirit);
+                let candlePool = ownedCandles.value || 0;
+                const perDay = candlesPerDay.value;
+                const heartCost = heartItem.candles || 0;
+                const heartName = cleanName(heartItem.name);
+
+                if (heartItem.checked) return { alreadyDone: true, order: [], totalCost: 0 };
+
+                const order = [];
+                const meetsGoal = () => points >= 280 && candlePool >= heartCost;
+                if (meetsGoal()) {
+                    return { day: 0, passOk: hasSeasonPass.value, candlePool, readyExceptPass: !hasSeasonPass.value, order: [], totalCost: 0 };
+                }
+
+                const MAX_DAYS = 500;
+                let day = 0;
+                while (day < MAX_DAYS) {
+                    day++;
+                    candlePool += perDay;
+                    points = Math.min(280, points + 10); // この精霊に毎日連れ歩きを割り当てた場合
+
+                    // 買えるアイテムをポイント効率(points/candles)の高い順に買えるだけ買う
+                    let bought = true;
+                    while (bought) {
+                        bought = false;
+                        let bestIdx = -1, bestRatio = -1;
+                        remaining.forEach((c, idx) => {
+                            if (points >= c.threshold && c.candles <= candlePool) {
+                                const ratio = c.candles === 0 ? Infinity : (c.points / c.candles);
+                                if (ratio > bestRatio) { bestRatio = ratio; bestIdx = idx; }
+                            }
+                        });
+                        if (bestIdx >= 0) {
+                            const it = remaining.splice(bestIdx, 1)[0];
+                            candlePool -= it.candles;
+                            points = Math.min(280, points + it.points);
+                            order.push({ name: it.name, icon: it.icon, candles: it.candles, points: it.points, day });
+                            bought = true;
+                        }
+                    }
+
+                    if (points >= 280 && candlePool >= heartCost) {
+                        order.push({ name: heartName, icon: '♡', candles: heartCost, points: 0, day, isHeart: true });
+                        const totalCost = order.reduce((sum, o) => sum + (o.candles || 0), 0);
+                        return { day, candlePool, passOk: hasSeasonPass.value, readyExceptPass: !hasSeasonPass.value, order, totalCost };
+                    }
+                }
+                return { unreachable: true, order: [], totalCost: 0 };
             });
 
             // 🧮 共通計算欄（+−×÷・全角対応）
@@ -1540,7 +1742,8 @@
                     sharedNotes: sharedNotes.value,
                     sharedCalcFormula: sharedCalcFormula.value,
                     hasSeasonPass: hasSeasonPass.value,
-                    ownedCandles: ownedCandles.value
+                    ownedCandles: ownedCandles.value,
+                    treeCostVersion: TREE_COST_VERSION
                 };
                 localStorage.setItem('sky_companion_v4_data', JSON.stringify(data));
             };
@@ -1566,6 +1769,11 @@
                         if (parsed.hasSeasonPass !== undefined) hasSeasonPass.value = parsed.hasSeasonPass;
                         if (parsed.ownedCandles !== undefined) ownedCandles.value = parsed.ownedCandles;
 
+                        // 🔖 保存時と現在でツリーのコスト表バージョンが違う場合、
+                        // 古いキャンドルコスト/種別の上書きは復元しない（最新の予想値を優先する）。
+                        // それ以外（チェック状態・連れ歩き日数など）は引き続き復元する。
+                        const costDataIsCurrent = parsed.treeCostVersion === TREE_COST_VERSION;
+
                         if (parsed.spirits && Array.isArray(parsed.spirits)) {
                             parsed.spirits.forEach((savedSpirit, sIdx) => {
                                 if (spirits.value[sIdx]) {
@@ -1575,17 +1783,17 @@
                                     Object.keys(savedSpirit.treeData).forEach(tierKey => {
                                         if (spirits.value[sIdx].treeData[tierKey]) {
                                             savedSpirit.treeData[tierKey].forEach((savedItem, iIdx) => {
-                                                if (spirits.value[sIdx].treeData[tierKey][iIdx]) {
-                                                    spirits.value[sIdx].treeData[tierKey][iIdx].checked = savedItem.checked;
-                                                    // 🕯️ 精霊ごとに調整したキャンドルコストがあれば復元
-                                                    if (savedItem.candles !== undefined) {
-                                                        spirits.value[sIdx].treeData[tierKey][iIdx].candles = savedItem.candles;
-                                                    }
+                                                const targetItem = spirits.value[sIdx].treeData[tierKey][iIdx];
+                                                // 🔁 保存済み配列と現在の構成でid対応が取れない場合（ツリー構造が変わった場合）は
+                                                // このアイテムの復元自体をスキップする。
+                                                if (!targetItem || (savedItem.id && targetItem.id !== savedItem.id)) return;
+                                                targetItem.checked = savedItem.checked;
+                                                if (costDataIsCurrent) {
+                                                    // 🕯️ 精霊ごとに調整したキャンドルコストがあれば復元（最新版のみ）
+                                                    if (savedItem.candles !== undefined) targetItem.candles = savedItem.candles;
                                                     // 🔁 種別（魔法⇄季節アイテム⇄染料など）の変更を復元。
                                                     // 名前は type と層の位置から自動計算されるため保存不要。
-                                                    if (savedItem.type !== undefined) {
-                                                        spirits.value[sIdx].treeData[tierKey][iIdx].type = savedItem.type;
-                                                    }
+                                                    if (savedItem.type !== undefined) targetItem.type = savedItem.type;
                                                 }
                                             });
                                         }
@@ -1606,10 +1814,11 @@
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
                 getIcon, getLevel, cleanName, getItemLabel, isDarkMode, toggleTheme,
-                showSidebar, sharedNotes,
+                showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles,
-                totalRemainingCandles, candleDaysNeeded, candleTargetDateText
+                totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
+                activeFastestHeartPlan
             };
         }
     }).mount('#app');
