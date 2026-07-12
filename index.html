@@ -714,7 +714,7 @@
             transition: filter 0.3s ease;
         }
 
-        .magic-star-icon {
+        .node-svg-icon {
             width: 26px;
             height: 26px;
             display: block;
@@ -722,7 +722,7 @@
         }
 
         @media (max-width: 360px) {
-            .magic-star-icon { width: 22px; height: 22px; }
+            .node-svg-icon { width: 22px; height: 22px; }
         }
 
         [data-theme="dark"] .node-icon {
@@ -916,10 +916,325 @@
             .sidebar-close-btn  { display: none; }
         }
 
+        /* --------------------------------------------------------------------------------- */
+        /* 🔮 精霊ツリー予想（4体横並び比較）エリア — 公開された予想ツリー画像のレイアウト参考 */
+        /* --------------------------------------------------------------------------------- */
+
+        .forecast-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 18px 18px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            margin-bottom: 16px;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        [data-theme="dark"] .forecast-card {
+            background: linear-gradient(180deg, #1b1535 0%, #0c081a 100%);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .forecast-head { margin-bottom: 10px; }
+        .forecast-title { font-size: 15px; font-weight: bold; }
+        .forecast-desc {
+            font-size: 11.5px;
+            color: var(--text-gray);
+            margin-top: 4px;
+            line-height: 1.55;
+        }
+
+        .forecast-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px 12px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: var(--stat-box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .forecast-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10.5px;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+        .fl-icon { width: 12px; height: 12px; color: var(--text-gray); flex-shrink: 0; opacity: 0.9; }
+
+        .forecast-grid {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            margin-top: 14px;
+            padding: 6px 2px 12px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .forecast-grid::-webkit-scrollbar { height: 6px; }
+        .forecast-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        @media (min-width: 1100px) {
+            .forecast-grid {
+                overflow-x: visible;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .forecast-theme-0 { --fc-tint: 158, 148, 130; --fc-accent: #5b5239; }
+        .forecast-theme-1 { --fc-tint: 173, 105, 138; --fc-accent: #5e2841; }
+        .forecast-theme-2 { --fc-tint: 176, 154, 68;  --fc-accent: #6b5c16; }
+        .forecast-theme-3 { --fc-tint: 84, 110, 196;  --fc-accent: #1a2c5c; }
+        [data-theme="dark"] .forecast-theme-0 { --fc-accent: #d8cfba; }
+        [data-theme="dark"] .forecast-theme-1 { --fc-accent: #e8a2c0; }
+        [data-theme="dark"] .forecast-theme-2 { --fc-accent: #e2c765; }
+        [data-theme="dark"] .forecast-theme-3 { --fc-accent: #91aef2; }
+
+        .forecast-column {
+            scroll-snap-align: start;
+            flex: 0 0 auto;
+            width: 168px;
+            display: flex;
+            gap: 6px;
+            border-radius: 12px;
+            padding: 12px 8px 12px;
+            background: rgba(var(--fc-tint), 0.22);
+            border: 1px solid rgba(var(--fc-tint), 0.65);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        @media (min-width: 1100px) { .forecast-column { width: auto; min-width: 0; } }
+
+        [data-theme="dark"] .forecast-column {
+            background: linear-gradient(165deg, rgba(var(--fc-tint), 0.3), rgba(9, 8, 16, 0.96) 65%);
+            border: 1px solid rgba(var(--fc-tint), 0.55);
+        }
+
+        .forecast-starpath {
+            width: 15px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 5px 0;
+        }
+        .forecast-starpath::before {
+            content: '';
+            position: absolute;
+            top: 2px; bottom: 2px;
+            left: 50%;
+            border-left: 1.5px dashed rgba(var(--fc-tint), 0.9);
+            opacity: 0.6;
+        }
+        [data-theme="dark"] .forecast-starpath::before { border-left-color: rgba(255,255,255,0.5); }
+
+        .fp-node {
+            width: 7px;
+            height: 7px;
+            background: var(--fc-accent);
+            opacity: 0.8;
+            clip-path: polygon(50% 0%, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0% 50%, 37% 37%);
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+        .fp-node-cap {
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1.5px solid var(--fc-accent);
+            clip-path: none;
+            opacity: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        [data-theme="dark"] .fp-node-cap { background: rgba(0,0,0,0.45); }
+        .fp-cap-icon { width: 10px; height: 10px; color: var(--fc-accent); }
+
+        .forecast-col-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+
+        .forecast-col-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+        .forecast-total {
+            font-size: 23px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: var(--text-color);
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+        .forecast-total-icon { width: 17px; height: 17px; color: var(--fc-accent); flex-shrink: 0; }
+
+        .forecast-card { --forecast-heart-red: #a5225a; }
+        [data-theme="dark"] .forecast-card { --forecast-heart-red: #ff5e7e; }
+
+        .forecast-heart-cost {
+            display: flex;
+            align-items: center;
+            font-size: 10.5px;
+            font-weight: bold;
+            color: var(--forecast-heart-red);
+            background: rgba(255, 45, 85, 0.1);
+            border-radius: 6px;
+            padding: 3px 5px;
+            flex-shrink: 0;
+            margin-top: 1px;
+            gap: 1px;
+        }
+        .fh-icon { width: 10px; height: 10px; flex-shrink: 0; }
+
+        .forecast-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+
+        .forecast-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 9px;
+            background: rgba(0,0,0,0.16);
+            border: 1px solid rgba(var(--fc-tint), 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+        [data-theme="dark"] .forecast-slot {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.14);
+        }
+
+        .forecast-slot-heart {
+            width: 46px;
+            height: 46px;
+            border-color: #ff5e7e;
+            background: rgba(255, 45, 85, 0.08);
+        }
+        [data-theme="dark"] .forecast-slot-heart {
+            border-color: rgba(255, 94, 126, 0.75);
+            background: rgba(255, 45, 85, 0.12);
+            box-shadow: 0 0 10px rgba(255, 45, 85, 0.35);
+        }
+
+        .forecast-slot--empty {
+            background: transparent;
+            border: 1px dashed rgba(var(--fc-tint), 0.35);
+        }
+        [data-theme="dark"] .forecast-slot--empty { border: 1px dashed rgba(255,255,255,0.12); }
+
+        .forecast-icon { width: 21px; height: 21px; color: var(--fc-accent); }
+        .forecast-slot-heart .forecast-icon { width: 24px; height: 24px; color: var(--forecast-heart-red); }
+
+        .forecast-badge {
+            position: absolute;
+            top: -5px;
+            left: -4px;
+            font-size: 9px;
+            font-weight: bold;
+            color: #331d00;
+            background: #f5a300;
+            padding: 1px 4px;
+            border-radius: 5px;
+            line-height: 1.35;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+            white-space: nowrap;
+        }
+        [data-theme="dark"] .forecast-badge { background: #ffcc00; color: #2a1800; }
+
+        .forecast-total-bar {
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--stat-box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 12.5px;
+            font-weight: bold;
+            color: var(--text-gray);
+        }
+        .forecast-grand-total {
+            font-size: 23px;
+            font-weight: 800;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .forecast-grand-total .forecast-total-icon { color: var(--accent-orange); }
+        [data-theme="dark"] .forecast-grand-total .forecast-total-icon { color: #ffcc00; }
+
+        @media (max-width: 359px) {
+            .forecast-column { width: 152px; }
+            .forecast-slot { width: 36px; height: 36px; }
+            .forecast-slot-heart { width: 42px; height: 42px; }
+        }
 
     </style>
 </head>
 <body>
+
+<!-- 🔮 精霊ツリー予想エリアで使う共通アイコン（SVGスプライト。表示はされず #id で参照される） -->
+<svg width="0" height="0" style="position:absolute; overflow:hidden;" aria-hidden="true">
+    <defs>
+        <symbol id="ic-candle" viewBox="0 0 100 100">
+            <rect x="33" y="40" width="34" height="52" rx="7" fill="currentColor"/>
+            <rect x="45" y="30" width="10" height="14" fill="currentColor" opacity="0.75"/>
+            <path d="M50 4c10 13 10 22 0 29-10-7-10-16 0-29z" fill="#ffb020"/>
+        </symbol>
+        <symbol id="ic-magic" viewBox="0 0 100 100">
+            <mask id="ic-magic-moonmask">
+                <rect width="100" height="100" fill="#fff"/>
+                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
+            </mask>
+            <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
+            <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" mask="url(#ic-magic-moonmask)"/>
+            <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
+            <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
+            <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
+        </symbol>
+        <symbol id="ic-emote" viewBox="0 0 100 100">
+            <circle cx="49" cy="27" r="13" fill="currentColor"/>
+            <path d="M49 43c-15 0-23 13-21 37h13l2-21 6 15 6-15 2 21h13c2-24-6-37-21-37z" fill="currentColor"/>
+            <path d="M64 35c9-3 16-12 15-20" stroke="currentColor" stroke-width="6.5" fill="none" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="ic-bloom" viewBox="0 0 100 100">
+            <g fill="currentColor">
+                <ellipse cx="50" cy="27" rx="10.5" ry="17" transform="rotate(0 50 50)"/>
+                <ellipse cx="50" cy="27" rx="10.5" ry="17" transform="rotate(72 50 50)"/>
+                <ellipse cx="50" cy="27" rx="10.5" ry="17" transform="rotate(144 50 50)"/>
+                <ellipse cx="50" cy="27" rx="10.5" ry="17" transform="rotate(216 50 50)"/>
+                <ellipse cx="50" cy="27" rx="10.5" ry="17" transform="rotate(288 50 50)"/>
+            </g>
+            <circle cx="50" cy="50" r="11" fill="#ffd76a"/>
+        </symbol>
+        <symbol id="ic-dye" viewBox="0 0 100 100">
+            <path d="M50 10C50 10 21 47 21 67a29 29 0 0 0 58 0c0-20-29-57-29-57z" fill="currentColor"/>
+            <ellipse cx="39" cy="63" rx="6.5" ry="10" fill="rgba(255,255,255,0.4)"/>
+        </symbol>
+        <symbol id="ic-heart" viewBox="0 0 100 100">
+            <path d="M50 88C18 64 6 43 6 26 6 11 19 1 34 1c8 0 14 4.5 16 11 2-6.5 8-11 16-11 15 0 28 10 28 25 0 17-12 38-44 62z" fill="currentColor"/>
+        </symbol>
+        <symbol id="ic-sparkle" viewBox="0 0 100 100">
+            <path d="M50 16 L59 41 L84 50 L59 59 L50 84 L41 59 L16 50 L41 41 Z" fill="currentColor"/>
+        </symbol>
+    </defs>
+</svg>
 
 <div id="app" class="container">
     <header>
@@ -963,6 +1278,71 @@
 
         <!-- ═══ メインコンテンツ ═══ -->
         <div class="main-content-wrapper">
+
+    <div class="forecast-card">
+        <div class="forecast-head">
+            <div class="forecast-title">🔮 精霊ツリー予想（4体横並び比較）</div>
+            <div class="forecast-desc">
+                公開された予想ツリー画像をもとにした一覧表示です。数値は下の個別ツリーと連動しています。未確定のアイテムは空欄になります。
+            </div>
+        </div>
+
+        <div class="forecast-legend">
+            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-magic"></use></svg>魔法</span>
+            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-emote"></use></svg>エモート</span>
+            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-bloom"></use></svg>季節アイテム</span>
+            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-dye"></use></svg>染料</span>
+            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-sparkle"></use></svg>アドパス</span>
+            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>ハートと交換</span>
+        </div>
+
+        <div class="forecast-grid">
+            <div v-for="sf in spiritForecasts" :key="sf.spirit.id" class="forecast-column" :class="'forecast-theme-' + sf.themeIndex">
+                <div class="forecast-starpath">
+                    <span class="fp-node" v-for="n in 5" :key="n"></span>
+                    <span class="fp-node-cap">
+                        <svg class="fp-cap-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>
+                    </span>
+                </div>
+
+                <div class="forecast-col-body">
+                    <div class="forecast-col-head">
+                        <span class="forecast-total">
+                            <svg class="forecast-total-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ sf.total }}
+                        </span>
+                        <span class="forecast-heart-cost" v-if="sf.heartItem">
+                            <svg class="fh-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>
+                            <svg class="fh-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ sf.heartItem.candles || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="forecast-row forecast-row-heart">
+                        <div v-if="sf.heartItem && sf.heartItem.name" class="forecast-slot forecast-slot-heart" :title="cleanName(sf.heartItem.name)">
+                            <svg class="forecast-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>
+                        </div>
+                        <div v-else class="forecast-slot forecast-slot-heart forecast-slot--empty"></div>
+                    </div>
+
+                    <div class="forecast-row" v-for="(row, rIdx) in sf.rows" :key="rIdx">
+                        <template v-for="item in row" :key="item.id">
+                            <div v-if="item && item.name" class="forecast-slot" :title="cleanName(getItemLabel(item))">
+                                <span v-if="item.candles > 0" class="forecast-badge">{{ item.candles }}</span>
+                                <svg class="forecast-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                            </div>
+                            <div v-else class="forecast-slot forecast-slot--empty"></div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="forecast-total-bar">
+            <span>🕯️ 4体合計</span>
+            <span class="forecast-grand-total">
+                <svg class="forecast-total-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ grandTotalCandles }}
+            </span>
+        </div>
+    </div>
 
     <div class="main-layout">
         
@@ -1234,20 +1614,7 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
-                                        <defs>
-                                            <mask :id="'moonmask-' + item.id">
-                                                <rect width="100" height="100" fill="#fff"/>
-                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
-                                            </mask>
-                                        </defs>
-                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
-                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
-                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
-                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
-                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
-                                    </svg>
-                                    <template v-else>{{ getIcon(item) }}</template>
+                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1271,20 +1638,7 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
-                                        <defs>
-                                            <mask :id="'moonmask-' + item.id">
-                                                <rect width="100" height="100" fill="#fff"/>
-                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
-                                            </mask>
-                                        </defs>
-                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
-                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
-                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
-                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
-                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
-                                    </svg>
-                                    <template v-else>{{ getIcon(item) }}</template>
+                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1308,20 +1662,7 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
-                                        <defs>
-                                            <mask :id="'moonmask-' + item.id">
-                                                <rect width="100" height="100" fill="#fff"/>
-                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
-                                            </mask>
-                                        </defs>
-                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
-                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
-                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
-                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
-                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
-                                    </svg>
-                                    <template v-else>{{ getIcon(item) }}</template>
+                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1345,20 +1686,7 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg v-if="item.type === 'magic' || (!item.type && item.name.includes('🪄'))" class="magic-star-icon" viewBox="0 0 100 100">
-                                        <defs>
-                                            <mask :id="'moonmask-' + item.id">
-                                                <rect width="100" height="100" fill="#fff"/>
-                                                <circle cx="46.8" cy="40.8" r="9.2" fill="#000"/>
-                                            </mask>
-                                        </defs>
-                                        <path d="M 50 12 C 53.83 12 53.69 29.04 60 32.68 C 66.31 36.32 80.99 27.68 82.91 31 C 84.83 34.32 70 42.72 70 50 C 70 57.28 84.83 65.68 82.91 69 C 80.99 72.32 66.31 63.68 60 67.32 C 53.69 70.96 53.83 88 50 88 C 46.17 88 46.31 70.96 40 67.32 C 33.69 63.68 19.01 72.32 17.09 69 C 15.17 65.68 30 57.28 30 50 C 30 42.72 15.17 34.32 17.09 31 C 19.01 27.68 33.69 36.32 40 32.68 C 46.31 29.04 46.17 12 50 12 Z" fill="var(--magic-star-fill)"/>
-                                        <circle cx="41" cy="45" r="10.5" fill="var(--magic-star-accent)" :mask="'url(#moonmask-' + item.id + ')'"/>
-                                        <circle cx="57" cy="42" r="2.4" fill="var(--magic-star-accent)"/>
-                                        <circle cx="62.5" cy="47" r="1.6" fill="var(--magic-star-accent)"/>
-                                        <circle cx="59" cy="52.5" r="1.2" fill="var(--magic-star-accent)"/>
-                                    </svg>
-                                    <template v-else>{{ getIcon(item) }}</template>
+                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1372,7 +1700,7 @@
                     <div class="heart-goal-container">
                         <div class="game-node-btn heart-node" :class="{'node-checked': activePoints >= 280}">
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
-                            <div class="node-icon">🧡</div>
+                            <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
                             <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">最上層ハート</div>
                             <div class="node-cost" style="color: #ff5e7e;">{{ activePoints >= 280 ? '🎉 獲得!' : '280p' }}</div>
                         </div>
@@ -1419,17 +1747,17 @@
         tier1: [
             { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: costs.em1, checked: true },
             { id: prefix + '_mag1', type: 'magic', name: '魔法①', points: 20, candles: costs.mag1, checked: false },
-            { id: prefix + '_bonus1', name: 'フリー①', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus1', name: 'アドパス①', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier2: [
             { id: prefix + '_it1', type: 'seasonal', name: '季節アイテム①', points: 30, candles: costs.it1, checked: false },
             { id: prefix + '_mag2', type: 'magic', name: '魔法②', points: 30, candles: costs.mag2, checked: false },
-            { id: prefix + '_bonus2', name: 'フリー②', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus2', name: 'アドパス②', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier3: [
             { id: prefix + '_em2', type: 'walk', name: 'エモートLv2', points: 40, candles: costs.em2, checked: false },
             { id: prefix + '_mag3', type: 'magic', name: '魔法③', points: 40, candles: costs.mag3, checked: false },
-            { id: prefix + '_bonus3', name: 'フリー③', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus3', name: 'アドパス③', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
         ],
         tier4: [
             { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: costs.it2, checked: false },
@@ -1487,7 +1815,7 @@
             const totalHearts = computed(() => spirits.value.filter(s => getSpiritPoints(s) >= 280).length);
 
             // 🕯️ キャンドルコスト関連のロジック
-            // ポイント対象外(noPoints)のフリーアイテムを除いた「実際にキャンドルを使うアイテム」一覧を取得
+            // ポイント対象外(noPoints)のアドパスアイテムを除いた「実際にキャンドルを使うアイテム」一覧を取得
             const getSpiritCandleItems = (spirit) => {
                 const items = [];
                 Object.values(spirit.treeData).forEach(tier => {
@@ -1504,6 +1832,40 @@
             const activeCandleItems = computed(() => getSpiritCandleItems(activeSpirit.value));
             const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value));
             const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value));
+
+            // 🔮 精霊ツリー予想（4体横並び比較）用のデータ整形
+            // 画像と同じ並び順（上＝ハートとの交換→第4層→第3層→第2層→下＝第1層）に組み替える。
+            // ハートとの交換アイテムは行として独立させ、コストはヘッダー側の💗バッジにまとめて表示する。
+            const getForecastData = (spirit) => {
+                let heartItem = null;
+                const tierOrder = ['tier4', 'tier3', 'tier2', 'tier1'];
+                const rows = tierOrder.map(key => spirit.treeData[key].filter(item => {
+                    if (item.requiresSeasonPass) { heartItem = item; return false; }
+                    return true;
+                }));
+                return { heartItem, rows, total: getSpiritTotalCandles(spirit) };
+            };
+
+            const spiritForecasts = computed(() => spirits.value.map((s, idx) => ({
+                spirit: s,
+                themeIndex: idx,
+                ...getForecastData(s)
+            })));
+
+            // 4体すべてを合計したツリー総コスト（予想画像下部の合計表示と対応）
+            const grandTotalCandles = computed(() => spirits.value.reduce((sum, s) => sum + getSpiritTotalCandles(s), 0));
+
+            // アイテムの種別からアイコン（#id）を判定。空欄アイテム（name未設定）はテンプレート側で描画自体をスキップする。
+            const getForecastIconId = (item) => {
+                if (!item) return 'ic-sparkle';
+                if (item.requiresSeasonPass) return 'ic-heart';
+                if (item.noPoints) return 'ic-sparkle';
+                if (item.type === 'magic') return 'ic-magic';
+                if (item.type === 'seasonal') return 'ic-bloom';
+                if (item.type === 'dye') return 'ic-dye';
+                if (item.type === 'walk') return 'ic-emote';
+                return 'ic-sparkle';
+            };
 
             // シーズンパスの有無で1日の獲得本数を切り替え（あり:6本 / なし:5本）
             const candlesPerDay = computed(() => hasSeasonPass.value ? 6 : 5);
@@ -1537,7 +1899,7 @@
                 const heartItem = spirit.treeData.tier4[2];
                 const tierThreshold = { tier1: 0, tier2: 40, tier3: 100, tier4: 180 };
 
-                // まだ購入していない、フリー枠でもハートでもない通常アイテムを集める
+                // まだ購入していない、アドパス枠でもハートでもない通常アイテムを集める
                 let remaining = [];
                 Object.keys(spirit.treeData).forEach(tierKey => {
                     spirit.treeData[tierKey].forEach(item => {
@@ -1663,7 +2025,7 @@
             // 🔢 種別（type）を選ぶと、下の層（第1層）から数えて同じ種別が何個目かを自動で番号に反映する。
             // 例: 第3層の枠を「染料」に変更 → その時点で最も下にある染料なら「染料①」になる。
             const getItemLabel = (item) => {
-                if (!item.type) return item.name; // フリー系などタイプを持たないものは既存の名前をそのまま使用
+                if (!item.type) return item.name; // アドパス系などタイプを持たないものは既存の名前をそのまま使用
                 const ordered = activeCandleItems.value;
                 let count = 0;
                 for (const i of ordered) {
@@ -1818,7 +2180,8 @@
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
-                activeFastestHeartPlan
+                activeFastestHeartPlan,
+                spiritForecasts, grandTotalCandles, getForecastIconId
             };
         }
     }).mount('#app');
