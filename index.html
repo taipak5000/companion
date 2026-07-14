@@ -1280,13 +1280,17 @@
         <div class="main-content-wrapper">
 
     <div class="forecast-card">
-        <div class="forecast-head">
-            <div class="forecast-title">🔮 精霊ツリー予想（4体横並び比較）</div>
+        <div class="forecast-head" style="cursor:pointer;" @click="showForecast = !showForecast">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <div class="forecast-title">🔮 精霊ツリー予想（4体横並び比較）</div>
+                <span style="font-size: 11px; color: var(--text-gray); font-weight: bold; white-space: nowrap;">{{ showForecast ? '閉じる ▲' : '比較表を見る ▼' }}</span>
+            </div>
             <div class="forecast-desc">
                 公開された予想ツリー画像をもとにした一覧表示です。数値は下の個別ツリーと連動しています。未確定のアイテムは空欄になります。
             </div>
         </div>
 
+        <template v-if="showForecast">
         <div class="forecast-legend">
             <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-magic"></use></svg>魔法</span>
             <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-emote"></use></svg>エモート</span>
@@ -1335,6 +1339,7 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <div class="forecast-total-bar">
             <span>🕯️ 4体合計</span>
@@ -1472,8 +1477,12 @@
                         </div>
 
                         <div v-if="activeFastestHeartPlan.order && activeFastestHeartPlan.order.length" style="margin-top: 10px;">
-                            <div style="font-size: 10.5px; color: var(--text-gray); font-weight: bold; margin-bottom: 2px;">📋 交換の優先順位（ハート到達に必要な分のみ）</div>
-                            <div class="priority-chart">
+                            <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showHeartPlanDetail = !showHeartPlanDetail">
+                                <span style="font-size: 10.5px; color: var(--text-gray); font-weight: bold;">📋 交換の優先順位（ハート到達に必要な分のみ）</span>
+                                <span style="font-size: 10.5px; color: var(--text-gray); font-weight: bold; white-space: nowrap;">{{ showHeartPlanDetail ? '閉じる ▲' : '見る ▼' }}</span>
+                            </div>
+                            <template v-if="showHeartPlanDetail">
+                            <div class="priority-chart" style="margin-top: 6px;">
                                 <template v-for="(step, idx) in activeFastestHeartPlan.order" :key="idx">
                                     <div class="priority-step" :class="{ 'priority-step-heart': step.isHeart }">
                                         <div class="priority-step-num">{{ idx + 1 }}</div>
@@ -1488,6 +1497,7 @@
                             <div style="font-size: 10px; color: var(--text-gray); margin-top: 4px;">
                                 ※ 280p到達に不要なアイテム（例: 季節アイテム②など）は最短ルートでは省略されます。見た目も揃えたい場合は、そのアイテムも追加で交換してください。
                             </div>
+                            </template>
                         </div>
 
                         <div style="font-size: 10.5px; color: var(--text-gray); margin-top: 8px; line-height: 1.4;">
@@ -1503,12 +1513,12 @@
                 <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">💥 リセット</button>
             </div>
 
-            <div class="section-card" style="border: 1px solid var(--accent-purple); background: rgba(175, 82, 222, 0.01); padding-bottom: 14px;">
+            <div class="section-card" style="padding-bottom: 14px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showSharedTools = !showSharedTools">
-                    <span style="font-weight: bold; font-size: 14px; color: var(--accent-purple);">
+                    <span style="font-weight: bold; font-size: 14px; color: var(--text-color);">
                         📌 全精霊共通のメモ・計算
                     </span>
-                    <span style="font-size: 11px; color: var(--accent-purple); font-weight: bold; white-space: nowrap;">{{ showSharedTools ? '閉じる ▲' : '開く ▼' }}</span>
+                    <span style="font-size: 11px; color: var(--text-gray); font-weight: bold; white-space: nowrap;">{{ showSharedTools ? '閉じる ▲' : '開く ▼' }}</span>
                 </div>
 
                 <div v-if="showSharedTools" style="margin-top: 14px;">
@@ -1795,6 +1805,8 @@
             const hasSeasonPass = ref(true);
             const ownedCandles = ref(0);
             const showCandleEdit = ref(false);
+            const showForecast = ref(false); // 🔮 4体比較の詳細は初期状態で折りたたみ（情報量を抑える）
+            const showHeartPlanDetail = ref(false); // 🚀 最短交換シミュレーションの優先順位チャートも初期は折りたたみ
 
             const spirits = ref([
                 { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
@@ -2187,6 +2199,7 @@
                 getIcon, getLevel, cleanName, getItemLabel, isZeroCostMagic, isDarkMode, toggleTheme,
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
+                showForecast, showHeartPlanDetail,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
                 activeFastestHeartPlan,
