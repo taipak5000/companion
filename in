@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>最短ハート交換シミュレーション</title>
+<meta name="description" content="連れ歩きとキャンドル購入をこの精霊に集中させた場合の、最短でハートと交換できるルート解説">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%E2%9D%A4%EF%B8%8F</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFF7EC;
+    --card: #FFFFFF;
+    --ink: #4A3A2C;
+    --muted: #8F7A62;
+    --apricot: #FF9F45;
+    --apricot-dark: #E17A1B;
+    --apricot-pale: #FFEBD3;
+    --bloom: #FF4D6D;
+    --bloom-dark: #E23256;
+    --bloom-pale: #FFE1E7;
+    --lilac: #8C6FCB;
+    --lilac-pale: #EFE8FB;
+    --meadow: #4F9463;
+    --meadow-dark: #3D7850;
+    --meadow-pale: #E5F3E7;
+    --amber: #E8B84E;
+    --amber-dark: #B8860B;
+    --amber-pale: #FBF2DA;
+    --line: #F0DFC5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    padding: 36px 16px 70px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 440px; margin: 0 auto; }
+
+  /* header */
+  header { text-align: center; margin-bottom: 24px; }
+  .kicker {
+    display: inline-block;
+    background: var(--apricot-pale); color: var(--apricot-dark);
+    font-weight: 700; font-size: 12px; letter-spacing: .03em;
+    padding: 6px 16px; border-radius: 999px; margin-bottom: 14px;
+  }
+  h1 { font-size: 21px; font-weight: 800; margin: 0 0 10px; }
+  .lead { font-size: 13.5px; color: var(--muted); margin: 0; padding: 0 4px; }
+
+  /* stat cards */
+  .stats { display: flex; gap: 10px; margin: 22px 0; }
+  .stat {
+    flex: 1; background: var(--card); border-radius: 18px;
+    padding: 16px 8px; text-align: center;
+    box-shadow: 0 3px 14px rgba(191,140,84,0.14);
+  }
+  .stat .num { font-size: 25px; font-weight: 800; color: var(--apricot-dark); display: block; }
+  .stat .num small { font-size: 12.5px; font-weight: 700; margin-left: 2px; }
+  .stat .label { font-size: 11px; color: var(--muted); margin-top: 5px; display: block; }
+
+  /* signature: candle growth chart */
+  .chart-card {
+    background: var(--card); border-radius: 18px; padding: 18px 16px 14px;
+    margin: 0 0 26px; box-shadow: 0 3px 14px rgba(191,140,84,0.14);
+  }
+  .chart-title { font-size: 13.5px; font-weight: 700; margin: 0 0 4px; }
+  .chart-sub { font-size: 11px; color: var(--muted); margin: 0 0 16px; }
+  .bars { display: flex; align-items: flex-end; justify-content: space-between; height: 100px; gap: 6px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .bar-val { font-size: 10.5px; font-weight: 700; color: var(--apricot-dark); margin-bottom: 4px; }
+  .bar { width: 100%; max-width: 26px; background: linear-gradient(180deg, var(--apricot), var(--apricot-dark)); border-radius: 7px 7px 3px 3px; }
+  .bar-col.goal .bar { background: linear-gradient(180deg, var(--bloom), var(--bloom-dark)); }
+  .bar-col.goal .bar-val { color: var(--bloom-dark); }
+  .bar-day { font-size: 9.5px; color: var(--muted); margin-top: 6px; white-space: nowrap; }
+
+  /* point chart (stacked) */
+  .pt-bars .bar-val { color: var(--ink); }
+  .stack { width: 100%; max-width: 26px; display: flex; flex-direction: column; border-radius: 7px 7px 3px 3px; overflow: hidden; }
+  .seg-item { background: linear-gradient(180deg, var(--amber), var(--amber-dark)); }
+  .seg-walk { background: linear-gradient(180deg, var(--meadow), var(--meadow-dark)); }
+  .legend { display: flex; justify-content: center; gap: 18px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dot-item { background: var(--amber-dark); }
+  .dot-walk { background: var(--meadow); }
+  .chart-footnote { font-size: 10.5px; color: var(--muted); text-align: center; margin: 10px 4px 0; }
+
+  /* timeline */
+  .timeline { position: relative; padding-left: 32px; margin-bottom: 8px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 12px; top: 4px; bottom: 4px;
+    width: 3px; background: var(--line); border-radius: 3px;
+  }
+  .step { position: relative; margin-bottom: 16px; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num {
+    position: absolute; left: -32px; top: 2px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--apricot); color: #fff; font-weight: 800; font-size: 12.5px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(225,122,27,0.4);
+    z-index: 2;
+  }
+  .step.goal .step-num { background: var(--bloom); box-shadow: 0 2px 6px rgba(226,50,86,0.45); }
+  .card {
+    background: var(--card); border-radius: 16px; padding: 13px 15px;
+    box-shadow: 0 3px 12px rgba(191,140,84,0.12);
+  }
+  .step.goal .card { background: var(--bloom-pale); box-shadow: 0 3px 12px rgba(226,50,86,0.16); }
+  .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+  .day-tag { font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  .tier-tag {
+    font-size: 10.5px; font-weight: 700; color: var(--lilac);
+    background: var(--lilac-pale); padding: 3px 10px; border-radius: 999px;
+  }
+  .item-row { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .item-icon { font-size: 22px; line-height: 1; }
+  .item-name { font-size: 15px; font-weight: 700; }
+  .bonus-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--amber-pale); border-radius: 10px;
+    padding: 7px 10px; margin: -2px 0 10px;
+  }
+  .bonus-icon { font-size: 15px; }
+  .bonus-text { flex: 1; font-size: 11.5px; font-weight: 600; color: var(--ink); }
+  .bonus-pt { font-size: 11px; font-weight: 800; color: var(--amber-dark); white-space: nowrap; }
+  .card-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .cost { font-size: 13px; font-weight: 700; color: var(--apricot-dark); }
+  .cost small { font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 6px; }
+  .point-tag {
+    font-size: 10.5px; font-weight: 700; color: var(--amber-dark);
+    background: var(--amber-pale); padding: 3px 10px; border-radius: 999px;
+  }
+
+  /* tier ladder reference */
+  .ref {
+    background: var(--card); border-radius: 18px; padding: 18px 16px 16px;
+    margin: 28px 0 24px; box-shadow: 0 3px 14px rgba(191,140,84,0.14);
+  }
+  .ref h2 { font-size: 14px; margin: 0 0 4px; }
+  .ref .ref-sub { font-size: 11px; color: var(--muted); margin: 0 0 14px; }
+  .ladder-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .rung {
+    background: var(--apricot-pale); border-radius: 12px; padding: 7px 9px;
+    text-align: center; min-width: 50px;
+  }
+  .rung.goal-rung { background: var(--bloom-pale); }
+  .rung .rung-label { display: block; font-size: 10px; color: var(--apricot-dark); font-weight: 700; }
+  .rung.goal-rung .rung-label { color: var(--bloom-dark); }
+  .rung .rung-pt { display: block; font-size: 11.5px; font-weight: 800; margin-top: 2px; }
+  .arrow { color: var(--muted); font-size: 12px; }
+  .ref p.small { font-size: 11.5px; color: var(--muted); margin: 6px 2px 0; }
+
+  /* notes */
+  .notes {
+    background: #FFFAF1; border: 1.5px dashed #E8D2A3; border-radius: 16px;
+    padding: 16px 17px; margin-top: 22px;
+  }
+  .notes p { font-size: 12px; color: #8A7355; margin: 0 0 10px; }
+  .notes p:last-child { margin-bottom: 0; }
+
+  footer { text-align: center; margin-top: 30px; font-size: 10.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="kicker">最短ルートガイド</span>
+    <h1>🚀 最短ハート交換シミュレーション</h1>
+    <p class="lead">連れ歩き（毎日この精霊を選択）とキャンドル購入をこの精霊に集中させた場合の、最速でハートと交換できるルートです。連れ歩きだけで毎日👣+10pt貯まります。</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="num">11<small>日後</small></span>
+      <span class="label">ハートと交換できる見込み</span>
+    </div>
+    <div class="stat">
+      <span class="num">🕯️61<small>本</small></span>
+      <span class="label">ここから必要なキャンドル合計</span>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">🕯️ 累計キャンドル推移</div>
+    <p class="chart-sub">交換のたびに必要本数がどれくらい増えるか一目でわかります</p>
+    <div class="bars">
+      <div class="bar-col">
+        <span class="bar-val">4</span>
+        <div class="bar" style="height:10px"></div>
+        <span class="bar-day">1日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">10</span>
+        <div class="bar" style="height:18px"></div>
+        <span class="bar-day">2日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">18</span>
+        <div class="bar" style="height:30px"></div>
+        <span class="bar-day">3日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">36</span>
+        <div class="bar" style="height:55px"></div>
+        <span class="bar-day">6日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">58</span>
+        <div class="bar" style="height:86px"></div>
+        <span class="bar-day">10日目</span>
+      </div>
+      <div class="bar-col goal">
+        <span class="bar-val">61</span>
+        <div class="bar" style="height:90px"></div>
+        <span class="bar-day">11日目</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">👣 累計ポイント推移</div>
+    <p class="chart-sub">連れ歩き分（🚶）とアイテム交換分（👣）を積み上げた累計ポイントです</p>
+    <div class="bars pt-bars">
+      <div class="bar-col">
+        <span class="bar-val">50pt</span>
+        <div class="stack">
+          <div class="seg seg-item" style="height:8px"></div>
+          <div class="seg seg-walk" style="height:2px"></div>
+        </div>
+        <span class="bar-day">1日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">90pt</span>
+        <div class="stack">
+          <div class="seg seg-item" style="height:18px"></div>
+          <div class="seg seg-walk" style="height:5px"></div>
+        </div>
+        <span class="bar-day">2日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">140pt</span>
+        <div class="stack">
+          <div class="seg seg-item" style="height:31px"></div>
+          <div class="seg seg-walk" style="height:9px"></div>
+        </div>
+        <span class="bar-day">3日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">200pt</span>
+        <div class="stack">
+          <div class="seg seg-item" style="height:42px"></div>
+          <div class="seg seg-walk" style="height:18px"></div>
+        </div>
+        <span class="bar-day">6日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">280pt</span>
+        <div class="stack">
+          <div class="seg seg-item" style="height:56px"></div>
+          <div class="seg seg-walk" style="height:31px"></div>
+        </div>
+        <span class="bar-day">10日目</span>
+      </div>
+      <div class="bar-col">
+        <span class="bar-val">290pt</span>
+        <div class="stack">
+          <div class="seg seg-item" style="height:56px"></div>
+          <div class="seg seg-walk" style="height:34px"></div>
+        </div>
+        <span class="bar-day">11日目</span>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><i class="dot dot-item"></i>アイテム交換分</span>
+      <span class="legend-item"><i class="dot dot-walk"></i>連れ歩き分</span>
+    </div>
+    <p class="chart-footnote">🎯 10日目で必要な280ptに到達し、11日目に実際の交換が行われる計算です</p>
+  </div>
+
+  <div class="timeline">
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="card">
+        <div class="card-top">
+          <span class="day-tag">1日目</span>
+          <span class="tier-tag">第1層</span>
+        </div>
+        <div class="item-row">
+          <span class="item-icon">🪄</span>
+          <span class="item-name">魔法①</span>
+        </div>
+        <div class="bonus-row">
+          <span class="bonus-icon">🎁</span>
+          <span class="bonus-text">エモートLv1が無料で解放（1日目は確定）</span>
+          <span class="bonus-pt">+20pt</span>
+        </div>
+        <div class="card-bottom">
+          <span class="cost">🕯️ 4本 <small>累計4本</small></span>
+          <span class="point-tag">👣+20pt</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="card">
+        <div class="card-top">
+          <span class="day-tag">2日目</span>
+          <span class="tier-tag">第2層</span>
+        </div>
+        <div class="item-row">
+          <span class="item-icon">🪄</span>
+          <span class="item-name">魔法②</span>
+        </div>
+        <div class="card-bottom">
+          <span class="cost">🕯️ 6本 <small>累計10本</small></span>
+          <span class="point-tag">👣+30pt</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="card">
+        <div class="card-top">
+          <span class="day-tag">3日目</span>
+          <span class="tier-tag">第3層</span>
+        </div>
+        <div class="item-row">
+          <span class="item-icon">🪄</span>
+          <span class="item-name">魔法③</span>
+        </div>
+        <div class="card-bottom">
+          <span class="cost">🕯️ 8本 <small>累計18本</small></span>
+          <span class="point-tag">👣+40pt</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="card">
+        <div class="card-top">
+          <span class="day-tag">6日目</span>
+          <span class="tier-tag">第2層</span>
+        </div>
+        <div class="item-row">
+          <span class="item-icon">🌸</span>
+          <span class="item-name">季節アイテム①</span>
+        </div>
+        <div class="card-bottom">
+          <span class="cost">🕯️ 18本 <small>累計36本</small></span>
+          <span class="point-tag">👣+30pt</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="card">
+        <div class="card-top">
+          <span class="day-tag">10日目</span>
+          <span class="tier-tag">第3層</span>
+        </div>
+        <div class="item-row">
+          <span class="item-icon">🕺</span>
+          <span class="item-name">エモート Lv2</span>
+        </div>
+        <div class="card-bottom">
+          <span class="cost">🕯️ 22本 <small>累計58本</small></span>
+          <span class="point-tag">👣+40pt</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step goal">
+      <div class="step-num">6</div>
+      <div class="card">
+        <div class="card-top">
+          <span class="day-tag">11日目</span>
+          <span class="tier-tag">第4層</span>
+        </div>
+        <div class="item-row">
+          <span class="item-icon">❤️</span>
+          <span class="item-name">ハートと交換 🎉</span>
+        </div>
+        <div class="card-bottom">
+          <span class="cost">🕯️ 3本 <small>累計61本</small></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ref">
+    <h2>📋 ポイント制のしくみ</h2>
+    <p class="ref-sub">2枚目の画像にあったティア構造の早見表です</p>
+    <div class="ladder-row">
+      <div class="rung"><span class="rung-label">第1層</span><span class="rung-pt">20pt</span></div>
+      <span class="arrow">→</span>
+      <div class="rung"><span class="rung-label">第2層</span><span class="rung-pt">40pt</span></div>
+      <span class="arrow">→</span>
+      <div class="rung"><span class="rung-label">第3層</span><span class="rung-pt">100pt</span></div>
+      <span class="arrow">→</span>
+      <div class="rung"><span class="rung-label">第4層</span><span class="rung-pt">180pt</span></div>
+      <span class="arrow">→</span>
+      <div class="rung goal-rung"><span class="rung-label">❤️ハート</span><span class="rung-pt">280pt</span></div>
+    </div>
+    <p class="small">交換で貯まる👣ポイントが累計でこのラインに届くごとに、次の層のアイテムが解放されていきます。</p>
+    <p class="small">🚶 連れ歩きも毎日+10pt貯まるので、アイテムを交換しない日もポイントは少しずつ増えています。</p>
+  </div>
+
+  <div class="notes">
+    <p>💡 280pt到達に不要なアイテム（季節アイテム②など）は、この最短ルートでは省略しています。見た目も揃えたい場合は、追加で交換してください。</p>
+    <p>⚠️ 連れ歩きは1日1体までのため、他の精霊とも分け合う場合はこの日数より遅くなります。キャンドルも他の精霊に使わず、この精霊に全て使った想定の最短見込みです。</p>
+  </div>
+
+  <footer>🕯️ Candle Exchange Simulation</footer>
+
+</div>
+</body>
+</html>
