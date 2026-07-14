@@ -35,10 +35,12 @@
             --stat-box-bg: #fdfdfd;
             --magic-star-fill: #c9a3ac;
             --magic-star-accent: #8a4658;
+            --success-text: #1e7e34;
+            --danger-text: #ff3b30;
         }
 
-        /* 🌙 ダークモード用のカラー上書き設定 */
-        [data-theme="dark"] {
+        /* 🌙 ダークモード用のカラー上書き設定（:root より確実に優先させるため html[data-theme="dark"] で指定） */
+        html[data-theme="dark"] {
             --bg-color: #0c081a;
             --card-bg: #1b1535;
             --text-color: #ffffff;
@@ -50,6 +52,8 @@
             --stat-box-bg: rgba(255, 255, 255, 0.04);
             --magic-star-fill: #ffffff;
             --magic-star-accent: #c17b82;
+            --success-text: #30d158;
+            --danger-text: #ff453a;
         }
 
         body {
@@ -82,7 +86,33 @@
         .subtitle {
             font-size: 13px;
             color: var(--text-gray);
+            margin-bottom: 10px;
+        }
+
+        .season-info-badge {
+            text-align: center;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--accent-orange);
+            padding: 7px 10px;
+            background: rgba(255, 149, 0, 0.08);
+            border: 1px solid rgba(255, 149, 0, 0.22);
+            border-radius: 9px;
             margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .season-info-dates {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 500;
+            color: var(--text-gray);
+            margin-top: 2px;
+        }
+
+        [data-theme="dark"] .season-info-badge {
+            background: rgba(255, 149, 0, 0.14);
+            border-color: rgba(255, 149, 0, 0.32);
         }
 
         .header-nav {
@@ -211,6 +241,41 @@
             color: var(--accent-orange);
             font-weight: bold;
         }
+
+        /* 🧭 連れ歩きカード（固定表示）内の、コンパクトな精霊切り替えタブ */
+        .mini-spirit-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--tab-bg);
+            padding: 2px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .mini-tab-btn {
+            flex: 1;
+            min-width: 0;
+            border: none;
+            background: transparent;
+            padding: 6px 2px;
+            font-size: 11.5px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .mini-tab-btn.active {
+            background: var(--tab-btn-active);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            color: var(--accent-orange);
+        }
+        .mini-tab-check { font-size: 10px; flex-shrink: 0; }
 
         .stats-grid {
             display: grid;
@@ -455,6 +520,33 @@
         .priority-step-day { font-size: 8px; color: var(--text-gray); margin-top: 1px; }
         .priority-arrow { color: var(--text-gray); font-size: 13px; flex-shrink: 0; opacity: 0.6; }
 
+        /* 📋 4体分の日別プラン一覧 */
+        .multi-spirit-log {
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px 10px;
+        }
+        .multi-spirit-log-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-color);
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .multi-spirit-log-row:last-child { border-bottom: none; }
+        .msl-day {
+            font-weight: bold;
+            color: var(--accent-blue);
+            min-width: 44px;
+            flex-shrink: 0;
+        }
+
         .candle-edit-row {
             display: flex;
             align-items: center;
@@ -639,6 +731,32 @@
             opacity: 0.45;
             filter: grayscale(30%);
             box-shadow: none;
+        }
+
+        /* 🔒 アドパス未保有により交換不可のアイテムには斜線を重ねる */
+        .game-node-btn.node-pass-locked::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            background: linear-gradient(
+                to top right,
+                transparent calc(50% - 1.2px),
+                rgba(60, 60, 60, 0.8) calc(50% - 1.2px),
+                rgba(60, 60, 60, 0.8) calc(50% + 1.2px),
+                transparent calc(50% + 1.2px)
+            );
+            pointer-events: none;
+        }
+
+        [data-theme="dark"] .game-node-btn.node-pass-locked::after {
+            background: linear-gradient(
+                to top right,
+                transparent calc(50% - 1.2px),
+                rgba(255, 255, 255, 0.55) calc(50% - 1.2px),
+                rgba(255, 255, 255, 0.55) calc(50% + 1.2px),
+                transparent calc(50% + 1.2px)
+            );
         }
 
         /* 💜 右列（ポイント外ボーナス）アイテムのスタイル */
@@ -1258,6 +1376,10 @@
             </button>
         </div>
         <div class="subtitle">連れ歩き日数とアイテム交換の最適化シミュレーター</div>
+        <div class="season-info-badge">
+            🎨 <strong>{{ CURRENT_SEASON_NAME }}</strong>
+            <span class="season-info-dates">{{ SEASON_START_TEXT }} 〜 {{ SEASON_END_TEXT }}</span>
+        </div>
     </header>
 
     <!-- サイドバーオーバーレイ（モバイル） -->
@@ -1373,7 +1495,7 @@
                 </div>
 
                 <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
-                    シーズンパス
+                    アドパス
                 </label>
                 <div class="preset-group" style="margin-bottom: 12px;">
                     <button class="btn-sm" :class="{'btn-active': hasSeasonPass}" @click="hasSeasonPass = true">あり（1日6本）</button>
@@ -1384,6 +1506,11 @@
                     🕯️ 現在の所持キャンドル数
                 </label>
                 <input type="number" min="0" v-model.number="ownedCandles" class="calc-input" placeholder="例: 20">
+
+                <div v-if="hasSeasonPass" style="display:flex; align-items:center; gap:8px; margin-top: 8px; flex-wrap: wrap;">
+                    <button class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + 30">🎁 購入特典 +30本を追加</button>
+                    <span style="font-size: 10px; color: var(--text-gray);">アドパス購入時に一度だけ配布される30本を、タップで所持数に加算できます</span>
+                </div>
 
                 <div class="stats-grid">
                     <div class="stat-box">
@@ -1401,7 +1528,7 @@
                     </div>
                 </div>
 
-                <div class="advice-box" style="margin-top: 12px;" :style="candleDaysNeeded <= 0 ? 'background:rgba(52,197,89,0.08); color:#1e7e34; border-color:rgba(52,197,89,0.2); margin-top:12px;' : ''">
+                <div class="advice-box" style="margin-top: 12px;" :style="candleDaysNeeded <= 0 ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2); margin-top:12px;' : ''">
                     <template v-if="candleDaysNeeded <= 0">
                         🎉 今の所持数で、全精霊ツリーの残りコストをまかなえます！
                     </template>
@@ -1409,9 +1536,87 @@
                         💡 1日 <strong>{{ candlesPerDay }}本</strong> ペースなら、<strong>{{ candleTargetDateText }}</strong> 頃に必要数へ到達する見込みです。
                     </template>
                 </div>
+
+                <div class="advice-box" style="margin-top: 10px;" :style="completionForecast.isPossible ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);' : 'background:rgba(255,59,48,0.06); color:var(--danger-text); border-color:rgba(255,59,48,0.25);'">
+                    <div style="font-weight: bold; margin-bottom: 4px;">🏁 魔法を除くコンプリート診断（4体分・シーズン終了 {{ SEASON_END_TEXT }}まで）</div>
+                    <template v-if="completionForecast.isPossible">
+                        🎉 今からでも、シーズン終了まで残り<strong>{{ completionForecast.daysLeft }}日</strong>あれば間に合う見込みです。
+                    </template>
+                    <template v-else>
+                        ⚠️ このままのペースだと厳しいかもしれません（残り<strong>{{ completionForecast.daysLeft }}日</strong>）。
+                        <div v-if="completionForecast.candleShortfall > 0" style="margin-top: 4px;">🕯️ キャンドルが約 <strong>{{ completionForecast.candleShortfall }}本</strong> 不足する見込みです。</div>
+                        <div v-if="completionForecast.walkShortfallDays > 0" style="margin-top: 4px;">👣 連れ歩き日数があと <strong>{{ completionForecast.walkShortfallDays }}日</strong> 分足りません（4体合計で判定）。</div>
+                    </template>
+                </div>
+                <div style="font-size: 10px; color: var(--text-gray); margin-top: 6px; line-height: 1.5;">
+                    ※「コンプリート」は魔法アイテムを除く全アイテム（アドパス①〜③・ハートとの交換を含む）が対象です。アドパス関連アイテムの取得には別途アドパスの保有が必要です。
+                </div>
                 <div style="font-size: 10px; color: var(--text-gray); margin-top: 8px; line-height: 1.5;">
                     ※ キャンドルは精霊間で共通の所持数として計算されます。各アイテムのコストはツリー内の「コストを編集」から精霊ごとに調整できます。
                 </div>
+            </div>
+
+            <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0,122,255,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showMultiSpiritPlan = !showMultiSpiritPlan">
+                    <span style="font-weight: bold; font-size: 14px;">🧭 効率的な進め方のおすすめ（4体分・魔法除く）</span>
+                    <span style="font-size: 11px; color: var(--text-gray); font-weight: bold; white-space: nowrap;">{{ showMultiSpiritPlan ? '閉じる ▲' : '開く ▼' }}</span>
+                </div>
+
+                <template v-if="showMultiSpiritPlan">
+                <template v-if="multiSpiritPlan.allDone">
+                    <div class="advice-box" style="margin-top: 12px; background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);">
+                        🎉 魔法以外のアイテムは4体ともすべて完了しています！
+                    </div>
+                </template>
+                <template v-else>
+                    <div class="advice-box" style="margin-top: 12px;">
+                        <div style="font-weight: bold; margin-bottom: 4px;">☀️ 今日のおすすめ</div>
+                        <div v-if="multiSpiritPlan.walkTargetName">
+                            👣 連れ歩き: <strong>{{ multiSpiritPlan.walkTargetName }}</strong>（4体の中で最もポイントが低いため優先）
+                        </div>
+                        <div v-else style="color: var(--text-gray);">
+                            👣 連れ歩き: 対象精霊は全員280p到達済みです
+                        </div>
+                        <div v-if="multiSpiritPlan.buyNow.length" style="margin-top: 8px;">
+                            🕯️ 今の所持数（{{ ownedCandles || 0 }}本）で交換できるアイテム:
+                            <div v-for="(b, idx) in multiSpiritPlan.buyNow" :key="idx" style="margin-top: 3px; padding-left: 2px;">
+                                ・{{ b.spiritName }}: {{ b.itemName }}（🕯️{{ b.candles }}）
+                            </div>
+                        </div>
+                        <div v-else style="margin-top: 8px; color: var(--text-gray);">
+                            🕯️ 今すぐ交換できるアイテムはありません（候補は未解放か、キャンドル不足です）
+                        </div>
+                    </div>
+
+                    <div class="advice-box" style="margin-top: 10px;">
+                        <div style="font-weight: bold; margin-bottom: 4px;">📆 4体全体の完了見込み</div>
+                        <template v-if="multiSpiritPlan.unreachable">
+                            現在のペースでは完了時期を見積もれませんでした。
+                        </template>
+                        <template v-else>
+                            このペースなら、あと<strong>{{ multiSpiritPlan.totalDays }}日</strong>で4体すべて完了する見込みです。
+                        </template>
+                    </div>
+
+                    <div v-if="multiSpiritPlan.dayLog.length" style="margin-top: 10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showMultiSpiritLog = !showMultiSpiritLog">
+                            <span style="font-size: 10.5px; color: var(--text-gray); font-weight: bold;">📋 日別プランを見る（{{ multiSpiritPlan.dayLog.length }}日分）</span>
+                            <span style="font-size: 10.5px; color: var(--text-gray); font-weight: bold;">{{ showMultiSpiritLog ? '閉じる ▲' : '開く ▼' }}</span>
+                        </div>
+                        <div v-if="showMultiSpiritLog" class="multi-spirit-log">
+                            <div v-for="d in multiSpiritPlan.dayLog" :key="d.day" class="multi-spirit-log-row">
+                                <span class="msl-day">{{ d.day }}日目</span>
+                                <span v-if="d.walkName">👣 {{ d.walkName }}</span>
+                                <span v-for="(b, bi) in d.buys" :key="bi">🕯️ {{ b.spiritName }}:{{ b.itemName }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <div style="font-size: 10px; color: var(--text-gray); margin-top: 10px; line-height: 1.5;">
+                    ※ 連れ歩きは「4体の中で最もポイントが低い精霊」を、交換は「ポイント効率の良いアイテム」を毎日優先する想定のシミュレーションです。アドパス①〜③は好きなタイミングで取得できるためプラン対象外です。実際の進め方の参考としてご利用ください。
+                </div>
+                </template>
             </div>
 
             <div class="spirit-tabs">
@@ -1451,13 +1656,13 @@
                     </div>
                 </div>
 
-                <div class="advice-box" :style="activePoints >= 280 ? 'background:rgba(52,197,89,0.08); color:#1e7e34; border-color:rgba(52,197,89,0.2);' : ''">
+                <div class="advice-box" :style="activePoints >= 280 ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);' : ''">
                     <div v-if="activePoints >= 280">
                         🎉 <strong>おめでとうございます！</strong> 必要ポイントを満たしました。
                     </div>
                     <div v-else>
                         💡 <strong>アドバイス:</strong> あと <strong>{{ activeRemainingDays }} 日</strong> 連れ歩けば、280pに到達します！
-                        <span v-if="activeSpirit.walkDays + activeRemainingDays > 77" style="color: #ff3b30; display: block; margin-top: 4px; font-weight: bold;">
+                        <span v-if="activeSpirit.walkDays + activeRemainingDays > 77" style="color: var(--danger-text); display: block; margin-top: 4px; font-weight: bold;">
                             ⚠️ 注意: 季節の残り日数を超えてしまうため、魔法などの追加交換が必要です。
                         </span>
                     </div>
@@ -1483,8 +1688,8 @@
                                 <span style="color: var(--text-gray); font-size: 10.5px;">（ハート交換分 🕯️{{ activeSpirit.treeData.tier4[2].candles }}を含む／現在の所持数 {{ ownedCandles }}本は別）</span>
                             </div>
                         </template>
-                        <div v-if="activeFastestHeartPlan.readyExceptPass" style="color: #ff3b30; margin-top: 6px; font-weight: bold;">
-                            ⚠️ ハートとの交換にはシーズンパスが必要です（現在: 未保有）。
+                        <div v-if="activeFastestHeartPlan.readyExceptPass" style="color: var(--danger-text); margin-top: 6px; font-weight: bold;">
+                            ⚠️ ハートとの交換にはアドパスが必要です（現在: 未保有）。
                         </div>
 
                         <div v-if="activeFastestHeartPlan.order && activeFastestHeartPlan.order.length" style="margin-top: 10px;">
@@ -1550,7 +1755,7 @@
                                     <span style="font-size: 11px; color: var(--text-gray); margin-left: 2px;">本</span>
                                 </template>
                                 <template v-else-if="sharedCalcFormula.trim()">
-                                    <span style="font-size: 12px; color: #ff3b30; font-weight: bold;">⚠️ 式エラー</span>
+                                    <span style="font-size: 12px; color: var(--danger-text); font-weight: bold;">⚠️ 式エラー</span>
                                 </template>
                                 <template v-else>
                                     <span style="font-size: 14px; color: var(--text-gray);">＝ —</span>
@@ -1565,7 +1770,7 @@
                             📋 シーズン全体のメモ・目標
                         </label>
                         <textarea v-model="sharedNotes" class="memo-textarea" style="height: 108px;"
-                                  placeholder="例: シーズンパス購入済み。毎日連れ歩き忘れずに！残り必要キャンドルなど自由記入..."
+                                  placeholder="例: アドパス購入済み。毎日連れ歩き忘れずに！残り必要キャンドルなど自由記入..."
                                   onfocus="this.style.borderColor='var(--accent-purple)'"
                                   onblur="this.style.borderColor='var(--border-color)'"></textarea>
                     </div>
@@ -1576,6 +1781,13 @@
 
         <div class="right-column">
             <div class="section-card walk-days-card">
+                <div class="mini-spirit-tabs">
+                    <button v-for="(spirit, index) in spirits" :key="spirit.id"
+                            class="mini-tab-btn" :class="{ active: activeIndex === index }"
+                            @click="activeIndex = index">
+                        {{ spirit.name }}<span v-if="getSpiritPoints(spirit) >= 280" class="mini-tab-check">🧡</span>
+                    </button>
+                </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: bold; font-size: 14px;">👣 {{ activeSpirit.name }} との連れ歩き（同行）日数</span>
                     <span style="font-weight: bold; color: var(--accent-blue);">+{{ activeSpirit.walkDays * 10 }} p</span>
@@ -1601,8 +1813,8 @@
                     <span>🕯️ このツリーの残り: <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} 本</span>
                     <button class="candle-edit-toggle-btn" @click="showCandleEdit = !showCandleEdit">{{ showCandleEdit ? '編集を閉じる ▲' : '🕯️ コストを編集 ▼' }}</button>
                 </div>
-                <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : '#ff3b30' }">
-                    ♡ 第4層最上位の<b>ハートとの交換</b>（🕯️{{ activeSpirit.treeData.tier4[2].candles }}）は<b>シーズンパス保有者のみ</b>可能です{{ hasSeasonPass ? '（現在: 保有）' : '（現在: 未保有 — 左側で切替できます）' }}
+                <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : 'var(--danger-text)' }">
+                    ♡ <b>ハートとの交換</b>（🕯️{{ activeSpirit.treeData.tier4[2].candles }}）と、各層右列の<b>アドパスアイテム</b>は<b>アドパス保有者のみ</b>可能です{{ hasSeasonPass ? '（現在: 保有）' : '（現在: 未保有 — 左側で切替できます）' }}
                 </div>
 
                 <div v-if="showCandleEdit" class="candle-edit-panel">
@@ -1630,8 +1842,9 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier1.filter(i => !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn"
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus}"
-                                 @click="item.checked = !item.checked; activeSpirit.currentPreset = 'custom'">
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': item.requiresSeasonPass && !hasSeasonPass && !item.checked, 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                 :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
+                                 @click="if(!(item.requiresSeasonPass && !hasSeasonPass && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -1654,8 +1867,9 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier2.filter(i => !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn" 
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 40 && !item.checked}"
-                                 @click="if(!(activePoints < 40 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                 :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
+                                 @click="if(!((activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked))) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -1678,8 +1892,9 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn" 
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 100 && !item.checked}"
-                                 @click="if(!(activePoints < 100 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                 :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
+                                 @click="if(!((activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked))) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -1720,8 +1935,9 @@
 
                     <div class="heart-goal-container">
                         <div class="game-node-btn heart-node" 
-                             :class="{'node-checked': activePoints >= 280 || activeSpirit.treeData.tier4[2].checked, 'node-disabled': activePoints < 180 && !activeSpirit.treeData.tier4[2].checked}"
-                             @click="if(!(activePoints < 180 && !activeSpirit.treeData.tier4[2].checked)) { activeSpirit.treeData.tier4[2].checked = !activeSpirit.treeData.tier4[2].checked; activeSpirit.currentPreset = 'custom'; }">
+                             :class="{'node-checked': activePoints >= 280 || activeSpirit.treeData.tier4[2].checked, 'node-disabled': (activePoints < 180 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked), 'node-pass-locked': !hasSeasonPass && !activeSpirit.treeData.tier4[2].checked}"
+                             :title="(!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked) ? 'アドパスが必要です' : null"
+                             @click="if(!((activePoints < 180 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked))) { activeSpirit.treeData.tier4[2].checked = !activeSpirit.treeData.tier4[2].checked; activeSpirit.currentPreset = 'custom'; }">
                             <div class="node-candle-badge">🕯️{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
                             <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
@@ -1766,32 +1982,32 @@
 
     // 🕯️ costs は精霊ごとのキャンドルコスト表（次イベント予想ツリー画像より反映）
     // ツリーは下から第1層→第4層の順（画像の一番下が第1層、一番上のハートが最終報酬）。
-    // em1/mag1=第1層, it1/mag2=第2層, em2/mag3=第3層, it2/extra4=第4層季節アイテム, heart=最上位のハートとの交換（要シーズンパス）
+    // em1/mag1=第1層, it1/mag2=第2層, em2/mag3=第3層, it2/extra4=第4層季節アイテム, heart=最上位のハートとの交換（要アドパス）
     const createInitialTree = (prefix, costs) => ({
         tier1: [
             { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: costs.em1, checked: true },
             { id: prefix + '_mag1', type: 'magic', name: '魔法①', points: 20, candles: costs.mag1, checked: false },
-            { id: prefix + '_bonus1', name: 'アドパス①', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus1', name: 'アドパス①', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false }
         ],
         tier2: [
             { id: prefix + '_it1', type: 'seasonal', name: '季節アイテム①', points: 30, candles: costs.it1, checked: false },
             { id: prefix + '_mag2', type: 'magic', name: '魔法②', points: 30, candles: costs.mag2, checked: false },
-            { id: prefix + '_bonus2', name: 'アドパス②', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus2', name: 'アドパス②', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false }
         ],
         tier3: [
             { id: prefix + '_em2', type: 'walk', name: 'エモートLv2', points: 40, candles: costs.em2, checked: false },
             { id: prefix + '_mag3', type: 'magic', name: '魔法③', points: 40, candles: costs.mag3, checked: false },
-            { id: prefix + '_bonus3', name: 'アドパス③', points: 0, candles: 0, noPoints: true, firstBonus: true, checked: false }
+            { id: prefix + '_bonus3', name: 'アドパス③', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false }
         ],
         tier4: [
             { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: costs.it2, checked: false },
             { id: prefix + '_extra4', type: 'magic', name: '魔法④', points: 0, candles: costs.extra, checked: false },
-            { id: prefix + '_heart', name: '♡ ハートと交換', points: 0, candles: costs.heart, requiresSeasonPass: true, firstBonus: true, checked: false }
+            { id: prefix + '_heart', name: '♡ ハートと交換', points: 0, candles: costs.heart, requiresSeasonPass: true, isHeartGoal: true, firstBonus: true, checked: false }
         ]
     });
 
     // 📊 次回イベント精霊ツリー予想（画像より）のキャンドルコスト一覧
-    // ツリー合計: 精霊①=87 / 精霊②=105 / 精霊③=93 / 精霊④=107 （最上位ハートとの交換 🕯️3・要シーズンパス を含む）
+    // ツリー合計: 精霊①=87 / 精霊②=105 / 精霊③=93 / 精霊④=107 （最上位ハートとの交換 🕯️3・要アドパス を含む）
     // ※ エモートLv1（初回解放）は0コスト、魔法①側にコストがかかる
     const SPIRIT_TREE_COSTS = {
         s1: { em1: 0, mag1: 4, it1: 18, mag2: 6,  em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計87
@@ -1803,6 +2019,13 @@
     // ブラウザに保存済みの古いキャンドルコスト（localStorage）を無効化し、
     // 新しいデフォルト値が確実に反映されるようにするためのバージョン番号。
     const TREE_COST_VERSION = 2;
+
+    // 🌸 現在のシーズン情報
+    const CURRENT_SEASON_NAME = '親愛なるファン・ゴッホへ';
+    const SEASON_START = new Date('2026-07-17T16:00:00');
+    const SEASON_END = new Date('2026-10-02T15:59:00');
+    const SEASON_START_TEXT = '2026/7/17 16:00';
+    const SEASON_END_TEXT = '2026/10/2 15:59';
 
     createApp({
         setup() {
@@ -1818,6 +2041,8 @@
             const showCandleEdit = ref(false);
             const showForecast = ref(false); // 🔮 4体比較の詳細は初期状態で折りたたみ（情報量を抑える）
             const showHeartPlanDetail = ref(false); // 🚀 最短交換シミュレーションの優先順位チャートも初期は折りたたみ
+            const showMultiSpiritLog = ref(false); // 📋 4体分の日別プランも初期は折りたたみ
+            const showMultiSpiritPlan = ref(false); // 🧭 効率的な進め方のおすすめカードも初期は折りたたみ
 
             const spirits = ref([
                 { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
@@ -1855,6 +2080,11 @@
                 .filter(item => !item.checked)
                 .reduce((sum, item) => sum + (item.candles || 0), 0);
 
+            // 🏁 「魔法を除くコンプリート」判定用：魔法アイテム（type === 'magic'）を除いた残りコスト
+            const getSpiritRemainingCandlesExcludingMagic = (spirit) => getSpiritCandleItems(spirit)
+                .filter(item => !item.checked && item.type !== 'magic')
+                .reduce((sum, item) => sum + (item.candles || 0), 0);
+
             const activeCandleItems = computed(() => getSpiritCandleItems(activeSpirit.value));
             const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value));
             const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value));
@@ -1866,7 +2096,7 @@
                 let heartItem = null;
                 const tierOrder = ['tier4', 'tier3', 'tier2', 'tier1'];
                 const rows = tierOrder.map(key => spirit.treeData[key].filter(item => {
-                    if (item.requiresSeasonPass) { heartItem = item; return false; }
+                    if (item.isHeartGoal) { heartItem = item; return false; }
                     if (isZeroCostMagic(item)) return false;
                     return true;
                 }));
@@ -1885,7 +2115,7 @@
             // アイテムの種別からアイコン（#id）を判定。空欄アイテム（name未設定）はテンプレート側で描画自体をスキップする。
             const getForecastIconId = (item) => {
                 if (!item) return 'ic-sparkle';
-                if (item.requiresSeasonPass) return 'ic-heart';
+                if (item.isHeartGoal) return 'ic-heart';
                 if (item.noPoints) return 'ic-sparkle';
                 if (item.type === 'magic') return 'ic-magic';
                 if (item.type === 'seasonal') return 'ic-bloom';
@@ -1894,7 +2124,7 @@
                 return 'ic-sparkle';
             };
 
-            // シーズンパスの有無で1日の獲得本数を切り替え（あり:6本 / なし:5本）
+            // アドパスの有無で1日の獲得本数を切り替え（あり:6本 / なし:5本）
             const candlesPerDay = computed(() => hasSeasonPass.value ? 6 : 5);
 
             // 4体すべての精霊で、まだチェックしていないアイテムのキャンドルコスト合計
@@ -1913,6 +2143,129 @@
                 const target = new Date();
                 target.setDate(target.getDate() + days);
                 return `${target.getFullYear()}年${target.getMonth() + 1}月${target.getDate()}日`;
+            });
+
+            // 🏁 シーズン終了日までに「魔法を除く全アイテムコンプリート（4体分）」が間に合うか診断する
+            // ・キャンドル面: 今日から終了日までの見込み獲得数（所持数含む）で、魔法以外の残りコストをまかなえるか
+            // ・連れ歩き面: 魔法なしで280p到達に必要な連れ歩き日数（1精霊につき最大9日）を、
+            //   4体分カレンダー日数内に確保できるか（1日1体しか連れ歩けないため合算で判定）
+            const totalRemainingCandlesExcludingMagic = computed(() => spirits.value.reduce((sum, s) => sum + getSpiritRemainingCandlesExcludingMagic(s), 0));
+
+            const completionForecast = computed(() => {
+                const now = new Date();
+                // シーズン開始前なら開始日を起点に、開始後なら「今日」を起点に残り日数を数える
+                const effectiveStart = now < SEASON_START ? SEASON_START : now;
+                const msLeft = SEASON_END - effectiveStart;
+                const seasonEnded = msLeft <= 0;
+                const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+
+                const neededCandles = totalRemainingCandlesExcludingMagic.value;
+                const availableCandles = (ownedCandles.value || 0) + daysLeft * candlesPerDay.value;
+                const candleShortfall = Math.max(0, neededCandles - availableCandles);
+
+                // 魔法アイテム(90p分)を除くと、280p到達には最低9日分の連れ歩きが必要（既存の「魔法スルー」と同じ計算）
+                const walkDaysNeeded = spirits.value.reduce((sum, s) => sum + Math.max(0, 9 - s.walkDays), 0);
+                const walkShortfallDays = Math.max(0, walkDaysNeeded - daysLeft);
+
+                const isPossible = !seasonEnded && candleShortfall === 0 && walkShortfallDays === 0;
+
+                return { daysLeft, neededCandles, availableCandles, candleShortfall, walkDaysNeeded, walkShortfallDays, isPossible, seasonEnded };
+            });
+
+            // 🧭 4体をまたいだ効率的な進め方のシミュレーション（魔法を除く）
+            // ・連れ歩きは「4体の中で最もポイントが低い精霊」を毎日優先（1日1体のみ）
+            // ・キャンドル交換は「ポイント効率(points/candles)が良いアイテム」を、解放済み＆購入可能な範囲で毎日優先
+            // ・アドパス①〜③（noPoints系ボーナス）はプレイヤーが好きなタイミングで取得するため、プランの対象外
+            // ・ハートとの交換はアドパス未保有の場合、対象から除外する
+            const tierThresholds = { tier1: 0, tier2: 40, tier3: 100, tier4: 180 };
+
+            const buildMultiSpiritState = () => spirits.value.map(spirit => {
+                const remaining = [];
+                Object.keys(spirit.treeData).forEach(tierKey => {
+                    spirit.treeData[tierKey].forEach(item => {
+                        if (item.checked || item.type === 'magic') return;
+                        if (item.noPoints) return; // 🎁 アドパス①〜③は好きなタイミングで取得できるため、プランの対象外にする
+                        if (item.requiresSeasonPass && !hasSeasonPass.value) return;
+                        remaining.push({
+                            name: cleanName(getItemLabelForSpirit(item, spirit)),
+                            candles: item.candles || 0,
+                            points: item.points || 0,
+                            threshold: tierThresholds[tierKey]
+                        });
+                    });
+                });
+                return { name: spirit.name, points: getSpiritPoints(spirit), remaining };
+            });
+
+            // 現在のポイント状況で、購入可能なアイテムの中から最もポイント効率が良いものを1つ選ぶ
+            const pickBestBuy = (state, pool) => {
+                let best = null, bestRatio = -1, bestSIdx = -1, bestIIdx = -1;
+                state.forEach((s, sIdx) => {
+                    s.remaining.forEach((item, iIdx) => {
+                        if (s.points >= item.threshold && item.candles <= pool) {
+                            const ratio = item.candles === 0 ? Infinity : (item.points / item.candles);
+                            if (ratio > bestRatio) { bestRatio = ratio; best = item; bestSIdx = sIdx; bestIIdx = iIdx; }
+                        }
+                    });
+                });
+                return best ? { best, bestSIdx, bestIIdx } : null;
+            };
+
+            const pickWalkTarget = (state) => {
+                const candidates = state.filter(s => s.points < 280 && s.remaining.length > 0);
+                if (!candidates.length) return null;
+                return candidates.reduce((min, s) => (s.points < min.points ? s : min), candidates[0]);
+            };
+
+            const multiSpiritPlan = computed(() => {
+                const state = buildMultiSpiritState();
+                let pool = ownedCandles.value || 0;
+                const perDay = candlesPerDay.value;
+
+                // ☀️ 今日、今すぐ交換できるアイテム（新たな日を進める前に、現在の所持数だけで買えるだけ買う）
+                const buyNow = [];
+                let picked;
+                while ((picked = pickBestBuy(state, pool))) {
+                    const { best, bestSIdx, bestIIdx } = picked;
+                    pool -= best.candles;
+                    state[bestSIdx].points = Math.min(280, state[bestSIdx].points + best.points);
+                    buyNow.push({ spiritName: state[bestSIdx].name, itemName: best.name, candles: best.candles });
+                    state[bestSIdx].remaining.splice(bestIIdx, 1);
+                }
+
+                const walkTarget = pickWalkTarget(state);
+                const isIncomplete = () => state.some(s => s.remaining.length > 0);
+                const alreadyAllDone = !isIncomplete(); // 🔑 シミュレーションで消費し尽くす前、「現時点」で判定しておく
+
+                // 📆 翌日以降のシミュレーション（1日ごとに連れ歩き→交換を繰り返す）
+                const dayLog = [];
+                let day = 0;
+                const MAX_DAYS = 500;
+                while (isIncomplete() && day < MAX_DAYS) {
+                    day++;
+                    pool += perDay;
+                    const w = pickWalkTarget(state);
+                    if (w) w.points = Math.min(280, w.points + 10);
+                    const buysToday = [];
+                    let p;
+                    while ((p = pickBestBuy(state, pool))) {
+                        const { best, bestSIdx, bestIIdx } = p;
+                        pool -= best.candles;
+                        state[bestSIdx].points = Math.min(280, state[bestSIdx].points + best.points);
+                        buysToday.push({ spiritName: state[bestSIdx].name, itemName: best.name });
+                        state[bestSIdx].remaining.splice(bestIIdx, 1);
+                    }
+                    dayLog.push({ day, walkName: w ? w.name : null, buys: buysToday });
+                }
+
+                return {
+                    buyNow,
+                    walkTargetName: walkTarget ? walkTarget.name : null,
+                    totalDays: day,
+                    unreachable: day >= MAX_DAYS,
+                    dayLog,
+                    allDone: alreadyAllDone
+                };
             });
 
             // 🚀 最短ハート到達シミュレーション
@@ -2067,6 +2420,23 @@
                 return item.firstUnlock ? base + ' (初回解放)' : base;
             };
 
+            // 🧭 アクティブ精霊に限定せず、任意の精霊のアイテムラベルを算出する汎用版（4体横断のシミュレーション用）
+            const getItemLabelForSpirit = (item, spirit) => {
+                if (!item.type) return item.name;
+                const ordered = getSpiritCandleItems(spirit);
+                let count = 0;
+                for (const i of ordered) {
+                    if (i.type === item.type) {
+                        count++;
+                        if (i.id === item.id) break;
+                    }
+                }
+                const base = item.type === 'walk'
+                    ? TYPE_LABELS.walk + 'Lv' + count
+                    : (TYPE_LABELS[item.type] || item.type) + (CIRCLED_NUMS[count - 1] || ('#' + count));
+                return item.firstUnlock ? base + ' (初回解放)' : base;
+            };
+
             const getLevel = (name) => {
                 const match = name.match(/Lv\.?\d+/);
                 return match ? match[0] : '';
@@ -2108,6 +2478,13 @@
                     activeSpirit.value.treeData.tier1[1].checked = false;
                     activeSpirit.value.treeData.tier2[1].checked = false;
                     activeSpirit.value.treeData.tier3[1].checked = false;
+                    if (!hasSeasonPass.value) {
+                        // 🔒 アドパス未保有時は、パス必須アイテム（アドパス①〜③・ハート）まで
+                        // 自動チェックしない（実際には交換できていないため）。
+                        Object.values(activeSpirit.value.treeData).forEach(tier => {
+                            tier.forEach(item => { if (item.requiresSeasonPass) item.checked = false; });
+                        });
+                    }
                 }
             };
 
@@ -2117,13 +2494,16 @@
                 });
             };
 
-            const toggleTheme = () => {
-                isDarkMode.value = !isDarkMode.value;
-                localStorage.setItem('sky_app_theme', isDarkMode.value ? 'dark' : 'light');
-            };
-
             const applyThemeToDOM = () => {
                 document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
+            };
+
+            const toggleTheme = () => {
+                isDarkMode.value = !isDarkMode.value;
+                applyThemeToDOM(); // 🔒 watch経由だけに頼らず、クリック時に即座にDOMへ反映する
+                try {
+                    localStorage.setItem('sky_app_theme', isDarkMode.value ? 'dark' : 'light');
+                } catch (e) { /* プライベートブラウジング等でlocalStorageが使えない場合も表示は継続する */ }
             };
 
             watch(isDarkMode, () => { applyThemeToDOM(); });
@@ -2144,11 +2524,15 @@
 
             // 📂 読み込み処理
             const load = () => {
-                const savedTheme = localStorage.getItem('sky_app_theme');
-                if (savedTheme) {
-                    isDarkMode.value = (savedTheme === 'dark');
-                } else {
-                    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                try {
+                    const savedTheme = localStorage.getItem('sky_app_theme');
+                    if (savedTheme) {
+                        isDarkMode.value = (savedTheme === 'dark');
+                    } else {
+                        isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    }
+                } catch (e) {
+                    isDarkMode.value = false;
                 }
                 applyThemeToDOM();
 
@@ -2210,9 +2594,11 @@
                 getIcon, getLevel, cleanName, getItemLabel, isZeroCostMagic, isDarkMode, toggleTheme,
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
-                showForecast, showHeartPlanDetail,
+                showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
+                totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
+                CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT,
                 activeFastestHeartPlan,
                 spiritForecasts, grandTotalCandles, getForecastIconId
             };
