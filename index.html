@@ -1607,7 +1607,7 @@
                             <span class="tier-req">{{ activePoints >= 40 ? '🎉 解放完了' : 'あと ' + (40 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier1" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier1.filter(i => !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn"
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus}"
                                  @click="item.checked = !item.checked; activeSpirit.currentPreset = 'custom'">
@@ -1631,7 +1631,7 @@
                             <span class="tier-req">{{ activePoints >= 100 ? '🎉 解放完了' : 'あと ' + (activePoints < 40 ? 60 : 100 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier2" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier2.filter(i => !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 40 && !item.checked}"
                                  @click="if(!(activePoints < 40 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
@@ -1655,7 +1655,7 @@
                             <span class="tier-req">{{ activePoints >= 180 ? '🎉 解放完了' : 'あと ' + (activePoints < 100 ? 80 : 180 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier3" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 100 && !item.checked}"
                                  @click="if(!(activePoints < 100 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
@@ -1679,7 +1679,7 @@
                             <span class="tier-req">{{ activePoints >= 280 ? '🎉 解放完了' : 'あと ' + (activePoints < 180 ? 100 : 280 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier4" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier4.filter(i => !i.requiresSeasonPass && !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
                                  @click="if(!(activePoints < 180 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
@@ -1698,11 +1698,14 @@
                     </div>
 
                     <div class="heart-goal-container">
-                        <div class="game-node-btn heart-node" :class="{'node-checked': activePoints >= 280}">
+                        <div class="game-node-btn heart-node" 
+                             :class="{'node-checked': activePoints >= 280 || activeSpirit.treeData.tier4[2].checked, 'node-disabled': activePoints < 180 && !activeSpirit.treeData.tier4[2].checked}"
+                             @click="if(!(activePoints < 180 && !activeSpirit.treeData.tier4[2].checked)) { activeSpirit.treeData.tier4[2].checked = !activeSpirit.treeData.tier4[2].checked; activeSpirit.currentPreset = 'custom'; }">
+                            <div class="node-candle-badge">🕯️{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
                             <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
                             <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">最上層ハート</div>
-                            <div class="node-cost" style="color: #ff5e7e;">{{ activePoints >= 280 ? '🎉 獲得!' : '280p' }}</div>
+                            <div class="node-cost" style="color: #ff5e7e;">{{ (activePoints >= 280 || activeSpirit.treeData.tier4[2].checked) ? '🎉 獲得!' : '280p' }}</div>
                         </div>
                     </div>
                 </div>
@@ -1841,6 +1844,7 @@
                 const tierOrder = ['tier4', 'tier3', 'tier2', 'tier1'];
                 const rows = tierOrder.map(key => spirit.treeData[key].filter(item => {
                     if (item.requiresSeasonPass) { heartItem = item; return false; }
+                    if (isZeroCostMagic(item)) return false;
                     return true;
                 }));
                 return { heartItem, rows, total: getSpiritTotalCandles(spirit) };
@@ -2049,6 +2053,11 @@
                 return name.replace(/[💨🪄✨♡]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
             };
 
+            // 🚫 コスト0の魔法は実在しない（精霊によっては魔法④の枠自体が存在しないため、
+            // その場合はキャンドルコスト0のプレースホルダーになっている）。
+            // ツリー表示・ツリー予想比較の両方で、この枠は通常ノードとして描画しない。
+            const isZeroCostMagic = (item) => item.type === 'magic' && !item.candles;
+
             const incrementWalkDays = () => {
                 if (activeSpirit.value.walkDays < 77) {
                     activeSpirit.value.walkDays++;
@@ -2175,7 +2184,7 @@
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
-                getIcon, getLevel, cleanName, getItemLabel, isDarkMode, toggleTheme,
+                getIcon, getLevel, cleanName, getItemLabel, isZeroCostMagic, isDarkMode, toggleTheme,
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles,
