@@ -153,6 +153,17 @@
             }
         }
 
+        /* 👣 連れ歩き日数カードは、ツリーを見ながら操作できるよう画面上部に固定表示する */
+        .walk-days-card {
+            position: sticky;
+            top: 16px;
+            z-index: 20;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        [data-theme="dark"] .walk-days-card {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
         .section-card {
             background: var(--card-bg);
             border-radius: 14px;
@@ -1564,7 +1575,7 @@
         </div>
 
         <div class="right-column">
-            <div class="section-card">
+            <div class="section-card walk-days-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: bold; font-size: 14px;">👣 {{ activeSpirit.name }} との連れ歩き（同行）日数</span>
                     <span style="font-weight: bold; color: var(--accent-blue);">+{{ activeSpirit.walkDays * 10 }} p</span>
