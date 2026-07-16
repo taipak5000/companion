@@ -1544,7 +1544,12 @@
                 <div class="advice-box" style="margin-top: 10px;" :style="completionForecast.isPossible ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);' : 'background:rgba(255,59,48,0.06); color:var(--danger-text); border-color:rgba(255,59,48,0.25);'">
                     <div style="font-weight: bold; margin-bottom: 4px;">🏁 魔法を除くコンプリート診断（4体分・シーズン終了 {{ SEASON_END_TEXT }}まで）</div>
                     <template v-if="completionForecast.isPossible">
-                        🎉 今からでも、シーズン終了まで残り<strong>{{ completionForecast.daysLeft }}日</strong>あれば間に合う見込みです。
+                        <template v-if="completionForecast.daysNeeded <= 0">
+                            🎉 今の所持数・連れ歩き日数で、魔法を除くコンプリート条件はすでに満たせています！
+                        </template>
+                        <template v-else>
+                            🎉 今からでも、あと<strong>{{ completionForecast.daysNeeded }}日</strong>ほどでコンプリートできる見込みです（シーズン終了まで残り{{ completionForecast.daysLeft }}日）。
+                        </template>
                     </template>
                     <template v-else>
                         ⚠️ このままのペースだと厳しいかもしれません（残り<strong>{{ completionForecast.daysLeft }}日</strong>）。
@@ -2173,7 +2178,13 @@
 
                 const isPossible = !seasonEnded && candleShortfall === 0 && walkShortfallDays === 0;
 
-                return { daysLeft, neededCandles, availableCandles, candleShortfall, walkDaysNeeded, walkShortfallDays, isPossible, seasonEnded };
+                // 🗓️ 実際に完了までかかる見込み日数（キャンドルが貯まるまでの日数と、連れ歩きに必要な日数の大きい方）。
+                // 「残り日数」は開幕前だとシーズン全体の日数と一致してしまい、「残り日数あれば間に合う」という
+                // 診断が常に自明な文言になってしまうため、実際に必要な日数を別途算出してメッセージに使う。
+                const candleDaysUntilReady = Math.ceil(Math.max(0, neededCandles - (ownedCandles.value || 0)) / candlesPerDay.value);
+                const daysNeeded = Math.max(candleDaysUntilReady, walkDaysNeeded);
+
+                return { daysLeft, neededCandles, availableCandles, candleShortfall, walkDaysNeeded, walkShortfallDays, isPossible, seasonEnded, daysNeeded };
             });
 
             // 🧭 4体をまたいだ効率的な進め方のシミュレーション（魔法を除く）
