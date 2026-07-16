@@ -235,6 +235,13 @@
         [data-theme="dark"] .walk-days-card {
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
+        /* 🕯️ スマホ幅では画面上部に所持キャンドルバー（sticky, 高さ約56px）が重なるため、
+           連れ歩き日数カードの固定位置をその分だけ下げて重なりを防ぐ */
+        @media (max-width: 767px) {
+            .walk-days-card {
+                top: 68px;
+            }
+        }
 
         .section-card {
             background: var(--card-bg);
