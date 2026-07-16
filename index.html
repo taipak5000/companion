@@ -1828,7 +1828,7 @@
                     <button class="candle-edit-toggle-btn" @click="showCandleEdit = !showCandleEdit">{{ showCandleEdit ? '編集を閉じる ▲' : '🕯️ コストを編集 ▼' }}</button>
                 </div>
                 <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : 'var(--danger-text)' }">
-                    ♡ <b>ハートとの交換</b>（🕯️{{ activeSpirit.treeData.tier4[2].candles }}）と、各層右列の<b>アドパスアイテム</b>は<b>アドパス保有者のみ</b>可能です{{ hasSeasonPass ? '（現在: 保有）' : '（現在: 未保有 — 左側で切替できます）' }}
+                    ♡ <b>ハートとの交換</b>（🕯️{{ activeSpirit.treeData.tier4[2].candles }}）と、各層右列の<b>アドパスアイテム</b>は<b>アドパス保有者のみ</b>可能です{{ hasSeasonPass ? '（現在: 保有）' : '（現在: 未保有 — 「シーズンキャンドル計算機」のアドパス切替で変更できます）' }}
                 </div>
 
                 <div v-if="showCandleEdit" class="candle-edit-panel">
@@ -2133,9 +2133,19 @@
                 .filter(item => !item.checked && item.type !== 'magic')
                 .reduce((sum, item) => sum + (item.candles || 0), 0);
 
+            // 🔒 アドパス未保有時は、未交換のハートと交換できない（＝そのキャンドルを使う機会がない）。
+            // 「現在の実質的な必要数・総数」からは、そのハート分のコストを除外して考える必要があるため、
+            // 除外すべき本数(交換済み、またはアドパス保有時は 0)を返す共通ヘルパー。
+            const getSpiritLockedHeartCost = (spirit) => {
+                if (hasSeasonPass.value) return 0;
+                const heartItem = spirit.treeData.tier4[2];
+                if (!heartItem || !heartItem.isHeartGoal || heartItem.checked) return 0;
+                return heartItem.candles || 0;
+            };
+
             const activeCandleItems = computed(() => getSpiritCandleItems(activeSpirit.value));
-            const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value));
-            const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value));
+            const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value) - getSpiritLockedHeartCost(activeSpirit.value));
+            const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value) - getSpiritLockedHeartCost(activeSpirit.value));
             // 🕯️ このツリーに「配った」本数 = 総コストのうち、すでに交換済み(チェック済み)の分
             const activeDistributedCandles = computed(() => activeTotalCandles.value - activeRemainingCandles.value);
 
@@ -2178,7 +2188,10 @@
             const candlesPerDay = computed(() => hasSeasonPass.value ? 6 : 5);
 
             // 4体すべての精霊で、まだチェックしていないアイテムのキャンドルコスト合計
-            const totalRemainingCandles = computed(() => spirits.value.reduce((sum, s) => sum + getSpiritRemainingCandles(s), 0));
+            // 🔒 アドパスを保有していない場合はハートと交換できない（＝そのキャンドルを使う機会がない）ため、
+            // 未交換のハート分のコストは「必要数」から除外する（アドパス保有時、または交換済みならそのまま含める）
+            const totalRemainingCandles = computed(() => spirits.value.reduce((sum, s) =>
+                sum + getSpiritRemainingCandles(s) - getSpiritLockedHeartCost(s), 0));
 
             // 現在の所持数から、あと何日で全精霊分の残りコストを賄えるか
             const candleDaysNeeded = computed(() => {
