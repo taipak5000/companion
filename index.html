@@ -165,6 +165,48 @@
             gap: 16px;
         }
 
+        /* 🕯️ スマホ幅では左右カラムが縦積みになり、デスクトップ版のような左カラムのsticky表示が
+           使えないため、専用の追従バーで「精霊ツリー予想」より下を見ている間も所持数を表示し続ける。
+           デスクトップ幅では左カラム自体がsticky表示されるため、このバーは非表示にする。 */
+        .mobile-candle-bar { display: none; }
+
+        @media (max-width: 767px) {
+            .mobile-candle-bar {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                position: sticky;
+                top: 8px;
+                z-index: 30;
+                background: var(--card-bg);
+                border: 1px solid var(--accent-orange);
+                border-radius: 10px;
+                padding: 7px 12px;
+                box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+                font-size: 11.5px;
+                color: var(--text-gray);
+            }
+            [data-theme="dark"] .mobile-candle-bar {
+                box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            }
+            .mobile-candle-bar input {
+                width: 62px;
+                font-size: 15px;
+                font-weight: bold;
+                padding: 4px 6px;
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                background: var(--input-bg);
+                color: var(--accent-orange);
+                box-sizing: border-box;
+            }
+            .mobile-candle-bar .btn-sm {
+                padding: 5px 8px;
+                font-size: 11px;
+                white-space: nowrap;
+            }
+        }
+
         @media (min-width: 768px) {
             .container {
                 max-width: 1050px;
@@ -392,6 +434,14 @@
             transition: all 0.2s;
         }
         .calc-input:focus { background: var(--card-bg); border-color: var(--accent-blue); outline: none; }
+
+        /* 🕯️ 所持キャンドル数は他の入力欄よりも大きく・目立つ色で表示する（色はインラインstyleで動的に指定） */
+        .owned-candle-input {
+            width: auto;
+            max-width: 130px;
+            font-size: 22px;
+            font-weight: bold;
+        }
         
         .memo-textarea {
             width: 100%;
@@ -1489,7 +1539,13 @@
     </div>
 
     <div class="main-layout">
-        
+        <div class="mobile-candle-bar">
+            <span style="font-weight:bold; white-space:nowrap;">🕯️ 所持</span>
+            <input type="number" min="0" v-model.number="ownedCandles">
+            <span style="white-space:nowrap;">本</span>
+            <button class="btn-sm" style="margin-left:auto;" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">+{{ candlesPerDay }}（今日の分）</button>
+        </div>
+
         <div class="left-column">
             <div class="total-goal-banner">
                 <div style="font-size: 22px; font-weight: bold; margin: 0;">🧡 シーズンハート獲得: {{ totalHearts }} / 4 個</div>
@@ -1511,7 +1567,16 @@
                 <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
                     🕯️ 現在の所持キャンドル数
                 </label>
-                <input type="number" min="0" v-model.number="ownedCandles" class="calc-input" placeholder="例: 20">
+                <div style="display:flex; align-items:baseline; gap:8px;">
+                    <input type="number" min="0" v-model.number="ownedCandles" class="calc-input owned-candle-input"
+                           :style="{ color: (ownedCandles || 0) < 0 ? 'var(--danger-text)' : 'var(--accent-orange)' }" placeholder="例: 20">
+                    <span style="font-size: 13px; color: var(--text-gray);">本</span>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:8px; margin-top: 10px; flex-wrap: wrap;">
+                    <button class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">🕯️ 今日の分を追加（+{{ candlesPerDay }}）</button>
+                    <span style="font-size: 10px; color: var(--text-gray);">獲得できなかった日は押さなくてOK。上の欄で直接調整も可能です</span>
+                </div>
 
                 <div v-if="hasSeasonPass" style="display:flex; align-items:center; gap:8px; margin-top: 8px; flex-wrap: wrap;">
                     <button class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + 30">🎁 購入特典 +30本を追加</button>
@@ -1858,7 +1923,7 @@
                                  class="game-node-btn"
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': item.requiresSeasonPass && !hasSeasonPass && !item.checked, 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
-                                 @click="if(!(item.requiresSeasonPass && !hasSeasonPass && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                 @click="toggleTreeItem(item)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -1884,7 +1949,7 @@
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
-                                 @click="if(!((activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked))) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                 @click="toggleTreeItem(item, 40)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -1910,7 +1975,7 @@
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
-                                 @click="if(!((activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked))) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                 @click="toggleTreeItem(item, 100)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -1935,7 +2000,7 @@
                             <div v-for="item in activeSpirit.treeData.tier4.filter(i => !i.requiresSeasonPass && !isZeroCostMagic(i))" :key="item.id" 
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
-                                 @click="if(!(activePoints < 180 && !item.checked)) { item.checked = !item.checked; activeSpirit.currentPreset = 'custom'; }">
+                                 @click="toggleTreeItem(item, 180)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -2112,6 +2177,20 @@
 
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
             const totalHearts = computed(() => spirits.value.filter(s => getSpiritPoints(s) >= 280).length);
+
+            // 🕯️ ツリーのアイテムをチェック/解除する共通処理。
+            // ・前層の必要ポイント(minPoints)未達、またはアドパス未保有でのパス限定アイテムは新規チェック不可
+            // ・チェック時はそのキャンドルコスト分を所持数から減らし、解除時は元に戻す（誤操作でも取り消せるように）
+            const toggleTreeItem = (item, minPoints) => {
+                if (!item.checked) {
+                    if (item.requiresSeasonPass && !hasSeasonPass.value) return;
+                    if (minPoints !== undefined && activePoints.value < minPoints) return;
+                }
+                item.checked = !item.checked;
+                activeSpirit.value.currentPreset = 'custom';
+                const delta = item.checked ? -(item.candles || 0) : (item.candles || 0);
+                ownedCandles.value = (ownedCandles.value || 0) + delta;
+            };
 
             // 🕯️ キャンドルコスト関連のロジック
             // ポイント対象外(noPoints)のアドパスアイテムを除いた「実際にキャンドルを使うアイテム」一覧を取得
@@ -2694,7 +2773,7 @@
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
             return {
-                activeIndex, spirits, activeSpirit, activePoints, totalHearts,
+                activeIndex, spirits, activeSpirit, activePoints, totalHearts, toggleTreeItem,
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
