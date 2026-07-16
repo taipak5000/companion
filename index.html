@@ -848,6 +848,7 @@
             height: 26px;
             display: block;
             overflow: visible;
+            object-fit: contain;
         }
 
         @media (max-width: 360px) {
@@ -890,7 +891,7 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
 
-        /* 🧡 最上層シーズンハート */
+        /* 🧡 シーズンハート */
         .heart-goal-container {
             display: flex;
             justify-content: center;
@@ -1093,7 +1094,7 @@
             color: var(--text-gray);
             font-weight: 500;
         }
-        .fl-icon { width: 12px; height: 12px; color: var(--text-gray); flex-shrink: 0; opacity: 0.9; }
+        .fl-icon { width: 12px; height: 12px; color: var(--text-gray); flex-shrink: 0; opacity: 0.9; object-fit: contain; }
 
         .forecast-grid {
             display: flex;
@@ -1265,7 +1266,7 @@
         }
         [data-theme="dark"] .forecast-slot--empty { border: 1px dashed rgba(255,255,255,0.12); }
 
-        .forecast-icon { width: 21px; height: 21px; color: var(--fc-accent); }
+        .forecast-icon { width: 21px; height: 21px; color: var(--fc-accent); object-fit: contain; }
         .forecast-slot-heart .forecast-icon { width: 24px; height: 24px; color: var(--forecast-heart-red); }
 
         .forecast-badge {
@@ -1429,11 +1430,11 @@
 
         <template v-if="showForecast">
         <div class="forecast-legend">
-            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-magic"></use></svg>魔法</span>
-            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-emote"></use></svg>エモート</span>
-            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-bloom"></use></svg>季節アイテム</span>
+            <span><img v-if="TYPE_IMAGES.magic" class="fl-icon" :src="TYPE_IMAGES.magic" alt=""><svg v-else class="fl-icon" viewBox="0 0 100 100"><use href="#ic-magic"></use></svg>魔法</span>
+            <span><img v-if="TYPE_IMAGES.walk" class="fl-icon" :src="TYPE_IMAGES.walk" alt=""><svg v-else class="fl-icon" viewBox="0 0 100 100"><use href="#ic-emote"></use></svg>エモート</span>
+            <span><img v-if="TYPE_IMAGES.seasonal" class="fl-icon" :src="TYPE_IMAGES.seasonal" alt=""><svg v-else class="fl-icon" viewBox="0 0 100 100"><use href="#ic-bloom"></use></svg>季節アイテム</span>
             <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-dye"></use></svg>染料</span>
-            <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-sparkle"></use></svg>アドパス</span>
+            <span><img v-if="TYPE_IMAGES.adpass" class="fl-icon" :src="TYPE_IMAGES.adpass" alt=""><svg v-else class="fl-icon" viewBox="0 0 100 100"><use href="#ic-sparkle"></use></svg>アドパス</span>
             <span><svg class="fl-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>ハートと交換</span>
         </div>
 
@@ -1468,7 +1469,8 @@
                         <template v-for="item in row" :key="item.id">
                             <div v-if="item && item.name" class="forecast-slot" :title="cleanName(getItemLabel(item))">
                                 <span v-if="item.candles > 0" class="forecast-badge">{{ item.candles }}</span>
-                                <svg class="forecast-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                                <img v-if="getItemImageUrl(item)" class="forecast-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))">
+                                <svg v-else class="forecast-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                             </div>
                             <div v-else class="forecast-slot forecast-slot--empty"></div>
                         </template>
@@ -1711,7 +1713,10 @@
                                 <template v-for="(step, idx) in activeFastestHeartPlan.order" :key="idx">
                                     <div class="priority-step" :class="{ 'priority-step-heart': step.isHeart }">
                                         <div class="priority-step-num">{{ idx + 1 }}</div>
-                                        <div class="priority-step-icon">{{ step.icon }}</div>
+                                        <div class="priority-step-icon">
+                                            <img v-if="step.imageUrl" :src="step.imageUrl" :alt="step.name" style="width: 17px; height: 17px; object-fit: contain; vertical-align: middle;">
+                                            <template v-else>{{ step.icon }}</template>
+                                        </div>
                                         <div class="priority-step-name">{{ step.name }}</div>
                                         <div class="priority-step-cost">🕯️{{ step.candles }}</div>
                                         <div class="priority-step-day">{{ step.day }}日目</div>
@@ -1819,7 +1824,7 @@
                 </div>
 
                 <div class="tree-subtotal-bar">
-                    <span>🕯️ このツリーの残り: <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} 本</span>
+                    <span>🕯️ このツリーの残り: <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} 本（配った: {{ activeDistributedCandles }} 本）</span>
                     <button class="candle-edit-toggle-btn" @click="showCandleEdit = !showCandleEdit">{{ showCandleEdit ? '編集を閉じる ▲' : '🕯️ コストを編集 ▼' }}</button>
                 </div>
                 <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : 'var(--danger-text)' }">
@@ -1857,7 +1862,8 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                                    <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))">
+                                    <svg v-else class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1882,7 +1888,8 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                                    <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))">
+                                    <svg v-else class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1907,7 +1914,8 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                                    <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))">
+                                    <svg v-else class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1931,7 +1939,8 @@
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
-                                    <svg class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                                    <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))">
+                                    <svg v-else class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
                                 </div>
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
@@ -1950,7 +1959,7 @@
                             <div class="node-candle-badge">🕯️{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
                             <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
-                            <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">最上層ハート</div>
+                            <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">シーズンハート</div>
                             <div class="node-cost" style="color: #ff5e7e;">{{ (activePoints >= 280 || activeSpirit.treeData.tier4[2].checked) ? '🎉 獲得!' : '280p' }}</div>
                         </div>
                     </div>
@@ -1991,7 +2000,7 @@
 
     // 🕯️ costs は精霊ごとのキャンドルコスト表（次イベント予想ツリー画像より反映）
     // ツリーは下から第1層→第4層の順（画像の一番下が第1層、一番上のハートが最終報酬）。
-    // em1/mag1=第1層, it1/mag2=第2層, em2/mag3=第3層, it2/extra4=第4層季節アイテム, heart=最上位のハートとの交換（要アドパス）
+    // em1/mag1=第1層, it1/mag2=第2層, em2/mag3=第3層, it2/extra4=第4層季節アイテム, heart=シーズンハートとの交換（要アドパス）
     const createInitialTree = (prefix, costs) => ({
         tier1: [
             { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: costs.em1, checked: true },
@@ -2016,7 +2025,7 @@
     });
 
     // 📊 次回イベント精霊ツリー予想（画像より）のキャンドルコスト一覧
-    // ツリー合計: 精霊①=87 / 精霊②=105 / 精霊③=93 / 精霊④=107 （最上位ハートとの交換 🕯️3・要アドパス を含む）
+    // ツリー合計: 精霊①=87 / 精霊②=105 / 精霊③=93 / 精霊④=107 （シーズンハートとの交換 🕯️3・要アドパス を含む）
     // ※ エモートLv1（初回解放）は0コスト、魔法①側にコストがかかる
     const SPIRIT_TREE_COSTS = {
         s1: { em1: 0, mag1: 4, it1: 18, mag2: 6,  em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計87
@@ -2035,6 +2044,36 @@
     const SEASON_END = new Date('2026-10-02T15:59:00');
     const SEASON_START_TEXT = '2026/7/17 16:00';
     const SEASON_END_TEXT = '2026/10/2 15:59';
+
+    // 🕓 デイリー（キャンドル等の獲得チャンス）はこの時刻にリセットされる。
+    // シーズン終了時刻はリセット時刻の1分前(15:59)に設定されているため、
+    // 「終了日の16:00リセット分」は発生しない＝その日はキャンドルを稼げない。
+    // そのため「残り日数」は単純な24時間単位の切り上げではなく、
+    // 実際に何回リセットを迎えられるかで数える必要がある。
+    const DAILY_RESET_HOUR = 16;
+
+    // 🕓 指定時刻以降で、最初に迎える（まだ来ていない）デイリーリセット日時を返す
+    const getNextDailyReset = (fromTime) => {
+        const next = new Date(fromTime);
+        next.setHours(DAILY_RESET_HOUR, 0, 0, 0);
+        if (next < fromTime) next.setDate(next.getDate() + 1);
+        return next;
+    };
+
+    // 🕓 fromTime以降・untilTime以前に発生するデイリーリセットの回数を正確に数える
+    // （例: untilTimeがリセット時刻をまたがない15:59などの場合、その日の分は含まれない）
+    const countDailyResetsUntil = (fromTime, untilTime) => {
+        const next = getNextDailyReset(fromTime);
+        if (next > untilTime) return 0;
+        return Math.floor((untilTime - next) / (1000 * 60 * 60 * 24)) + 1;
+    };
+
+    // 🕓 fromTime以降で n 回目のデイリーリセットが発生する日付を返す（n=1は直近の次回リセット）
+    const getNthDailyResetDate = (fromTime, n) => {
+        const target = getNextDailyReset(fromTime);
+        target.setDate(target.getDate() + (n - 1));
+        return target;
+    };
 
     createApp({
         setup() {
@@ -2097,6 +2136,8 @@
             const activeCandleItems = computed(() => getSpiritCandleItems(activeSpirit.value));
             const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value));
             const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value));
+            // 🕯️ このツリーに「配った」本数 = 総コストのうち、すでに交換済み(チェック済み)の分
+            const activeDistributedCandles = computed(() => activeTotalCandles.value - activeRemainingCandles.value);
 
             // 🔮 精霊ツリー予想（4体横並び比較）用のデータ整形
             // 画像と同じ並び順（上＝ハートとの交換→第4層→第3層→第2層→下＝第1層）に組み替える。
@@ -2149,8 +2190,9 @@
             const candleTargetDateText = computed(() => {
                 const days = candleDaysNeeded.value;
                 if (days <= 0) return '達成済み';
-                const target = new Date();
-                target.setDate(target.getDate() + days);
+                // 🕓 単純な「今日+N日」ではなく、実際にN回目のリセットを迎える日付で算出する
+                // （例: 今日の16:00リセット前なら、1回目のリセット＝今日になる）
+                const target = getNthDailyResetDate(new Date(), days);
                 return `${target.getFullYear()}年${target.getMonth() + 1}月${target.getDate()}日`;
             });
 
@@ -2166,7 +2208,10 @@
                 const effectiveStart = now < SEASON_START ? SEASON_START : now;
                 const msLeft = SEASON_END - effectiveStart;
                 const seasonEnded = msLeft <= 0;
-                const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+                // 🕓 単純な24時間切り上げだと、シーズン終了時刻(15:59)が16:00リセットを
+                // またがない関係で「本当は間に合わないリセット回数」を1回多く数えてしまうため、
+                // 実際のリセット回数ベースで残り日数を算出する。
+                const daysLeft = Math.max(0, countDailyResetsUntil(effectiveStart, SEASON_END));
 
                 const neededCandles = totalRemainingCandlesExcludingMagic.value;
                 const availableCandles = (ownedCandles.value || 0) + daysLeft * candlesPerDay.value;
@@ -2302,6 +2347,7 @@
                         remaining.push({
                             name: cleanName(getItemLabel(item)),
                             icon: getIcon(item),
+                            imageUrl: getItemImageUrl(item),
                             candles: item.candles || 0,
                             points: item.points || 0,
                             threshold: tierThreshold[tierKey]
@@ -2345,13 +2391,13 @@
                             const it = remaining.splice(bestIdx, 1)[0];
                             candlePool -= it.candles;
                             points = Math.min(280, points + it.points);
-                            order.push({ name: it.name, icon: it.icon, candles: it.candles, points: it.points, day });
+                            order.push({ name: it.name, icon: it.icon, imageUrl: it.imageUrl, candles: it.candles, points: it.points, day });
                             bought = true;
                         }
                     }
 
                     if (points >= 280 && candlePool >= heartCost) {
-                        order.push({ name: heartName, icon: '♡', candles: heartCost, points: 0, day, isHeart: true });
+                        order.push({ name: heartName, icon: '♡', imageUrl: null, candles: heartCost, points: 0, day, isHeart: true });
                         const totalCost = order.reduce((sum, o) => sum + (o.candles || 0), 0);
                         return { day, candlePool, passOk: hasSeasonPass.value, readyExceptPass: !hasSeasonPass.value, order, totalCost };
                     }
@@ -2413,6 +2459,39 @@
                 if (name.includes('🎨')) return '🎨';
                 if (name.includes('♡')) return '♡';
                 return '🎁';
+            };
+
+            // 🖼️ 種別ごとのカスタム画像（準備中）。
+            // 画像を用意できたら、対応するキーに画像のURL（このリポジトリ内の相対パスでもOK。
+            // 例: 'images/emote.png'）を入れてください。空文字 '' のままなら、
+            // 今まで通りSVGアイコン・絵文字での表示が維持されます（下の getItemImageUrl 参照）。
+            // ・walk     … エモート
+            // ・seasonal … 季節アイテム
+            // ・magic    … 魔法
+            // ・adpass   … アドパス①〜③
+            const TYPE_IMAGES = {
+                walk: '',
+                seasonal: '',
+                magic: '',
+                adpass: ''
+            };
+
+            // 🔑 TYPE_IMAGES を引くためのキーを算出する。
+            // アドパス①〜③は type を持たない特殊アイテムなので noPoints フラグで判定する
+            // （♡ハートとの交換は isHeartGoal のため対象外＝今まで通りSVGアイコン表示）。
+            const getItemImageKey = (item) => {
+                if (!item) return null;
+                if (item.noPoints && !item.isHeartGoal) return 'adpass';
+                if (item.type && Object.prototype.hasOwnProperty.call(TYPE_IMAGES, item.type)) return item.type;
+                return null;
+            };
+
+            // 🖼️ アイテムに対応する画像URLを返す。画像が未設定・対象外の場合は null を返し、
+            // 呼び出し側（テンプレート）で従来のSVGアイコン／絵文字表示にフォールバックする。
+            const getItemImageUrl = (item) => {
+                const key = getItemImageKey(item);
+                if (!key) return null;
+                return TYPE_IMAGES[key] || null;
             };
 
             const CIRCLED_NUMS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
@@ -2606,11 +2685,11 @@
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
-                getIcon, getLevel, cleanName, getItemLabel, isZeroCostMagic, isDarkMode, toggleTheme,
+                getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, isZeroCostMagic, isDarkMode, toggleTheme,
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
-                activeCandleItems, activeTotalCandles, activeRemainingCandles,
+                activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT,
