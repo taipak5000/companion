@@ -166,7 +166,7 @@
         }
 
         /* 🕯️ スマホ幅では左右カラムが縦積みになり、デスクトップ版のような左カラムのsticky表示が
-           使えないため、専用の追従バーで「精霊ツリー予想」より下を見ている間も所持数を表示し続ける。
+           使えないため、専用の追従バーで「精霊ツリー」より下を見ている間も所持数を表示し続ける。
            デスクトップ幅では左カラム自体がsticky表示されるため、このバーは非表示にする。 */
         .mobile-candle-bar { display: none; }
 
@@ -863,7 +863,10 @@
         }
 
         /* 💜 右列（ポイント外ボーナス）アイテムのスタイル */
+        /* 🔢 order:1 で常に同じ層内の最後尾に表示する。データ配列内の位置とは独立させることで、
+           新しいアイテムを配列の末尾に追加してもlocalStorage上の既存チェック状態（配列の位置で対応付け）を壊さずに済む。 */
         .game-node-btn.no-points-node {
+            order: 1;
             border-color: rgba(175, 82, 222, 0.7);
             background: rgba(175, 82, 222, 0.04);
         }
@@ -1150,7 +1153,7 @@
         }
 
         /* --------------------------------------------------------------------------------- */
-        /* 🔮 精霊ツリー予想（4体横並び比較）エリア — 公開された予想ツリー画像のレイアウト参考 */
+        /* 🔮 精霊ツリー（4体横並び比較）エリア — 公開されたツリー画像のレイアウト参考 */
         /* --------------------------------------------------------------------------------- */
 
         .forecast-card {
@@ -1422,7 +1425,7 @@
 </head>
 <body>
 
-<!-- 🔮 精霊ツリー予想エリアで使う共通アイコン（SVGスプライト。表示はされず #id で参照される） -->
+<!-- 🔮 精霊ツリーエリアで使う共通アイコン（SVGスプライト。表示はされず #id で参照される） -->
 <svg width="0" height="0" style="position:absolute; overflow:hidden;" aria-hidden="true">
     <defs>
         <symbol id="ic-candle" viewBox="0 0 100 100">
@@ -1523,11 +1526,11 @@
     <div class="forecast-card">
         <div class="forecast-head" style="cursor:pointer;" @click="showForecast = !showForecast">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <div class="forecast-title">🔮 精霊ツリー予想（4体横並び比較）</div>
+                <div class="forecast-title">🔮 精霊ツリー（4体横並び比較）</div>
                 <span style="font-size: 11px; color: var(--text-gray); font-weight: bold; white-space: nowrap;">{{ showForecast ? '閉じる ▲' : '比較表を見る ▼' }}</span>
             </div>
             <div class="forecast-desc">
-                公開された予想ツリー画像をもとにした一覧表示です。数値は下の個別ツリーと連動しています。未確定のアイテムは空欄になります。
+                公開されたツリー画像をもとにした一覧表示です。数値は下の個別ツリーと連動しています。未確定のアイテムは空欄になります。
             </div>
         </div>
 
@@ -1977,7 +1980,7 @@
                             <span class="tier-req">{{ activePoints >= 40 ? '🎉 解放完了' : 'あと ' + (40 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier1.filter(i => !isZeroCostMagic(i))" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier1.filter(i => !isPhantomItem(i))" :key="item.id" 
                                  class="game-node-btn"
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': item.requiresSeasonPass && !hasSeasonPass && !item.checked, 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
@@ -1991,7 +1994,7 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>👣 +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -2003,7 +2006,7 @@
                             <span class="tier-req">{{ activePoints >= 100 ? '🎉 解放完了' : 'あと ' + (activePoints < 40 ? 60 : 100 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier2.filter(i => !isZeroCostMagic(i))" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier2.filter(i => !isPhantomItem(i))" :key="item.id" 
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
@@ -2017,7 +2020,7 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>👣 +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -2029,7 +2032,7 @@
                             <span class="tier-req">{{ activePoints >= 180 ? '🎉 解放完了' : 'あと ' + (activePoints < 100 ? 80 : 180 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isZeroCostMagic(i))" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isPhantomItem(i))" :key="item.id" 
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
@@ -2043,7 +2046,7 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>👣 +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -2055,7 +2058,7 @@
                             <span class="tier-req">{{ activePoints >= 280 ? '🎉 解放完了' : 'あと ' + (activePoints < 180 ? 100 : 280 - activePoints) + 'p' }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier4.filter(i => !i.requiresSeasonPass && !isZeroCostMagic(i))" :key="item.id" 
+                            <div v-for="item in activeSpirit.treeData.tier4.filter(i => !i.requiresSeasonPass && !isPhantomItem(i))" :key="item.id" 
                                  class="game-node-btn" 
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
                                  @click="toggleTreeItem(item, 180)">
@@ -2068,7 +2071,7 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">P外</template>
-                                    <template v-else>👣 +{{ item.points }}p</template>
+                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
                             </div>
                         </div>
@@ -2121,7 +2124,7 @@
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
 
-    // 🕯️ costs は精霊ごとのキャンドルコスト表（次イベント予想ツリー画像より反映）
+    // 🕯️ costs は精霊ごとのキャンドルコスト表（次イベントのツリー画像より反映）
     // ツリーは下から第1層→第4層の順（画像の一番下が第1層、一番上のハートが最終報酬）。
     // em1/mag1=第1層, it1/mag2=第2層, em2/mag3=第3層, it2/extra4=第4層季節アイテム, heart=シーズンハートとの交換（要アドパス）
     const createInitialTree = (prefix, costs) => ({
@@ -2147,19 +2150,21 @@
         ]
     });
 
-    // 📊 次回イベント精霊ツリー予想（画像より）のキャンドルコスト一覧
-    // ツリー合計: 精霊①=87 / 精霊②=105 / 精霊③=93 / 精霊④=107 （シーズンハートとの交換 🕯️3・要アドパス を含む）
+    // 📊 次回イベント精霊ツリー（画像より）のキャンドルコスト一覧
+    // ツリー合計: オランダの記憶=89 / 素朴な記憶=89 / 芸術の記憶=93 / 喜びの記憶=111 （シーズンハートとの交換 🕯️3・要アドパス を含む）
     // ※ エモートLv1（初回解放）は0コスト、魔法①側にコストがかかる
+    // ※ キー名（mag1/it1など）はツリー内の「位置」を表す識別子であり、実際の種別(type)は
+    //   下のspirits初期化直後の個別上書きで変わる場合がある（例: 芸術の記憶のmag1は実際には季節アイテム）。
     const SPIRIT_TREE_COSTS = {
-        s1: { em1: 0, mag1: 4, it1: 18, mag2: 6,  em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計87
-        s2: { em1: 0, mag1: 4, it1: 16, mag2: 6,  em2: 22, mag3: 20, it2: 26, extra: 8,  heart: 3 }, // 合計105
-        s3: { em1: 0, mag1: 4, it1: 18, mag2: 8,  em2: 22, mag3: 10, it2: 28, extra: 0,  heart: 3 }, // 合計93
-        s4: { em1: 0, mag1: 4, it1: 14, mag2: 6,  em2: 20, mag3: 8,  it2: 28, extra: 24, heart: 3 }  // 合計107
+        s1: { em1: 0, mag1: 4,  it1: 18, mag2: 6, em2: 22, mag3: 10, it2: 26, extra: 0,  heart: 3 }, // 合計89（第3層は「白染料」。下のspirits初期化直後でtype/customLabelを上書き）
+        s2: { em1: 0, mag1: 4,  it1: 18, mag2: 8, em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計89（第2層は「赤染料」、魔法④は枠が存在しないため削除）
+        s3: { em1: 0, mag1: 12, it1: 18, mag2: 6, em2: 22, mag3: 22, it2: 10, extra: 0,  heart: 3 }, // 合計93（第1層は季節アイテム①、第2層magは①へ繰上、第3層は季節アイテム③、第4層itは魔法②へ）
+        s4: { em1: 0, mag1: 12, it1: 0,  mag2: 6, em2: 22, mag3: 8,  it2: 26, extra: 12, heart: 3 }  // 合計111（第1層は季節アイテム①、第2層itは削除・magは①へ繰上、第3層magは②へ・季節アイテム②を追加、第4層extraは「黒染料」）
     };
     // 🔖 上記コストの表を書き換えたら、この番号を+1すること。
     // ブラウザに保存済みの古いキャンドルコスト（localStorage）を無効化し、
     // 新しいデフォルト値が確実に反映されるようにするためのバージョン番号。
-    const TREE_COST_VERSION = 2;
+    const TREE_COST_VERSION = 4;
 
     // 🌸 現在のシーズン情報
     const CURRENT_SEASON_NAME = '親愛なるファン・ゴッホへ';
@@ -2216,11 +2221,50 @@
             const showMultiSpiritPlan = ref(false); // 🧭 効率的な進め方のおすすめカードも初期は折りたたみ
 
             const spirits = ref([
-                { id: 1, name: '精霊①', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
-                { id: 2, name: '精霊②', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2', SPIRIT_TREE_COSTS.s2) },
-                { id: 3, name: '精霊③', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3', SPIRIT_TREE_COSTS.s3) },
-                { id: 4, name: '精霊④', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4', SPIRIT_TREE_COSTS.s4) }
+                { id: 1, name: 'オランダの記憶', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
+                { id: 2, name: '素朴な記憶', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2', SPIRIT_TREE_COSTS.s2) },
+                { id: 3, name: '芸術の記憶', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3', SPIRIT_TREE_COSTS.s3) },
+                { id: 4, name: '喜びの記憶', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4', SPIRIT_TREE_COSTS.s4) }
             ]);
+
+            // 🎨 実際に公開されたツリーで「魔法」枠の中身が染料だった精霊は、種別(type)と表示名をここで個別に上書きする。
+            // 種別を変えると同じ精霊内・同じ種別の自動採番（①②③…）がズレるため、
+            // 影響を受ける他のアイテムは customLabel で元の表示名に固定し直している。
+
+            // オランダの記憶: 第3層の魔法③ → 白染料（🕯️10）
+            spirits.value[0].treeData.tier3[1].type = 'dye';
+            spirits.value[0].treeData.tier3[1].customLabel = '白染料';
+            spirits.value[0].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示のまま）
+
+            // 素朴な記憶: 第2層の魔法② → 赤染料（🕯️8）。第4層の魔法④は枠自体が存在しないため削除（コスト0化）
+            spirits.value[1].treeData.tier2[1].type = 'dye';
+            spirits.value[1].treeData.tier2[1].customLabel = '赤染料';
+            spirits.value[1].treeData.tier3[1].customLabel = '魔法③'; // ↑の採番ズレ補正
+            spirits.value[1].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示）
+
+            // 🔁 芸術の記憶・喜びの記憶は「魔法」⇄「季節アイテム」の入れ替えが多いため、
+            // ここでは customLabel を使わず type だけ書き換え、自動採番（①②③…）の繰り上がりに任せている。
+            // （繰り上がり後の結果は末尾のシミュレーションで確認済み）
+
+            // 芸術の記憶: 第1層 魔法①→季節アイテム①(🕯️12) / 第2層 魔法②は自動で①に繰上(🕯️6)
+            // 第3層 魔法③→季節アイテム③(🕯️22) / 第4層 季節アイテム②→魔法②(🕯️10、自動で②になる)
+            spirits.value[2].treeData.tier1[1].type = 'seasonal';
+            spirits.value[2].treeData.tier3[1].type = 'seasonal';
+            spirits.value[2].treeData.tier4[0].type = 'magic';
+
+            // 喜びの記憶: 第1層 魔法①→季節アイテム①(🕯️12)
+            // 第2層 季節アイテム①は枠が存在しないため削除（コスト0化。typeはseasonalのまま維持し非表示に）
+            //       魔法②は自動で①に繰上(🕯️6のまま)
+            // 第3層 エモートのコストのみ変更(🕯️22) / 魔法③は自動で②に繰上(🕯️8のまま)
+            //       季節アイテム②を新規追加(🕯️22)。第3層は3アイテム構成になるため、
+            //       獲得ポイントの合計が引き続き100になるよう33.3/33.3/33.4で配分（表示は丸めて+33p統一）
+            // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)
+            spirits.value[3].treeData.tier1[1].type = 'seasonal';
+            spirits.value[3].treeData.tier3[0].points = 33.3; // エモートLv2
+            spirits.value[3].treeData.tier3[1].points = 33.3; // 魔法②
+            spirits.value[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 33.4, candles: 22, checked: false });
+            spirits.value[3].treeData.tier4[1].type = 'dye';
+            spirits.value[3].treeData.tier4[1].customLabel = '黒染料';
 
             const activeSpirit = computed(() => spirits.value[activeIndex.value]);
 
@@ -2230,7 +2274,7 @@
                     tier.forEach(item => { if (item.checked && !item.noPoints) points += item.points; });
                 });
                 points += (spirit.walkDays * 10);
-                return Math.min(280, points);
+                return Math.min(280, Math.round(points)); // 🔢 第3層を3分割した端数(33.3等)が進捗表示に出ないよう丸める
             };
 
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
@@ -2286,7 +2330,7 @@
             // 🕯️ このツリーに「配った」本数 = 総コストのうち、すでに交換済み(チェック済み)の分
             const activeDistributedCandles = computed(() => activeTotalCandles.value - activeRemainingCandles.value);
 
-            // 🔮 精霊ツリー予想（4体横並び比較）用のデータ整形
+            // 🔮 精霊ツリー（4体横並び比較）用のデータ整形
             // 画像と同じ並び順（上＝ハートとの交換→第4層→第3層→第2層→下＝第1層）に組み替える。
             // ハートとの交換アイテムは行として独立させ、コストはヘッダー側の💗バッジにまとめて表示する。
             const getForecastData = (spirit) => {
@@ -2294,7 +2338,7 @@
                 const tierOrder = ['tier4', 'tier3', 'tier2', 'tier1'];
                 const rows = tierOrder.map(key => spirit.treeData[key].filter(item => {
                     if (item.isHeartGoal) { heartItem = item; return false; }
-                    if (isZeroCostMagic(item)) return false;
+                    if (isPhantomItem(item)) return false;
                     return true;
                 }));
                 return { heartItem, rows, total: getSpiritTotalCandles(spirit) };
@@ -2306,7 +2350,7 @@
                 ...getForecastData(s)
             })));
 
-            // 4体すべてを合計したツリー総コスト（予想画像下部の合計表示と対応）
+            // 4体すべてを合計したツリー総コスト（画像下部の合計表示と対応）
             const grandTotalCandles = computed(() => spirits.value.reduce((sum, s) => sum + getSpiritTotalCandles(s), 0));
 
             // アイテムの種別からアイコン（#id）を判定。空欄アイテム（name未設定）はテンプレート側で描画自体をスキップする。
@@ -2649,10 +2693,13 @@
             // 🔢 種別（type）を選ぶと、下の層（第1層）から数えて同じ種別が何個目かを自動で番号に反映する。
             // 例: 第3層の枠を「染料」に変更 → その時点で最も下にある染料なら「染料①」になる。
             const getItemLabel = (item) => {
+                if (item.customLabel) return item.customLabel; // 🎨 染料の色名など、自動採番と異なる表示名を個別指定したい場合はこちらを優先
                 if (!item.type) return item.name; // アドパス系などタイプを持たないものは既存の名前をそのまま使用
+                if (isPhantomItem(item)) return item.name; // 存在しない枠は採番せず、元の名前をそのまま返す（表示自体は非表示のまま）
                 const ordered = activeCandleItems.value;
                 let count = 0;
                 for (const i of ordered) {
+                    if (isPhantomItem(i)) continue; // 存在しない枠は他アイテムの採番（①②③…）に影響させない
                     if (i.type === item.type) {
                         count++;
                         if (i.id === item.id) break;
@@ -2666,10 +2713,13 @@
 
             // 🧭 アクティブ精霊に限定せず、任意の精霊のアイテムラベルを算出する汎用版（4体横断のシミュレーション用）
             const getItemLabelForSpirit = (item, spirit) => {
+                if (item.customLabel) return item.customLabel;
                 if (!item.type) return item.name;
+                if (isPhantomItem(item)) return item.name;
                 const ordered = getSpiritCandleItems(spirit);
                 let count = 0;
                 for (const i of ordered) {
+                    if (isPhantomItem(i)) continue;
                     if (i.type === item.type) {
                         count++;
                         if (i.id === item.id) break;
@@ -2690,10 +2740,11 @@
                 return name.replace(/[💨🪄✨♡]/g, '').replace(/Lv\.?\d+/, '').replace(/\(.*?\)/g, '').trim();
             };
 
-            // 🚫 コスト0の魔法は実在しない（精霊によっては魔法④の枠自体が存在しないため、
-            // その場合はキャンドルコスト0のプレースホルダーになっている）。
-            // ツリー表示・ツリー予想比較の両方で、この枠は通常ノードとして描画しない。
-            const isZeroCostMagic = (item) => item.type === 'magic' && !item.candles;
+            // 🚫 コスト0の枠（アイテムに限らず）は実在しない（精霊によっては特定の枠自体が存在しないため、
+            // その場合はキャンドルコスト0のプレースホルダーになっている。例: 魔法④・季節アイテム①など）。
+            // ツリー表示・ツリー比較の両方で、この枠は通常ノードとして描画しない。
+            // ※ エモートLv1（初回解放）はコスト0が正規の状態なので、firstUnlockは対象外とする。
+            const isPhantomItem = (item) => !!(item.type && !item.firstUnlock && !item.candles);
 
             const incrementWalkDays = () => {
                 if (activeSpirit.value.walkDays < 77) {
@@ -2792,7 +2843,7 @@
                         if (parsed.ownedCandles !== undefined) ownedCandles.value = parsed.ownedCandles;
 
                         // 🔖 保存時と現在でツリーのコスト表バージョンが違う場合、
-                        // 古いキャンドルコスト/種別の上書きは復元しない（最新の予想値を優先する）。
+                        // 古いキャンドルコスト/種別の上書きは復元しない（最新の値を優先する）。
                         // それ以外（チェック状態・連れ歩き日数など）は引き続き復元する。
                         const costDataIsCurrent = parsed.treeCostVersion === TREE_COST_VERSION;
 
@@ -2835,7 +2886,7 @@
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
-                getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, isZeroCostMagic, isDarkMode, toggleTheme,
+                getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, isPhantomItem, isDarkMode, toggleTheme,
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
