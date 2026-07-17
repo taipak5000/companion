@@ -427,6 +427,52 @@
             padding: 14px;
             text-align: center;
             box-shadow: 0 4px 12px rgba(255, 45, 85, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 🎉 4体全ての精霊でシーズンハートを獲得したときの、少し派手なお祝い演出 */
+        .total-goal-banner.goal-complete {
+            background: linear-gradient(135deg, #ff2d55, #ff9500, #ffcc00, #ff9500, #ff2d55);
+            background-size: 300% 300%;
+            animation: goalCompleteShine 3s ease-in-out infinite, goalCompleteGlow 1.8s ease-in-out infinite;
+        }
+        @keyframes goalCompleteShine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes goalCompleteGlow {
+            0%, 100% { box-shadow: 0 4px 12px rgba(255, 149, 0, 0.25); }
+            50% { box-shadow: 0 4px 26px rgba(255, 204, 0, 0.65); }
+        }
+        .goal-complete-message {
+            position: relative;
+            margin-top: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .confetti-burst {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .confetti-piece {
+            position: absolute;
+            top: -24px;
+            font-size: 18px;
+            opacity: 0;
+            animation: confettiFall 2.6s ease-in forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(-24px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(160px) rotate(360deg); opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .total-goal-banner.goal-complete { animation: none; }
+            .confetti-piece { animation: none; display: none; }
         }
 
         .calc-input {
@@ -1554,8 +1600,13 @@
         </div>
 
         <div class="left-column">
-            <div class="total-goal-banner">
-                <div style="font-size: 22px; font-weight: bold; margin: 0;">🧡 シーズンハート獲得: {{ totalHearts }} / 4 個</div>
+            <div class="total-goal-banner" :class="{ 'goal-complete': totalHearts === 4 }">
+                <div v-if="totalHearts === 4" class="confetti-burst" aria-hidden="true">
+                    <span v-for="n in 16" :key="n" class="confetti-piece"
+                          :style="{ left: (n * 6.2 + 2) + '%', animationDelay: (n * 0.12) + 's' }">{{ ['🎉','✨','🎊','⭐'][n % 4] }}</span>
+                </div>
+                <div style="font-size: 22px; font-weight: bold; margin: 0; position: relative;">🧡 シーズンハート獲得: {{ totalHearts }} / 4 個</div>
+                <div v-if="totalHearts === 4" class="goal-complete-message">🎉 おめでとうございます！全精霊のシーズンハートを獲得しました！</div>
             </div>
 
             <div class="section-card" style="border: 1px solid var(--accent-orange); background: rgba(255, 149, 0, 0.02);">
@@ -2055,7 +2106,7 @@
         作成・ご意見: <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a>
         <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
             参考データ: 
-            <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer">季節精霊 (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer">親愛なるファン・ゴッホへ (Sky Wiki 日本語)</a>
+            <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer">季節精霊 (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer">親愛なるファン・ゴッホへ (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/wiki/Dear_Van_Gogh" target="_blank" rel="noopener noreferrer">Dear Van Gogh (Sky Wiki 英語)</a>
         </span>
     </footer>
 
