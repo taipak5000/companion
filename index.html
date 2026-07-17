@@ -2248,18 +2248,24 @@
 
             // 芸術の記憶: 第1層 魔法①→季節アイテム①(🕯️12) / 第2層 魔法②は自動で①に繰上(🕯️6)
             // 第3層 魔法③→季節アイテム③(🕯️22) / 第4層 季節アイテム②→魔法②(🕯️10、自動で②になる)
+            // 第3層に「黄色染料」を追加(🕯️10)。3アイテム構成になるため、獲得ポイント合計は引き続き100になるよう
+            // 33.3/33.3/33.4で配分（喜びの記憶と同じ考え方。表示は丸めて+33pに統一）
             spirits.value[2].treeData.tier1[1].type = 'seasonal';
+            spirits.value[2].treeData.tier3[0].points = 33.3; // エモートLv2
             spirits.value[2].treeData.tier3[1].type = 'seasonal';
+            spirits.value[2].treeData.tier3[1].points = 33.3; // 季節アイテム③
+            spirits.value[2].treeData.tier3.push({ id: 's3_dye_yellow', type: 'dye', customLabel: '黄色染料', points: 33.4, candles: 10, checked: false });
             spirits.value[2].treeData.tier4[0].type = 'magic';
 
             // 喜びの記憶: 第1層 魔法①→季節アイテム①(🕯️12)
             // 第2層 季節アイテム①は枠が存在しないため削除（コスト0化。typeはseasonalのまま維持し非表示に）
-            //       魔法②は自動で①に繰上(🕯️6のまま)
+            //       魔法②は自動で①に繰上(🕯️6のまま)。獲得ポイントは暫定で40pに変更（要再確認）
             // 第3層 エモートのコストのみ変更(🕯️22) / 魔法③は自動で②に繰上(🕯️8のまま)
             //       季節アイテム②を新規追加(🕯️22)。第3層は3アイテム構成になるため、
             //       獲得ポイントの合計が引き続き100になるよう33.3/33.3/33.4で配分（表示は丸めて+33p統一）
             // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)
             spirits.value[3].treeData.tier1[1].type = 'seasonal';
+            spirits.value[3].treeData.tier2[1].points = 40; // 🔖 暫定値。実際のツリーと異なると分かれば要修正
             spirits.value[3].treeData.tier3[0].points = 33.3; // エモートLv2
             spirits.value[3].treeData.tier3[1].points = 33.3; // 魔法②
             spirits.value[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 33.4, candles: 22, checked: false });
