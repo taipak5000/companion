@@ -960,10 +960,11 @@
             width: 15px;
             height: 15px;
             border-radius: 50%;
-            border: 1.5px solid var(--border-color);
+            border: 1.5px solid rgba(255, 59, 48, 0.6);
             background: var(--card-bg);
-            color: var(--text-gray);
+            color: var(--danger-text);
             font-size: 8px;
+            font-weight: 700;
             line-height: 1;
             display: flex;
             align-items: center;
@@ -975,25 +976,28 @@
             appearance: none;
             cursor: pointer;
             z-index: 3;
-            opacity: 0.5;
+            opacity: 0.95;
             pointer-events: auto;
             transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
         }
 
         .game-node-btn:hover .node-exclude-toggle {
-            opacity: 0.85;
+            opacity: 1;
         }
 
         .node-exclude-toggle:hover {
             transform: scale(1.18);
             opacity: 1;
+            background: var(--danger-text);
+            border-color: var(--danger-text);
+            color: #fff;
         }
 
         .node-exclude-toggle.active {
             opacity: 1;
-            background: var(--text-gray);
-            border-color: var(--text-gray);
-            color: var(--card-bg);
+            background: var(--danger-text);
+            border-color: var(--danger-text);
+            color: #fff;
         }
 
         /* 🚫 除外指定中のノード本体の見た目（破線＋淡色化）。
