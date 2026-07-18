@@ -950,6 +950,65 @@
             );
         }
 
+        /* 🚫 「取りたくない」トグル：ノード右下の外側にはみ出す形の常時表示バッジ。
+           ノード本体のクリック（チェック切替）とは独立させるため @click.stop で受け止める。
+           親が node-disabled（pointer-events:none）でも押せるよう pointer-events を明示的に戻す。 */
+        .node-exclude-toggle {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-gray);
+            font-size: 8px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            font-family: inherit;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            z-index: 3;
+            opacity: 0.5;
+            pointer-events: auto;
+            transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+        }
+
+        .game-node-btn:hover .node-exclude-toggle {
+            opacity: 0.85;
+        }
+
+        .node-exclude-toggle:hover {
+            transform: scale(1.18);
+            opacity: 1;
+        }
+
+        .node-exclude-toggle.active {
+            opacity: 1;
+            background: var(--text-gray);
+            border-color: var(--text-gray);
+            color: var(--card-bg);
+        }
+
+        /* 🚫 除外指定中のノード本体の見た目（破線＋淡色化）。
+           チェック済み（獲得済み）の場合は通常の獲得済み表示を優先し、こちらは適用しない。 */
+        .game-node-btn.node-excluded:not(.node-checked) {
+            opacity: 0.5;
+            filter: grayscale(70%);
+            border-style: dashed;
+        }
+
+        [data-theme="dark"] .game-node-btn.node-excluded:not(.node-checked) {
+            opacity: 0.45;
+            filter: grayscale(55%);
+        }
+
         /* 💜 右列（ポイント外ボーナス）アイテムのスタイル */
         /* 🔢 order:1 で常に同じ層内の最後尾に表示する。データ配列内の位置とは独立させることで、
            新しいアイテムを配列の末尾に追加してもlocalStorage上の既存チェック状態（配列の位置で対応付け）を壊さずに済む。 */
@@ -1007,6 +1066,7 @@
             .game-node-btn { width: 72px; height: 72px; }
             .node-placeholder { width: 72px; height: 72px; }
             .node-icon { font-size: 22px; }
+            .node-exclude-toggle { width: 14px; height: 14px; font-size: 7px; bottom: -4px; right: -4px; }
         }
 
         .node-level {
@@ -1627,7 +1687,7 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in row.items" :key="item.id"
                                  class="game-node-btn"
-                                 :class="{'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus}"
+                                 :class="{'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded}"
                                  :title="cleanName(getItemLabelForSpirit(item, sf.spirit))">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabelForSpirit(item, sf.spirit))" class="node-level">{{ getLevel(getItemLabelForSpirit(item, sf.spirit)) }}</div>
@@ -2019,7 +2079,7 @@
                 </div>
 
                 <div class="tree-subtotal-bar">
-                    <span>🕯️ このツリーの残り: <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} 本（配った: {{ activeDistributedCandles }} 本）</span>
+                    <span>🕯️ このツリーの残り: <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} 本（配った: {{ activeDistributedCandles }} 本<template v-if="activeExcludedCandles > 0">・除外: {{ activeExcludedCandles }} 本</template>）</span>
                     <button class="candle-edit-toggle-btn" @click="showCandleEdit = !showCandleEdit">{{ showCandleEdit ? '編集を閉じる ▲' : '🕯️ コストを編集 ▼' }}</button>
                 </div>
                 <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : 'var(--danger-text)' }">
@@ -2051,7 +2111,7 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier1.filter(i => !isPhantomItem(i))" :key="item.id" 
                                  class="game-node-btn"
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': item.requiresSeasonPass && !hasSeasonPass && !item.checked, 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': item.requiresSeasonPass && !hasSeasonPass && !item.checked, 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
                                  @click="toggleTreeItem(item)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
@@ -2065,6 +2125,9 @@
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
+                                <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
+                                        :title="item.excluded ? '除外を解除' : '取りたくないアイテムとして除外'"
+                                        @click.stop="toggleExcluded(item)">✕</button>
                             </div>
                             <div class="node-placeholder"></div>
                         </div>
@@ -2081,7 +2144,7 @@
                             <div class="node-placeholder"></div>
                             <div v-for="item in activeSpirit.treeData.tier2.filter(i => i.wrapRow && !isPhantomItem(i))" :key="item.id"
                                  class="game-node-btn"
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
                                  @click="toggleTreeItem(item, 40)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
@@ -2095,6 +2158,9 @@
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
+                                <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
+                                        :title="item.excluded ? '除外を解除' : '取りたくないアイテムとして除外'"
+                                        @click.stop="toggleExcluded(item)">✕</button>
                             </div>
                         </div>
                         <!-- 🔽 下段: 3列固定（左・中＝通常アイテムを左詰め、右＝アドパスボーナス固定）。
@@ -2104,7 +2170,7 @@
                                 <div v-if="!item" class="node-placeholder"></div>
                                 <div v-else
                                      class="game-node-btn" 
-                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                      :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
                                      @click="toggleTreeItem(item, 40)">
                                     <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
@@ -2118,6 +2184,9 @@
                                         <template v-if="item.noPoints">P外</template>
                                         <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                     </div>
+                                    <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
+                                            :title="item.excluded ? '除外を解除' : '取りたくないアイテムとして除外'"
+                                            @click.stop="toggleExcluded(item)">✕</button>
                                 </div>
                             </template>
                         </div>
@@ -2131,7 +2200,7 @@
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isPhantomItem(i))" :key="item.id" 
                                  class="game-node-btn" 
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': (activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? 'アドパスが必要です' : null"
                                  @click="toggleTreeItem(item, 100)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
@@ -2145,6 +2214,9 @@
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
+                                <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
+                                        :title="item.excluded ? '除外を解除' : '取りたくないアイテムとして除外'"
+                                        @click.stop="toggleExcluded(item)">✕</button>
                             </div>
                         </div>
                     </div>
@@ -2160,7 +2232,7 @@
                             <div class="node-placeholder"></div>
                             <div v-for="item in activeSpirit.treeData.tier4.filter(i => i.wrapRow && !isPhantomItem(i))" :key="item.id"
                                  class="game-node-btn"
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < 180 && !item.checked}"
                                  @click="toggleTreeItem(item, 180)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
@@ -2173,6 +2245,9 @@
                                     <template v-if="item.noPoints">P外</template>
                                     <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                 </div>
+                                <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
+                                        :title="item.excluded ? '除外を解除' : '取りたくないアイテムとして除外'"
+                                        @click.stop="toggleExcluded(item)">✕</button>
                             </div>
                         </div>
                         <!-- 🔽 下段: 通常アイテム（季節/魔法・魔法④・アドパスエモートLv4など）。
@@ -2182,7 +2257,7 @@
                                 <div v-if="!item" class="node-placeholder"></div>
                                 <div v-else
                                      class="game-node-btn" 
-                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-disabled': activePoints < 180 && !item.checked}"
+                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < 180 && !item.checked}"
                                      @click="toggleTreeItem(item, 180)">
                                     <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                     <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
@@ -2195,6 +2270,9 @@
                                         <template v-if="item.noPoints">P外</template>
                                         <template v-else>👣 +{{ Math.round(item.points) }}p</template>
                                     </div>
+                                    <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
+                                            :title="item.excluded ? '除外を解除' : '取りたくないアイテムとして除外'"
+                                            @click.stop="toggleExcluded(item)">✕</button>
                                 </div>
                             </template>
                         </div>
@@ -2260,24 +2338,24 @@
     // em2は「歩き系アイテムの出現順」で自動採番すると2番目=Lv2になってしまうため、customLabelでLv3に固定している。
     const createInitialTree = (prefix, costs) => ({
         tier1: [
-            { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: costs.em1, checked: true },
-            { id: prefix + '_mag1', type: 'magic', name: '魔法①', points: 20, candles: costs.mag1, checked: false }
+            { id: prefix + '_em1', type: 'walk', firstUnlock: true, name: 'エモートLv1 (初回解放)', points: 20, candles: costs.em1, checked: true, excluded: false },
+            { id: prefix + '_mag1', type: 'magic', name: '魔法①', points: 20, candles: costs.mag1, checked: false, excluded: false }
         ],
         tier2: [
-            { id: prefix + '_it1', type: 'seasonal', name: '季節アイテム①', points: 30, candles: costs.it1, checked: false },
-            { id: prefix + '_mag2', type: 'magic', name: '魔法②', points: 30, candles: costs.mag2, checked: false },
-            { id: prefix + '_bonus2b', name: 'アドパスエモートLv2', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false }
+            { id: prefix + '_it1', type: 'seasonal', name: '季節アイテム①', points: 30, candles: costs.it1, checked: false, excluded: false },
+            { id: prefix + '_mag2', type: 'magic', name: '魔法②', points: 30, candles: costs.mag2, checked: false, excluded: false },
+            { id: prefix + '_bonus2b', name: 'アドパスエモートLv2', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false }
         ],
         tier3: [
-            { id: prefix + '_em2', type: 'walk', name: 'エモートLv3', customLabel: 'エモートLv3', points: 40, candles: costs.em2, checked: false },
-            { id: prefix + '_mag3', type: 'magic', name: '魔法③', points: 40, candles: costs.mag3, checked: false }
+            { id: prefix + '_em2', type: 'walk', name: 'エモートLv3', customLabel: 'エモートLv3', points: 40, candles: costs.em2, checked: false, excluded: false },
+            { id: prefix + '_mag3', type: 'magic', name: '魔法③', points: 40, candles: costs.mag3, checked: false, excluded: false }
         ],
         tier4: [
-            { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: costs.it2, checked: false },
-            { id: prefix + '_extra4', type: 'magic', name: '魔法④', points: 0, candles: costs.extra, checked: false },
-            { id: prefix + '_heart', name: '♡ ハートと交換', points: 0, candles: costs.heart, requiresSeasonPass: true, isHeartGoal: true, firstBonus: true, checked: false },
-            { id: prefix + '_bonus4', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, wrapRow: true, checked: false },
-            { id: prefix + '_bonus4b', name: 'アドパスエモートLv4', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false }
+            { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: costs.it2, checked: false, excluded: false },
+            { id: prefix + '_extra4', type: 'magic', name: '魔法④', points: 0, candles: costs.extra, checked: false, excluded: false },
+            { id: prefix + '_heart', name: '♡ ハートと交換', points: 0, candles: costs.heart, requiresSeasonPass: true, isHeartGoal: true, firstBonus: true, checked: false, excluded: false },
+            { id: prefix + '_bonus4', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, wrapRow: true, checked: false, excluded: false },
+            { id: prefix + '_bonus4b', name: 'アドパスエモートLv4', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false }
         ]
     });
 
@@ -2445,7 +2523,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             spirits.value[0].treeData.tier4[4].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv4
 
             // 🆕 オランダの思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
-            spirits.value[0].treeData.tier3.push({ id: 's1_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, customImage: S1_ART_IMAGES.adpass_headpiece });
+            spirits.value[0].treeData.tier3.push({ id: 's1_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S1_ART_IMAGES.adpass_headpiece });
 
             // 素朴な思い出: 第2層の魔法② → 赤染料（🕯️8）。第4層の魔法④は枠自体が存在しないため削除（コスト0化）
             spirits.value[1].treeData.tier2[1].type = 'dye';
@@ -2464,7 +2542,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             spirits.value[1].treeData.tier4[4].customImage = S2_ART_IMAGES.emote_generic; // アドパスエモートLv4
 
             // 🆕 素朴な思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
-            spirits.value[1].treeData.tier3.push({ id: 's2_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, customImage: S2_ART_IMAGES.adpass_shoe });
+            spirits.value[1].treeData.tier3.push({ id: 's2_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S2_ART_IMAGES.adpass_shoe });
 
             // 🔁 芸術の思い出・喜びの思い出は「魔法」⇄「季節アイテム」の入れ替えが多いため、
             // ここでは customLabel を使わず type だけ書き換え、自動採番（①②③…）の繰り上がりに任せている。
@@ -2478,7 +2556,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             spirits.value[2].treeData.tier3[0].points = 33.3; // エモートLv3
             spirits.value[2].treeData.tier3[1].type = 'seasonal';
             spirits.value[2].treeData.tier3[1].points = 33.3; // 季節アイテム③
-            spirits.value[2].treeData.tier3.push({ id: 's3_dye_yellow', type: 'dye', customLabel: '黄色染料', points: 33.4, candles: 10, checked: false });
+            spirits.value[2].treeData.tier3.push({ id: 's3_dye_yellow', type: 'dye', customLabel: '黄色染料', points: 33.4, candles: 10, checked: false, excluded: false });
             spirits.value[2].treeData.tier4[0].type = 'magic';
             // 🖼️ 芸術の思い出の実機アイコン画像を割り当て（エモートは絵を描くポーズで全レベル共通、魔法は渦巻き模様の星で共通）
             spirits.value[2].treeData.tier1[0].customImage = S3_ART_IMAGES.emote_painting; // エモートLv1
@@ -2504,7 +2582,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             spirits.value[3].treeData.tier2[1].points = 40; // 🔖 暫定値。実際のツリーと異なると分かれば要修正
             spirits.value[3].treeData.tier3[0].points = 33.3; // エモートLv3
             spirits.value[3].treeData.tier3[1].points = 33.3; // 魔法②
-            spirits.value[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 33.4, candles: 22, checked: false });
+            spirits.value[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 33.4, candles: 22, checked: false, excluded: false });
             spirits.value[3].treeData.tier4[1].type = 'dye';
             spirits.value[3].treeData.tier4[1].customLabel = '黒染料';
 
@@ -2522,7 +2600,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 第2層に付け替える（アドパスエモートLv4は通常通り第4層に残る）。
             spirits.value[3].treeData.tier4.splice(3, 1); // 第4層のbonus4（アドパスアイテム）を削除
             spirits.value[3].treeData.tier4[3].customImage = S4_ART_IMAGES.emote_generic; // アドパスエモートLv4（繰上後のindex）
-            spirits.value[3].treeData.tier2.push({ id: 's4_bonus2c', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, requiresSeasonPass: true, wrapRow: true, checked: false, customImage: S4_ART_IMAGES.adpass_cap });
+            spirits.value[3].treeData.tier2.push({ id: 's4_bonus2c', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, requiresSeasonPass: true, wrapRow: true, checked: false, excluded: false, customImage: S4_ART_IMAGES.adpass_cap });
 
             const activeSpirit = computed(() => spirits.value[activeIndex.value]);
 
@@ -2552,6 +2630,13 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 ownedCandles.value = (ownedCandles.value || 0) + delta;
             };
 
+            // 🚫 「取りたくない」トグル：チェック状態とは独立したフラグ。取得可否には影響させず、
+            // 未交換(checked:false)の間だけキャンドル計算・進め方シミュレーションの対象から外すのに使う。
+            const toggleExcluded = (item) => {
+                item.excluded = !item.excluded;
+                activeSpirit.value.currentPreset = 'custom';
+            };
+
             // 🕯️ キャンドルコスト関連のロジック
             // ポイント対象外(noPoints)のアドパスアイテムを除いた「実際にキャンドルを使うアイテム」一覧を取得
             const getSpiritCandleItems = (spirit) => {
@@ -2567,9 +2652,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 .filter(item => !item.checked)
                 .reduce((sum, item) => sum + (item.candles || 0), 0);
 
-            // 🏁 「魔法を除くコンプリート」判定用：魔法アイテム（type === 'magic'）を除いた残りコスト
+            // 🏁 「魔法を除くコンプリート」判定用：魔法アイテム（type === 'magic'）と、除外指定したアイテムを除いた残りコスト
             const getSpiritRemainingCandlesExcludingMagic = (spirit) => getSpiritCandleItems(spirit)
-                .filter(item => !item.checked && item.type !== 'magic')
+                .filter(item => !item.checked && item.type !== 'magic' && !item.excluded)
                 .reduce((sum, item) => sum + (item.candles || 0), 0);
 
             // 🔒 アドパス未保有時は、未交換のハートと交換できない（＝そのキャンドルを使う機会がない）。
@@ -2582,11 +2667,20 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 return heartItem.candles || 0;
             };
 
+            // 🚫 「取りたくない」として除外指定された未交換アイテムのキャンドルコスト合計を返す共通ヘルパー。
+            // getSpiritLockedHeartCost と同じ考え方で total・remaining の両方から同額を差し引くことで、
+            // 「配った(distributed) = total - remaining」が実際の交換済み本数と一致し続けるようにする。
+            const getSpiritExcludedCandles = (spirit) => getSpiritCandleItems(spirit)
+                .filter(item => !item.checked && item.excluded)
+                .reduce((sum, item) => sum + (item.candles || 0), 0);
+
             const activeCandleItems = computed(() => getSpiritCandleItems(activeSpirit.value));
-            const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value) - getSpiritLockedHeartCost(activeSpirit.value));
-            const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value) - getSpiritLockedHeartCost(activeSpirit.value));
+            const activeTotalCandles = computed(() => getSpiritTotalCandles(activeSpirit.value) - getSpiritLockedHeartCost(activeSpirit.value) - getSpiritExcludedCandles(activeSpirit.value));
+            const activeRemainingCandles = computed(() => getSpiritRemainingCandles(activeSpirit.value) - getSpiritLockedHeartCost(activeSpirit.value) - getSpiritExcludedCandles(activeSpirit.value));
             // 🕯️ このツリーに「配った」本数 = 総コストのうち、すでに交換済み(チェック済み)の分
             const activeDistributedCandles = computed(() => activeTotalCandles.value - activeRemainingCandles.value);
+            // 🚫 このツリーで「除外」に指定した本数（表示用）
+            const activeExcludedCandles = computed(() => getSpiritExcludedCandles(activeSpirit.value));
 
             // 🔮 精霊ツリー（4体横並び比較）用のデータ整形
             // 個別ツリーと全く同じDOM順・同じ「層」区切りで表示する（第1層→第2層→第3層→第4層→ハート の順にDOMへ並べ、
@@ -2635,8 +2729,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 4体すべての精霊で、まだチェックしていないアイテムのキャンドルコスト合計
             // 🔒 アドパスを保有していない場合はハートと交換できない（＝そのキャンドルを使う機会がない）ため、
             // 未交換のハート分のコストは「必要数」から除外する（アドパス保有時、または交換済みならそのまま含める）
+            // 🚫 「取りたくない」に指定した分のコストも同様に「必要数」から除外する
             const totalRemainingCandles = computed(() => spirits.value.reduce((sum, s) =>
-                sum + getSpiritRemainingCandles(s) - getSpiritLockedHeartCost(s), 0));
+                sum + getSpiritRemainingCandles(s) - getSpiritLockedHeartCost(s) - getSpiritExcludedCandles(s), 0));
 
             // 現在の所持数から、あと何日で全精霊分の残りコストを賄えるか
             const candleDaysNeeded = computed(() => {
@@ -2704,6 +2799,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                         if (item.checked || item.type === 'magic') return;
                         if (item.noPoints) return; // 🎁 アドパス①〜③は好きなタイミングで取得できるため、プランの対象外にする
                         if (item.requiresSeasonPass && !hasSeasonPass.value) return;
+                        if (item.excluded) return; // 🚫 「取りたくない」指定済みのアイテムはプランの対象外にする
                         remaining.push({
                             name: cleanName(getItemLabelForSpirit(item, spirit)),
                             candles: item.candles || 0,
@@ -2801,7 +2897,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 let remaining = [];
                 Object.keys(spirit.treeData).forEach(tierKey => {
                     spirit.treeData[tierKey].forEach(item => {
-                        if (item === heartItem || item.noPoints || item.checked || !item.points) return; // 0ptアイテムは280p到達に寄与しないため候補から除外
+                        if (item === heartItem || item.noPoints || item.checked || !item.points || item.excluded) return; // 0ptアイテムと除外指定アイテムは280p到達に寄与しないため候補から除外
                         remaining.push({
                             name: cleanName(getItemLabel(item)),
                             icon: getIcon(item),
@@ -3140,6 +3236,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                                                 // このアイテムの復元自体をスキップする。
                                                 if (!targetItem || (savedItem.id && targetItem.id !== savedItem.id)) return;
                                                 targetItem.checked = savedItem.checked;
+                                                // 🚫 「取りたくない」指定はコスト表バージョンに関係のないユーザーの意思なので常に復元する
+                                                if (savedItem.excluded !== undefined) targetItem.excluded = savedItem.excluded;
                                                 if (costDataIsCurrent) {
                                                     // 🕯️ 精霊ごとに調整したキャンドルコストがあれば復元（最新版のみ）
                                                     if (savedItem.candles !== undefined) targetItem.candles = savedItem.candles;
@@ -3167,7 +3265,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
             return {
-                activeIndex, spirits, activeSpirit, activePoints, totalHearts, toggleTreeItem,
+                activeIndex, spirits, activeSpirit, activePoints, totalHearts, toggleTreeItem, toggleExcluded,
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
@@ -3175,7 +3273,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
-                activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles,
+                activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles, activeExcludedCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonCountdown, pad2,
