@@ -2665,6 +2665,11 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             tree_exclude_do: '取りたくないアイテムとして除外',
 
             tier1_title: '第1層（基礎ティア）',
+            status_complete: '完了！',
+            status_tier4: '第4層',
+            status_tier3: '第3層',
+            status_tier2: '第2層',
+            status_tier1: '第1層',
             tier2_title: '第2層（必要累計: 40p）',
             tier3_title: '第3層（必要累計: 100p）',
             tier4_title: '第4層（必要累計: 180p）',
@@ -2856,6 +2861,11 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             tree_exclude_do: "Mark as an item you don't want",
 
             tier1_title: 'Tier 1 (Base Tier)',
+            status_complete: 'Complete!',
+            status_tier4: 'Tier 4',
+            status_tier3: 'Tier 3',
+            status_tier2: 'Tier 2',
+            status_tier1: 'Tier 1',
             tier2_title: 'Tier 2 (cumulative required: 40p)',
             tier3_title: 'Tier 3 (cumulative required: 100p)',
             tier4_title: 'Tier 4 (cumulative required: 180p)',
@@ -3398,11 +3408,11 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
             const activeStatusText = computed(() => {
                 const p = activePoints.value;
-                if (p >= 280) return "完了！";
-                if (p >= 180) return "第4層";
-                if (p >= 100) return "第3層";
-                if (p >= 40) return "第2層";
-                return "第1層";
+                if (p >= 280) return t('status_complete');
+                if (p >= 180) return t('status_tier4');
+                if (p >= 100) return t('status_tier3');
+                if (p >= 40) return t('status_tier2');
+                return t('status_tier1');
             });
 
             const activeRemainingDays = computed(() => {
