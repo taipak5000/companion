@@ -115,6 +115,70 @@
             border-color: rgba(255, 149, 0, 0.32);
         }
 
+        /* ⏳ シーズン終了までの残り時間（バッジ内に大きく表示） */
+        .season-countdown {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 8px;
+            padding-top: 7px;
+            border-top: 1px dashed rgba(255, 149, 0, 0.3);
+        }
+
+        [data-theme="dark"] .season-countdown {
+            border-top-color: rgba(255, 149, 0, 0.35);
+        }
+
+        .season-countdown-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-gray);
+            white-space: nowrap;
+        }
+
+        .season-countdown-value {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .cd-days {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--accent-orange);
+            line-height: 1;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+        }
+
+        [data-theme="dark"] .cd-days { color: #ffcc00; }
+
+        .cd-days i {
+            font-style: normal;
+            font-size: 13px;
+            font-weight: 700;
+            margin-left: 2px;
+        }
+
+        .cd-time {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent-orange);
+            font-variant-numeric: tabular-nums;
+            opacity: 0.8;
+            white-space: nowrap;
+        }
+
+        [data-theme="dark"] .cd-time { color: #ffcc00; }
+
+        .season-countdown.is-ended .season-countdown-label {
+            color: var(--danger-text);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
         .header-nav {
             display: flex;
             gap: 8px;
@@ -1243,11 +1307,11 @@
         .forecast-column {
             scroll-snap-align: start;
             flex: 0 0 auto;
-            width: 168px;
+            min-width: 168px;
             display: flex;
-            gap: 6px;
+            flex-direction: column;
             border-radius: 12px;
-            padding: 12px 8px 12px;
+            padding: 12px 10px 14px;
             background: rgba(var(--fc-tint), 0.22);
             border: 1px solid rgba(var(--fc-tint), 0.65);
             transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -1259,60 +1323,24 @@
             border: 1px solid rgba(var(--fc-tint), 0.55);
         }
 
-        .forecast-starpath {
-            width: 15px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            padding: 5px 0;
-        }
-        .forecast-starpath::before {
-            content: '';
-            position: absolute;
-            top: 2px; bottom: 2px;
-            left: 50%;
-            border-left: 1.5px dashed rgba(var(--fc-tint), 0.9);
-            opacity: 0.6;
-        }
-        [data-theme="dark"] .forecast-starpath::before { border-left-color: rgba(255,255,255,0.5); }
-
-        .fp-node {
-            width: 7px;
-            height: 7px;
-            background: var(--fc-accent);
-            opacity: 0.8;
-            clip-path: polygon(50% 0%, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0% 50%, 37% 37%);
-            position: relative;
-            z-index: 1;
-            flex-shrink: 0;
-        }
-        .fp-node-cap {
-            width: 19px;
-            height: 19px;
-            border-radius: 50%;
-            background: var(--card-bg);
-            border: 1.5px solid var(--fc-accent);
-            clip-path: none;
-            opacity: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-        [data-theme="dark"] .fp-node-cap { background: rgba(0,0,0,0.45); }
-        .fp-cap-icon { width: 10px; height: 10px; color: var(--fc-accent); }
-
-        .forecast-col-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
-
+        /* 🏷️ 列ヘッダー（精霊名＋合計キャンドル数）。個別ツリーの「🌳 ○○のツリー」見出しに相当 */
         .forecast-col-head {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 4px;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            margin-bottom: 12px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid rgba(var(--fc-tint), 0.45);
+        }
+        .forecast-spirit-name {
+            font-size: 11.5px;
+            font-weight: 800;
+            color: var(--fc-accent);
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .forecast-total {
             font-size: 23px;
@@ -1326,79 +1354,75 @@
         }
         .forecast-total-icon { width: 17px; height: 17px; color: var(--fc-accent); flex-shrink: 0; }
 
-        .forecast-card { --forecast-heart-red: #a5225a; }
-        [data-theme="dark"] .forecast-card { --forecast-heart-red: #ff5e7e; }
-
-        .forecast-heart-cost {
+        /* 🌳 個別ツリーと同じ「層ごとに区切って積み上げる」配置（column-reverse で下から第1層→上へ） */
+        .forecast-tree {
             display: flex;
-            align-items: center;
-            font-size: 10.5px;
-            font-weight: bold;
-            color: var(--forecast-heart-red);
-            background: rgba(255, 45, 85, 0.1);
-            border-radius: 6px;
-            padding: 3px 5px;
-            flex-shrink: 0;
-            margin-top: 1px;
-            gap: 1px;
+            flex-direction: column-reverse;
+            gap: 12px;
         }
-        .fh-icon { width: 10px; height: 10px; flex-shrink: 0; }
 
-        .forecast-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
-
-        .forecast-slot {
-            width: 40px;
-            height: 40px;
-            border-radius: 9px;
-            background: rgba(0,0,0,0.16);
-            border: 1px solid rgba(var(--fc-tint), 0.55);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .forecast-tier {
             position: relative;
-            flex-shrink: 0;
+            border-top: 1px dashed rgba(var(--fc-tint), 0.6);
+            padding-top: 10px;
         }
-        [data-theme="dark"] .forecast-slot {
-            background: rgba(0,0,0,0.35);
-            border: 1px solid rgba(255,255,255,0.14);
+        .forecast-tree > .forecast-tier:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+        [data-theme="dark"] .forecast-tier { border-top-color: rgba(255, 255, 255, 0.14); }
+
+        /* ♡ ハートとの交換は個別ツリーのシーズンハートノードと同様、区切り線なしで最上部に置く */
+        .forecast-tier-heart { border-top: none !important; padding-top: 0 !important; }
+
+        .forecast-tier-header { text-align: center; margin-bottom: 8px; }
+        .forecast-tier-title {
+            font-size: 9.5px;
+            font-weight: 800;
+            color: var(--fc-accent);
+            letter-spacing: 0.03em;
+            opacity: 0.85;
         }
 
-        .forecast-slot-heart {
-            width: 46px;
-            height: 46px;
-            border-color: #ff5e7e;
-            background: rgba(255, 45, 85, 0.08);
-        }
-        [data-theme="dark"] .forecast-slot-heart {
-            border-color: rgba(255, 94, 126, 0.75);
-            background: rgba(255, 45, 85, 0.12);
-            box-shadow: 0 0 10px rgba(255, 45, 85, 0.35);
-        }
-
-        .forecast-slot--empty {
-            background: transparent;
-            border: 1px dashed rgba(var(--fc-tint), 0.35);
-        }
-        [data-theme="dark"] .forecast-slot--empty { border: 1px dashed rgba(255,255,255,0.12); }
-
-        .forecast-icon { width: 21px; height: 21px; color: var(--fc-accent); object-fit: contain; }
-        .forecast-slot-heart .forecast-icon { width: 24px; height: 24px; color: var(--forecast-heart-red); }
-
-        .forecast-badge {
-            position: absolute;
-            top: -5px;
-            left: -4px;
+        .forecast-tier-empty {
+            text-align: center;
             font-size: 9px;
-            font-weight: bold;
-            color: #331d00;
-            background: #f5a300;
-            padding: 1px 4px;
-            border-radius: 5px;
-            line-height: 1.35;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.35);
-            white-space: nowrap;
+            color: var(--text-gray);
+            opacity: 0.6;
+            padding: 8px 0;
         }
-        [data-theme="dark"] .forecast-badge { background: #ffcc00; color: #2a1800; }
+
+        /* 🎮 個別ツリーと同じ game-node-btn を、4体並べても収まるサイズに縮小して使い回す */
+        .forecast-column .game-node-wrapper { gap: 6px; }
+        .forecast-column .game-node-btn {
+            width: 56px;
+            height: 56px;
+            padding: 3px;
+            border-radius: 10px;
+            border-width: 1.5px;
+        }
+        .forecast-column .node-candle-badge {
+            top: 2px;
+            left: 3px;
+            font-size: 7px;
+            padding: 0 3px;
+            border-radius: 2px;
+        }
+        .forecast-column .node-level {
+            top: 2px;
+            right: 3px;
+            font-size: 7px;
+            padding: 0 3px;
+            border-radius: 2px;
+        }
+        .forecast-column .node-icon { font-size: 18px; }
+        .forecast-column .node-svg-icon { width: 18px; height: 18px; }
+        .forecast-column .node-name {
+            font-size: 7.5px;
+            margin-bottom: 0;
+            max-width: 50px;
+        }
+        .forecast-column .heart-node { width: 60px; height: 60px; }
 
         .forecast-total-bar {
             margin-top: 14px;
@@ -1425,9 +1449,12 @@
         [data-theme="dark"] .forecast-grand-total .forecast-total-icon { color: #ffcc00; }
 
         @media (max-width: 359px) {
-            .forecast-column { width: 152px; }
-            .forecast-slot { width: 36px; height: 36px; }
-            .forecast-slot-heart { width: 42px; height: 42px; }
+            .forecast-column { min-width: 152px; }
+            .forecast-column .game-node-btn { width: 48px; height: 48px; }
+            .forecast-column .heart-node { width: 52px; height: 52px; }
+            .forecast-column .node-icon { font-size: 15px; }
+            .forecast-column .node-svg-icon { width: 15px; height: 15px; }
+            .forecast-column .node-name { font-size: 6.8px; max-width: 42px; }
         }
 
     </style>
@@ -1495,6 +1522,18 @@
         <div class="season-info-badge">
             🎨 <strong>{{ CURRENT_SEASON_NAME }}</strong>
             <span class="season-info-dates">{{ SEASON_START_TEXT }} 〜 {{ SEASON_END_TEXT }}</span>
+            <div class="season-countdown" :class="{ 'is-ended': seasonCountdown.ended }">
+                <template v-if="!seasonCountdown.ended">
+                    <span class="season-countdown-label">⏳ 残り</span>
+                    <span class="season-countdown-value">
+                        <span class="cd-days">{{ seasonCountdown.days }}<i>日</i></span>
+                        <span class="cd-time">{{ pad2(seasonCountdown.hours) }}:{{ pad2(seasonCountdown.minutes) }}:{{ pad2(seasonCountdown.seconds) }}</span>
+                    </span>
+                </template>
+                <template v-else>
+                    <span class="season-countdown-label">🏁 シーズン終了しました</span>
+                </template>
+            </div>
         </div>
     </header>
 
@@ -1539,7 +1578,7 @@
                 <span style="font-size: 11px; color: var(--text-gray); font-weight: bold; white-space: nowrap;">{{ showForecast ? '閉じる ▲' : '比較表を見る ▼' }}</span>
             </div>
             <div class="forecast-desc">
-                公開されたツリー画像をもとにした一覧表示です。数値は下の個別ツリーと連動しています。未確定のアイテムは空欄になります。
+                公開されたツリー画像をもとにした一覧表示です。数値は下の個別ツリーと連動しています。
             </div>
         </div>
 
@@ -1555,40 +1594,44 @@
 
         <div class="forecast-grid">
             <div v-for="sf in spiritForecasts" :key="sf.spirit.id" class="forecast-column" :class="'forecast-theme-' + sf.themeIndex">
-                <div class="forecast-starpath">
-                    <span class="fp-node" v-for="n in 5" :key="n"></span>
-                    <span class="fp-node-cap">
-                        <svg class="fp-cap-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>
+                <div class="forecast-col-head">
+                    <span class="forecast-spirit-name">{{ sf.spirit.name }}</span>
+                    <span class="forecast-total">
+                        <svg class="forecast-total-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ sf.total }}
                     </span>
                 </div>
 
-                <div class="forecast-col-body">
-                    <div class="forecast-col-head">
-                        <span class="forecast-total">
-                            <svg class="forecast-total-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ sf.total }}
-                        </span>
-                        <span class="forecast-heart-cost" v-if="sf.heartItem">
-                            <svg class="fh-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>
-                            <svg class="fh-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ sf.heartItem.candles || 0 }}
-                        </span>
-                    </div>
-
-                    <div class="forecast-row forecast-row-heart">
-                        <div v-if="sf.heartItem && sf.heartItem.name" class="forecast-slot forecast-slot-heart" :title="cleanName(sf.heartItem.name)">
-                            <svg class="forecast-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg>
+                <!-- 🌳 個別ツリーと全く同じDOM順（第1層→第4層→ハート）＋column-reverseで、下から第1層→上へ積み上げる -->
+                <div class="forecast-tree">
+                    <div class="forecast-tier" v-for="row in sf.rows" :key="row.key">
+                        <div class="forecast-tier-header">
+                            <span class="forecast-tier-title">{{ row.label }}</span>
                         </div>
-                        <div v-else class="forecast-slot forecast-slot-heart forecast-slot--empty"></div>
+                        <div class="game-node-wrapper">
+                            <div v-for="item in row.items" :key="item.id"
+                                 class="game-node-btn"
+                                 :class="{'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus}"
+                                 :title="cleanName(getItemLabelForSpirit(item, sf.spirit))">
+                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                <div v-if="getLevel(getItemLabelForSpirit(item, sf.spirit))" class="node-level">{{ getLevel(getItemLabelForSpirit(item, sf.spirit)) }}</div>
+                                <div class="node-icon">
+                                    <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabelForSpirit(item, sf.spirit))">
+                                    <svg v-else class="node-svg-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                                </div>
+                                <div class="node-name">{{ cleanName(getItemLabelForSpirit(item, sf.spirit)) }}</div>
+                            </div>
+                            <div v-if="row.items.length === 0" class="forecast-tier-empty">枠なし</div>
+                        </div>
                     </div>
 
-                    <div class="forecast-row" v-for="(row, rIdx) in sf.rows" :key="rIdx">
-                        <template v-for="item in row" :key="item.id">
-                            <div v-if="item && item.name" class="forecast-slot" :title="cleanName(getItemLabel(item))">
-                                <span v-if="item.candles > 0" class="forecast-badge">{{ item.candles }}</span>
-                                <img v-if="getItemImageUrl(item)" class="forecast-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))">
-                                <svg v-else class="forecast-icon" viewBox="0 0 100 100"><use :href="'#' + getForecastIconId(item)"></use></svg>
+                    <div class="forecast-tier forecast-tier-heart" v-if="sf.heartItem">
+                        <div class="game-node-wrapper">
+                            <div class="game-node-btn heart-node" :title="cleanName(sf.heartItem.name)">
+                                <div class="node-candle-badge">🕯️{{ sf.heartItem.candles || 0 }}</div>
+                                <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
+                                <div class="node-name">{{ cleanName(sf.heartItem.name) }}</div>
                             </div>
-                            <div v-else class="forecast-slot forecast-slot--empty"></div>
-                        </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2158,7 +2201,7 @@
     }
 </script>
 <script>
-    const { createApp, ref, computed, watch, onMounted } = Vue;
+    const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
     // 🕯️ costs は精霊ごとのキャンドルコスト表（次イベントのツリー画像より反映）
     // ツリーは下から第1層→第4層の順（画像の一番下が第1層、一番上のハートが最終報酬）。
@@ -2269,6 +2312,23 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const showSidebar = ref(false);
             const showSharedTools = ref(false); // 📌 メモ・計算欄はデフォルトで折りたたみ
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
+
+            // ⏳ ヘッダーに表示するシーズン残り時間（1秒ごとに更新）
+            const nowForCountdown = ref(new Date());
+            let seasonCountdownTimer = null;
+            const seasonCountdown = computed(() => {
+                const diffMs = SEASON_END - nowForCountdown.value;
+                if (diffMs <= 0) return { ended: true, days: 0, hours: 0, minutes: 0, seconds: 0 };
+                const totalSeconds = Math.floor(diffMs / 1000);
+                return {
+                    ended: false,
+                    days: Math.floor(totalSeconds / 86400),
+                    hours: Math.floor((totalSeconds % 86400) / 3600),
+                    minutes: Math.floor((totalSeconds % 3600) / 60),
+                    seconds: totalSeconds % 60
+                };
+            });
+            const pad2 = (n) => String(n).padStart(2, '0');
 
             // 🕯️ シーズンキャンドル計算機の状態管理変数
             const hasSeasonPass = ref(true);
@@ -2408,15 +2468,21 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const activeDistributedCandles = computed(() => activeTotalCandles.value - activeRemainingCandles.value);
 
             // 🔮 精霊ツリー（4体横並び比較）用のデータ整形
-            // 画像と同じ並び順（上＝ハートとの交換→第4層→第3層→第2層→下＝第1層）に組み替える。
-            // ハートとの交換アイテムは行として独立させ、コストはヘッダー側の💗バッジにまとめて表示する。
+            // 個別ツリーと全く同じDOM順・同じ「層」区切りで表示する（第1層→第2層→第3層→第4層→ハート の順にDOMへ並べ、
+            // 個別ツリーと同じ column-reverse で下から第1層→上へ積み上げる。見た目は上＝ハート→第4層→…→下＝第1層になる）。
+            const FORECAST_TIER_LABELS = { tier4: '第4層', tier3: '第3層', tier2: '第2層', tier1: '第1層' };
+
             const getForecastData = (spirit) => {
                 let heartItem = null;
-                const tierOrder = ['tier4', 'tier3', 'tier2', 'tier1'];
-                const rows = tierOrder.map(key => spirit.treeData[key].filter(item => {
-                    if (item.isHeartGoal) { heartItem = item; return false; }
-                    if (isPhantomItem(item)) return false;
-                    return true;
+                const tierOrder = ['tier1', 'tier2', 'tier3', 'tier4'];
+                const rows = tierOrder.map(key => ({
+                    key,
+                    label: FORECAST_TIER_LABELS[key],
+                    items: spirit.treeData[key].filter(item => {
+                        if (item.isHeartGoal) { heartItem = item; return false; }
+                        if (isPhantomItem(item)) return false;
+                        return true;
+                    })
                 }));
                 return { heartItem, rows, total: getSpiritTotalCandles(spirit) };
             };
@@ -2956,7 +3022,13 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 }
             };
 
-            onMounted(() => { load(); });
+            onMounted(() => {
+                load();
+                seasonCountdownTimer = setInterval(() => { nowForCountdown.value = new Date(); }, 1000);
+            });
+            onUnmounted(() => {
+                if (seasonCountdownTimer) clearInterval(seasonCountdownTimer);
+            });
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
             return {
@@ -2964,14 +3036,14 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
-                getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, isPhantomItem, isDarkMode, toggleTheme,
+                getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, isDarkMode, toggleTheme,
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
-                CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT,
+                CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonCountdown, pad2,
                 activeFastestHeartPlan,
                 spiritForecasts, grandTotalCandles, getForecastIconId
             };
