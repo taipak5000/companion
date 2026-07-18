@@ -1738,7 +1738,7 @@
                     </template>
                 </div>
                 <div style="font-size: 10px; color: var(--text-gray); margin-top: 6px; line-height: 1.5;">
-                    ※「コンプリート」は魔法アイテムを除く全アイテム（アドパス①〜③・ハートとの交換を含む）が対象です。アドパス関連アイテムの取得には別途アドパスの保有が必要です。
+                    ※「コンプリート」は魔法アイテムを除く全アイテム（アドパスアイテム・ハートとの交換を含む）が対象です。アドパス関連アイテムの取得には別途アドパスの保有が必要です。
                 </div>
                 <div style="font-size: 10px; color: var(--text-gray); margin-top: 8px; line-height: 1.5;">
                     ※ キャンドルは精霊間で共通の所持数として計算されます。各アイテムのコストはツリー内の「コストを編集」から精霊ごとに調整できます。
@@ -1803,7 +1803,7 @@
                 </template>
 
                 <div style="font-size: 10px; color: var(--text-gray); margin-top: 10px; line-height: 1.5;">
-                    ※ 連れ歩きは「4体の中で最もポイントが低い精霊」を、交換は「ポイント効率の良いアイテム」を毎日優先する想定のシミュレーションです。アドパス①〜③は好きなタイミングで取得できるためプラン対象外です。実際の進め方の参考としてご利用ください。
+                    ※ 連れ歩きは「4体の中で最もポイントが低い精霊」を、交換は「ポイント効率の良いアイテム」を毎日優先する想定のシミュレーションです。アドパスアイテムは好きなタイミングで取得できるためプラン対象外です。実際の進め方の参考としてご利用ください。
                 </div>
                 </template>
             </div>
@@ -2110,7 +2110,7 @@
                             <span class="tier-title">第4層（必要累計: 180p）</span>
                             <span class="tier-req">{{ activePoints >= 280 ? '🎉 解放完了' : 'あと ' + (activePoints < 180 ? 100 : 280 - activePoints) + 'p' }}</span>
                         </div>
-                        <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: アドパス④）を右寄せで表示 -->
+                        <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: アドパスアイテム）を右寄せで表示 -->
                         <div class="game-node-wrapper" style="margin-bottom: 16px;" v-if="activeSpirit.treeData.tier4.some(i => i.wrapRow && !isPhantomItem(i))">
                             <div class="node-placeholder"></div>
                             <div class="node-placeholder"></div>
@@ -2211,7 +2211,7 @@
     // ⚠️ 第3層にはアドパスの枠が実在しない。代わりに第4層にアドパス④がある（ハートの後ろに追加し、
     // heartのtier4[2]という位置参照を崩さないようにしている）。
     // 🎭 エモートはLv1〜Lv4まであるが、Lv2とLv4はキャンドル交換ではなくアドパス限定で入手
-    // （「アドパス②/④」とは別枠の「アドパスエモートLv2/Lv4」として存在）。
+    // （アドパスアイテムとは別枠の「アドパスエモートLv2/Lv4」として存在）。
     // キャンドルを払って交換できるのはLv1(第1層,無料)とLv3(第3層,em2)のみ。
     // em2は「歩き系アイテムの出現順」で自動採番すると2番目=Lv2になってしまうため、customLabelでLv3に固定している。
     const createInitialTree = (prefix, costs) => ({
@@ -2232,7 +2232,7 @@
             { id: prefix + '_it2', type: 'seasonal', name: '季節アイテム②', points: 100, candles: costs.it2, checked: false },
             { id: prefix + '_extra4', type: 'magic', name: '魔法④', points: 0, candles: costs.extra, checked: false },
             { id: prefix + '_heart', name: '♡ ハートと交換', points: 0, candles: costs.heart, requiresSeasonPass: true, isHeartGoal: true, firstBonus: true, checked: false },
-            { id: prefix + '_bonus4', name: 'アドパス④', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, wrapRow: true, checked: false },
+            { id: prefix + '_bonus4', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, wrapRow: true, checked: false },
             { id: prefix + '_bonus4b', name: 'アドパスエモートLv4', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false }
         ]
     });
@@ -2375,11 +2375,11 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             spirits.value[0].treeData.tier3[0].customImage = S1_ART_IMAGES.emote_generic; // エモートLv3
             spirits.value[0].treeData.tier3[1].customImage = S1_ART_IMAGES.dye_white; // 白染料
             spirits.value[0].treeData.tier4[0].customImage = S1_ART_IMAGES.seasonal_shell; // 季節アイテム②（貝殻）
-            spirits.value[0].treeData.tier4[3].customImage = S1_ART_IMAGES.adpass_dress; // アドパス④
+            spirits.value[0].treeData.tier4[3].customImage = S1_ART_IMAGES.adpass_dress; // アドパスアイテム
             spirits.value[0].treeData.tier4[4].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv4
 
             // 🆕 オランダの記憶: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
-            spirits.value[0].treeData.tier3.push({ id: 's1_bonus3', name: 'アドパス③', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, customImage: S1_ART_IMAGES.adpass_headpiece });
+            spirits.value[0].treeData.tier3.push({ id: 's1_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, customImage: S1_ART_IMAGES.adpass_headpiece });
 
             // 素朴な記憶: 第2層の魔法② → 赤染料（🕯️8）。第4層の魔法④は枠自体が存在しないため削除（コスト0化）
             spirits.value[1].treeData.tier2[1].type = 'dye';
@@ -2411,7 +2411,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             spirits.value[2].treeData.tier2[0].customImage = S3_ART_IMAGES.seasonal2_blob; // 季節アイテム②（クリーム色の塊）
             spirits.value[2].treeData.tier2[2].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv2
             spirits.value[2].treeData.tier3[2].customImage = S3_ART_IMAGES.dye_yellow; // 黄色染料（フック状の壺アイコン）
-            spirits.value[2].treeData.tier4[3].customImage = S3_ART_IMAGES.adpass4_spiral; // アドパス④（茶色い渦巻き）
+            spirits.value[2].treeData.tier4[3].customImage = S3_ART_IMAGES.adpass4_spiral; // アドパスアイテム（茶色い渦巻き）
             spirits.value[2].treeData.tier4[4].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv4
 
             // 喜びの記憶: 第1層 魔法①→季節アイテム①(🕯️12)
