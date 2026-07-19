@@ -1313,6 +1313,138 @@
         }
 
         /* --------------------------------------------------------------------------------- */
+        /* 🗂️ 記録（データ）の切り替え — 現状の記録・予測用の記録や、複数アカウントの使い分けに使う */
+        /* --------------------------------------------------------------------------------- */
+
+        .record-switch-card {
+            margin-bottom: 16px;
+            padding: 14px 16px;
+        }
+
+        .record-switch-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .record-switch-title {
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .record-switch-hint {
+            font-size: 11px;
+            color: var(--text-gray);
+        }
+
+        .record-tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+        .record-tabs::-webkit-scrollbar { height: 6px; }
+        .record-tabs::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        .record-tab {
+            display: flex;
+            align-items: center;
+            gap: 1px;
+            flex-shrink: 0;
+            background: var(--tab-bg);
+            border-radius: 8px;
+            padding: 2px;
+            transition: background-color 0.2s;
+        }
+
+        /* 🟢 今アクティブな記録は、他のアイテムと色が被らない accent-green で目立たせる */
+        .record-tab.active {
+            background: rgba(52, 199, 89, 0.14);
+        }
+        [data-theme="dark"] .record-tab.active {
+            background: rgba(48, 209, 88, 0.2);
+        }
+
+        .record-tab-btn {
+            border: none;
+            background: transparent;
+            padding: 7px 10px;
+            font-size: 12.5px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-color);
+            white-space: nowrap;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .record-tab.active .record-tab-btn { color: var(--accent-green); }
+        [data-theme="dark"] .record-tab.active .record-tab-btn { color: #30d158; }
+
+        .record-icon-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 6px 5px;
+            border-radius: 6px;
+            line-height: 1;
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+        .record-icon-btn:hover { opacity: 1; filter: brightness(0.95); }
+        .record-icon-danger:hover { color: var(--danger-text); }
+
+        /* 🔴 削除ボタンの「もう一度押すと削除されます」確認状態。
+           ネイティブのconfirm()ダイアログが動かない環境でも確実に機能するよう、
+           ボタン自体の見た目を変えて2回タップさせる方式にしている。 */
+        .record-icon-confirming {
+            opacity: 1;
+            background: var(--danger-text);
+            color: #ffffff;
+            padding: 6px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .record-icon-confirming:hover { color: #ffffff; filter: brightness(1.1); }
+
+        .record-name-input {
+            box-sizing: border-box;
+            padding: 6px 8px;
+            border: 1px solid var(--accent-green);
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: bold;
+            background: var(--card-bg);
+            color: var(--text-color);
+            width: 112px;
+            outline: none;
+        }
+
+        .record-add-btn {
+            flex-shrink: 0;
+            border: 1px dashed var(--border-color);
+            background: transparent;
+            color: var(--text-gray);
+            padding: 7px 12px;
+            font-size: 12.5px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .record-add-btn:hover {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        /* --------------------------------------------------------------------------------- */
         /* 🔮 精霊ツリー（4体横並び比較）エリア — 公開されたツリー画像のレイアウト参考 */
         /* --------------------------------------------------------------------------------- */
 
@@ -1627,6 +1759,47 @@
             </div>
         </div>
     </header>
+
+    <!-- ═══ 記録（データ）の切り替え ═══ -->
+    <div class="section-card record-switch-card">
+        <div class="record-switch-head">
+            <span class="record-switch-title">{{ t('record_title') }}</span>
+            <span class="record-switch-hint">{{ t('record_hint') }}</span>
+        </div>
+        <div class="record-tabs">
+            <div v-for="rec in records" :key="rec.id" class="record-tab" :class="{ active: rec.id === activeRecordId }">
+                <input
+                    v-if="editingRecordId === rec.id"
+                    type="text"
+                    class="record-name-input"
+                    v-model="editingRecordName"
+                    :placeholder="t('record_name_placeholder')"
+                    maxlength="20"
+                    autofocus
+                    @focus="$event.target.select()"
+                    @keyup.enter="confirmRenameRecord"
+                    @keyup.esc="cancelRenameRecord"
+                    @blur="confirmRenameRecord"
+                    @click.stop
+                >
+                <template v-else>
+                    <button class="record-tab-btn" @click="switchRecord(rec.id)" :title="rec.name">{{ rec.name }}</button>
+                    <template v-if="rec.id === activeRecordId">
+                        <button class="record-icon-btn" @click.stop="startRenameRecord(rec)" :title="t('record_rename')">✏️</button>
+                        <button class="record-icon-btn" @click.stop="addRecord(true)" :title="t('record_duplicate')">⧉</button>
+                        <button
+                            v-if="records.length > 1"
+                            class="record-icon-btn record-icon-danger"
+                            :class="{ 'record-icon-confirming': confirmingDeleteId === rec.id }"
+                            @click.stop="requestDeleteRecord(rec.id)"
+                            :title="confirmingDeleteId === rec.id ? t('record_delete_confirm_tap') : t('record_delete')"
+                        >{{ confirmingDeleteId === rec.id ? t('record_delete_confirm_short') : '🗑️' }}</button>
+                    </template>
+                </template>
+            </div>
+            <button class="record-add-btn" @click="addRecord(false)" :title="t('record_add')">＋ {{ t('record_add_short') }}</button>
+        </div>
+    </div>
 
     <!-- サイドバーオーバーレイ（モバイル） -->
     <div v-if="showSidebar" class="sidebar-overlay" @click="showSidebar = false"></div>
@@ -2441,6 +2614,119 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
     };
 
+    // 🧬 精霊4体ぶんの初期データ（デフォルト状態）を毎回まっさらに生成するファクトリ関数。
+    // 元々は setup() 内で一度だけ実行される初期化コードだったが、
+    // 記録（データ）を新規追加するたびに同じ初期状態を作れるよう、関数として独立させてある。
+    const createDefaultSpiritsData = () => {
+        const data = [
+            { id: 1, name: 'オランダの思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
+            { id: 2, name: '素朴な思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2', SPIRIT_TREE_COSTS.s2) },
+            { id: 3, name: '芸術の思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3', SPIRIT_TREE_COSTS.s3) },
+            { id: 4, name: '喜びの思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4', SPIRIT_TREE_COSTS.s4) }
+        ];
+
+        // 🎨 実際に公開されたツリーで「魔法」枠の中身が染料だった精霊は、種別(type)と表示名をここで個別に上書きする。
+        // 種別を変えると同じ精霊内・同じ種別の自動採番（①②③…）がズレるため、
+        // 影響を受ける他のアイテムは customLabel で元の表示名に固定し直している。
+
+        // オランダの思い出: 第3層の魔法③ → 白染料（🕯️10）
+        data[0].treeData.tier3[1].type = 'dye';
+        data[0].treeData.tier3[1].customLabel = '白染料';
+        data[0].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示のまま）
+
+        // 🖼️ オランダの思い出: 実機スクショに基づく個別アイコン画像を割り当て
+        data[0].treeData.tier1[0].customImage = S1_ART_IMAGES.emote_generic; // エモートLv1
+        data[0].treeData.tier2[0].customImage = S1_ART_IMAGES.seasonal_vase; // 季節アイテム①（花瓶）
+        data[0].treeData.tier2[2].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv2
+        data[0].treeData.tier3[0].customImage = S1_ART_IMAGES.emote_generic; // エモートLv3
+        data[0].treeData.tier3[1].customImage = S1_ART_IMAGES.dye_white; // 白染料
+        data[0].treeData.tier4[0].customImage = S1_ART_IMAGES.seasonal_shell; // 季節アイテム②（貝殻）
+        data[0].treeData.tier4[3].customImage = S1_ART_IMAGES.adpass_dress; // アドパスアイテム
+        data[0].treeData.tier4[4].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv4
+
+        // 🆕 オランダの思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
+        data[0].treeData.tier3.push({ id: 's1_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S1_ART_IMAGES.adpass_headpiece });
+
+        // 素朴な思い出: 第2層の魔法② → 赤染料（🕯️8）。第4層の魔法④は枠自体が存在しないため削除（コスト0化）
+        data[1].treeData.tier2[1].type = 'dye';
+        data[1].treeData.tier2[1].customLabel = '赤染料';
+        data[1].treeData.tier3[1].customLabel = '魔法③'; // ↑の採番ズレ補正
+        data[1].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示）
+
+        // 🖼️ 素朴な思い出: 実機スクショに基づく個別アイコン画像を割り当て
+        data[1].treeData.tier1[0].customImage = S2_ART_IMAGES.emote_generic; // エモートLv1
+        data[1].treeData.tier2[0].customImage = S2_ART_IMAGES.seasonal_painting; // 季節アイテム①（風車の絵）
+        data[1].treeData.tier2[1].customImage = S2_ART_IMAGES.dye_red; // 赤染料
+        data[1].treeData.tier2[2].customImage = S2_ART_IMAGES.emote_generic; // アドパスエモートLv2
+        data[1].treeData.tier3[0].customImage = S2_ART_IMAGES.emote_generic; // エモートLv3
+        data[1].treeData.tier4[0].customImage = S2_ART_IMAGES.seasonal_hat; // 季節アイテム②（帽子）
+        data[1].treeData.tier4[3].customImage = S2_ART_IMAGES.adpass_cape; // アドパスアイテム
+        data[1].treeData.tier4[4].customImage = S2_ART_IMAGES.emote_generic; // アドパスエモートLv4
+
+        // 🆕 素朴な思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
+        data[1].treeData.tier3.push({ id: 's2_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S2_ART_IMAGES.adpass_shoe });
+
+        // 🔁 芸術の思い出・喜びの思い出は「魔法」⇄「季節アイテム」の入れ替えが多いため、
+        // ここでは customLabel を使わず type だけ書き換え、自動採番（①②③…）の繰り上がりに任せている。
+        // （繰り上がり後の結果は末尾のシミュレーションで確認済み）
+
+        // 芸術の思い出: 第1層 魔法①→季節アイテム①(🕯️12) / 第2層 魔法②は自動で①に繰上(🕯️6)
+        // 第3層 魔法③→季節アイテム③(🕯️22) / 第4層 季節アイテム②→魔法②(🕯️10、自動で②になる)
+        // 第3層に「黄色染料」を追加(🕯️10)。3アイテム構成・獲得ポイント合計は80になるよう
+        // 26.4/26.4/27.2で配分（表示は丸めて+26p/+26p/+27p。3等分の26.67だと全て+27pに丸まってしまうため、
+        // 2枠を26.4に寄せて+26p表示を維持しつつ、残りを最後の枠(黄色染料)に27.2として集約している）
+        data[2].treeData.tier1[1].type = 'seasonal';
+        data[2].treeData.tier3[0].points = 26.4; // エモートLv3
+        data[2].treeData.tier3[1].type = 'seasonal';
+        data[2].treeData.tier3[1].points = 26.4; // 季節アイテム③
+        data[2].treeData.tier3.push({ id: 's3_dye_yellow', type: 'dye', customLabel: '黄色染料', points: 27.2, candles: 10, checked: false, excluded: false });
+        data[2].treeData.tier4[0].type = 'magic';
+        // 🖼️ 芸術の思い出の実機アイコン画像を割り当て（エモートは絵を描くポーズで全レベル共通、魔法は渦巻き模様の星で共通）
+        data[2].treeData.tier1[0].customImage = S3_ART_IMAGES.emote_painting; // エモートLv1
+        data[2].treeData.tier1[1].customImage = S3_ART_IMAGES.seasonal1_frame; // 季節アイテム①（額縁の花の絵）
+        data[2].treeData.tier2[1].customImage = S3_ART_IMAGES.magic_swirl; // 魔法①
+        data[2].treeData.tier3[0].customImage = S3_ART_IMAGES.emote_painting; // エモートLv3
+        data[2].treeData.tier3[1].customImage = S3_ART_IMAGES.seasonal3_vase; // 季節アイテム③（ひまわりの花瓶）
+        data[2].treeData.tier4[0].customImage = S3_ART_IMAGES.magic_swirl; // 魔法②
+        data[2].treeData.tier2[0].customImage = S3_ART_IMAGES.seasonal2_blob; // 季節アイテム②（クリーム色の塊）
+        data[2].treeData.tier2[2].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv2
+        data[2].treeData.tier3[2].customImage = S3_ART_IMAGES.dye_yellow; // 黄色染料（フック状の壺アイコン）
+        data[2].treeData.tier4[3].customImage = S3_ART_IMAGES.adpass4_spiral; // アドパスアイテム（茶色い渦巻き）
+        data[2].treeData.tier4[4].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv4
+
+        // 喜びの思い出: 第1層 魔法①→季節アイテム①(🕯️12)
+        // 第2層 季節アイテム①は枠が存在しないため削除（コスト0化。typeはseasonalのまま維持し非表示に）
+        //       魔法②は自動で①に繰上(🕯️6のまま)。獲得ポイントは実機確認により60pに修正
+        // 第3層 エモートのコストのみ変更(🕯️22) / 魔法③は自動で②に繰上(🕯️8のまま)
+        //       季節アイテム②を新規追加(🕯️22)。第3層は3アイテム構成・獲得ポイント合計は80になるよう
+        //       26.4/26.4/27.2で配分（表示は丸めて+26p/+26p/+27p。芸術の思い出と同じ考え方）
+        // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)
+        data[3].treeData.tier1[1].type = 'seasonal';
+        data[3].treeData.tier2[1].points = 60; // 魔法①（自動繰上後の表示名）
+        data[3].treeData.tier3[0].points = 26.4; // エモートLv3
+        data[3].treeData.tier3[1].points = 26.4; // 魔法②
+        data[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 27.2, candles: 22, checked: false, excluded: false });
+        data[3].treeData.tier4[1].type = 'dye';
+        data[3].treeData.tier4[1].customLabel = '黒染料';
+
+        // 🖼️ 喜びの思い出: 実機スクショに基づく個別アイコン画像を割り当て
+        data[3].treeData.tier1[0].customImage = S4_ART_IMAGES.emote_generic; // エモートLv1
+        data[3].treeData.tier1[1].customImage = S4_ART_IMAGES.seasonal_painting; // 季節アイテム①（村の絵）
+        data[3].treeData.tier2[2].customImage = S4_ART_IMAGES.emote_generic; // アドパスエモートLv2
+        data[3].treeData.tier3[0].customImage = S4_ART_IMAGES.emote_generic; // エモートLv3
+        data[3].treeData.tier3[2].customImage = S4_ART_IMAGES.seasonal_hair; // 季節アイテム②（巻き毛）
+        data[3].treeData.tier4[0].customImage = S4_ART_IMAGES.seasonal_jacket; // 季節アイテム③（青い服）
+        data[3].treeData.tier4[1].customImage = S4_ART_IMAGES.dye_black; // 黒染料
+
+        // 🔀 喜びの思い出: 実機スクショで確認したところ、他の精霊と異なりアドパス専用枠（コスト0）は
+        // 第4層ではなく第2層に存在する。ベーステンプレートの第4層アドパス枠(bonus4)を取り除き、
+        // 第2層に付け替える（アドパスエモートLv4は通常通り第4層に残る）。
+        data[3].treeData.tier4.splice(3, 1); // 第4層のbonus4（アドパスアイテム）を削除
+        data[3].treeData.tier4[3].customImage = S4_ART_IMAGES.emote_generic; // アドパスエモートLv4（繰上後のindex）
+        data[3].treeData.tier2.push({ id: 's4_bonus2c', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, requiresSeasonPass: true, wrapRow: true, checked: false, excluded: false, customImage: S4_ART_IMAGES.adpass_cap });
+
+        return data;
+    };
 
     // 🌸 現在のシーズン情報
     const CURRENT_SEASON_NAME = '親愛なるファン・ゴッホへ';
@@ -2520,6 +2806,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             side_related_tools: '🔗 関連ツール',
             side_current_tool: '✨ 精霊同行ツール',
             side_star_candle_tool: '🕯️ 星のキャンドル計算機',
+
+            record_title: '🗂️ 記録の切り替え',
+            record_hint: '予測用・実績用の記録や、複数アカウントの使い分けに便利です',
+            record_add: '新しい記録を追加',
+            record_add_short: '追加',
+            record_rename: '名前を変更',
+            record_duplicate: 'この記録を複製して新規作成',
+            record_delete: 'この記録を削除',
+            record_name_placeholder: '記録名',
+            record_delete_confirm_short: '削除？',
+            record_delete_confirm_tap: 'もう一度押すと削除されます',
 
             fc_title: '🔮 精霊ツリー（4体横並び比較）',
             fc_close: '閉じる ▲',
@@ -2717,6 +3014,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             side_related_tools: '🔗 Related Tools',
             side_current_tool: '✨ Spirit Companion Tool',
             side_star_candle_tool: '🕯️ Star Candle Calculator',
+
+            record_title: '🗂️ Switch Records',
+            record_hint: 'Handy for tracking predicted vs. actual progress, or managing multiple accounts',
+            record_add: 'Add a new record',
+            record_add_short: 'Add',
+            record_rename: 'Rename',
+            record_duplicate: 'Duplicate this record',
+            record_delete: 'Delete this record',
+            record_name_placeholder: 'Record name',
+            record_delete_confirm_short: 'Delete?',
+            record_delete_confirm_tap: 'Tap again to delete',
 
             fc_title: '🔮 Spirit Trees (4-way comparison)',
             fc_close: 'Close ▲',
@@ -2938,112 +3246,16 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const showMultiSpiritLog = ref(false); // 📋 4体分の日別プランも初期は折りたたみ
             const showMultiSpiritPlan = ref(false); // 🧭 効率的な進め方のおすすめカードも初期は折りたたみ
 
-            const spirits = ref([
-                { id: 1, name: 'オランダの思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
-                { id: 2, name: '素朴な思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2', SPIRIT_TREE_COSTS.s2) },
-                { id: 3, name: '芸術の思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3', SPIRIT_TREE_COSTS.s3) },
-                { id: 4, name: '喜びの思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4', SPIRIT_TREE_COSTS.s4) }
-            ]);
+            // 🗂️ 記録（データ）管理用の状態変数。
+            // 「現状の記録」「予測用の記録」のように、丸ごと別のセーブ枠を複数持てるようにする。
+            const records = ref([{ id: 'default', name: 'データ1' }]); // [{id, name}] の一覧（load()内で復元・調整される）
+            const activeRecordId = ref('default'); // 現在アクティブな記録のid
+            const editingRecordId = ref(null); // 名前編集中の記録id（null=編集していない）
+            const editingRecordName = ref(''); // 名前編集中のテキストボックスの内容
+            const confirmingDeleteId = ref(null); // 削除確認中（ボタンを2回押す必要がある）の記録id
+            let confirmingDeleteTimer = null; // 削除確認状態を自動解除するタイマー
 
-            // 🎨 実際に公開されたツリーで「魔法」枠の中身が染料だった精霊は、種別(type)と表示名をここで個別に上書きする。
-            // 種別を変えると同じ精霊内・同じ種別の自動採番（①②③…）がズレるため、
-            // 影響を受ける他のアイテムは customLabel で元の表示名に固定し直している。
-
-            // オランダの思い出: 第3層の魔法③ → 白染料（🕯️10）
-            spirits.value[0].treeData.tier3[1].type = 'dye';
-            spirits.value[0].treeData.tier3[1].customLabel = '白染料';
-            spirits.value[0].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示のまま）
-
-            // 🖼️ オランダの思い出: 実機スクショに基づく個別アイコン画像を割り当て
-            spirits.value[0].treeData.tier1[0].customImage = S1_ART_IMAGES.emote_generic; // エモートLv1
-            spirits.value[0].treeData.tier2[0].customImage = S1_ART_IMAGES.seasonal_vase; // 季節アイテム①（花瓶）
-            spirits.value[0].treeData.tier2[2].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv2
-            spirits.value[0].treeData.tier3[0].customImage = S1_ART_IMAGES.emote_generic; // エモートLv3
-            spirits.value[0].treeData.tier3[1].customImage = S1_ART_IMAGES.dye_white; // 白染料
-            spirits.value[0].treeData.tier4[0].customImage = S1_ART_IMAGES.seasonal_shell; // 季節アイテム②（貝殻）
-            spirits.value[0].treeData.tier4[3].customImage = S1_ART_IMAGES.adpass_dress; // アドパスアイテム
-            spirits.value[0].treeData.tier4[4].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv4
-
-            // 🆕 オランダの思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
-            spirits.value[0].treeData.tier3.push({ id: 's1_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S1_ART_IMAGES.adpass_headpiece });
-
-            // 素朴な思い出: 第2層の魔法② → 赤染料（🕯️8）。第4層の魔法④は枠自体が存在しないため削除（コスト0化）
-            spirits.value[1].treeData.tier2[1].type = 'dye';
-            spirits.value[1].treeData.tier2[1].customLabel = '赤染料';
-            spirits.value[1].treeData.tier3[1].customLabel = '魔法③'; // ↑の採番ズレ補正
-            spirits.value[1].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示）
-
-            // 🖼️ 素朴な思い出: 実機スクショに基づく個別アイコン画像を割り当て
-            spirits.value[1].treeData.tier1[0].customImage = S2_ART_IMAGES.emote_generic; // エモートLv1
-            spirits.value[1].treeData.tier2[0].customImage = S2_ART_IMAGES.seasonal_painting; // 季節アイテム①（風車の絵）
-            spirits.value[1].treeData.tier2[1].customImage = S2_ART_IMAGES.dye_red; // 赤染料
-            spirits.value[1].treeData.tier2[2].customImage = S2_ART_IMAGES.emote_generic; // アドパスエモートLv2
-            spirits.value[1].treeData.tier3[0].customImage = S2_ART_IMAGES.emote_generic; // エモートLv3
-            spirits.value[1].treeData.tier4[0].customImage = S2_ART_IMAGES.seasonal_hat; // 季節アイテム②（帽子）
-            spirits.value[1].treeData.tier4[3].customImage = S2_ART_IMAGES.adpass_cape; // アドパスアイテム
-            spirits.value[1].treeData.tier4[4].customImage = S2_ART_IMAGES.emote_generic; // アドパスエモートLv4
-
-            // 🆕 素朴な思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
-            spirits.value[1].treeData.tier3.push({ id: 's2_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S2_ART_IMAGES.adpass_shoe });
-
-            // 🔁 芸術の思い出・喜びの思い出は「魔法」⇄「季節アイテム」の入れ替えが多いため、
-            // ここでは customLabel を使わず type だけ書き換え、自動採番（①②③…）の繰り上がりに任せている。
-            // （繰り上がり後の結果は末尾のシミュレーションで確認済み）
-
-            // 芸術の思い出: 第1層 魔法①→季節アイテム①(🕯️12) / 第2層 魔法②は自動で①に繰上(🕯️6)
-            // 第3層 魔法③→季節アイテム③(🕯️22) / 第4層 季節アイテム②→魔法②(🕯️10、自動で②になる)
-            // 第3層に「黄色染料」を追加(🕯️10)。3アイテム構成・獲得ポイント合計は80になるよう
-            // 26.4/26.4/27.2で配分（表示は丸めて+26p/+26p/+27p。3等分の26.67だと全て+27pに丸まってしまうため、
-            // 2枠を26.4に寄せて+26p表示を維持しつつ、残りを最後の枠(黄色染料)に27.2として集約している）
-            spirits.value[2].treeData.tier1[1].type = 'seasonal';
-            spirits.value[2].treeData.tier3[0].points = 26.4; // エモートLv3
-            spirits.value[2].treeData.tier3[1].type = 'seasonal';
-            spirits.value[2].treeData.tier3[1].points = 26.4; // 季節アイテム③
-            spirits.value[2].treeData.tier3.push({ id: 's3_dye_yellow', type: 'dye', customLabel: '黄色染料', points: 27.2, candles: 10, checked: false, excluded: false });
-            spirits.value[2].treeData.tier4[0].type = 'magic';
-            // 🖼️ 芸術の思い出の実機アイコン画像を割り当て（エモートは絵を描くポーズで全レベル共通、魔法は渦巻き模様の星で共通）
-            spirits.value[2].treeData.tier1[0].customImage = S3_ART_IMAGES.emote_painting; // エモートLv1
-            spirits.value[2].treeData.tier1[1].customImage = S3_ART_IMAGES.seasonal1_frame; // 季節アイテム①（額縁の花の絵）
-            spirits.value[2].treeData.tier2[1].customImage = S3_ART_IMAGES.magic_swirl; // 魔法①
-            spirits.value[2].treeData.tier3[0].customImage = S3_ART_IMAGES.emote_painting; // エモートLv3
-            spirits.value[2].treeData.tier3[1].customImage = S3_ART_IMAGES.seasonal3_vase; // 季節アイテム③（ひまわりの花瓶）
-            spirits.value[2].treeData.tier4[0].customImage = S3_ART_IMAGES.magic_swirl; // 魔法②
-            spirits.value[2].treeData.tier2[0].customImage = S3_ART_IMAGES.seasonal2_blob; // 季節アイテム②（クリーム色の塊）
-            spirits.value[2].treeData.tier2[2].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv2
-            spirits.value[2].treeData.tier3[2].customImage = S3_ART_IMAGES.dye_yellow; // 黄色染料（フック状の壺アイコン）
-            spirits.value[2].treeData.tier4[3].customImage = S3_ART_IMAGES.adpass4_spiral; // アドパスアイテム（茶色い渦巻き）
-            spirits.value[2].treeData.tier4[4].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv4
-
-            // 喜びの思い出: 第1層 魔法①→季節アイテム①(🕯️12)
-            // 第2層 季節アイテム①は枠が存在しないため削除（コスト0化。typeはseasonalのまま維持し非表示に）
-            //       魔法②は自動で①に繰上(🕯️6のまま)。獲得ポイントは実機確認により60pに修正
-            // 第3層 エモートのコストのみ変更(🕯️22) / 魔法③は自動で②に繰上(🕯️8のまま)
-            //       季節アイテム②を新規追加(🕯️22)。第3層は3アイテム構成・獲得ポイント合計は80になるよう
-            //       26.4/26.4/27.2で配分（表示は丸めて+26p/+26p/+27p。芸術の思い出と同じ考え方）
-            // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)
-            spirits.value[3].treeData.tier1[1].type = 'seasonal';
-            spirits.value[3].treeData.tier2[1].points = 60; // 魔法①（自動繰上後の表示名）
-            spirits.value[3].treeData.tier3[0].points = 26.4; // エモートLv3
-            spirits.value[3].treeData.tier3[1].points = 26.4; // 魔法②
-            spirits.value[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 27.2, candles: 22, checked: false, excluded: false });
-            spirits.value[3].treeData.tier4[1].type = 'dye';
-            spirits.value[3].treeData.tier4[1].customLabel = '黒染料';
-
-            // 🖼️ 喜びの思い出: 実機スクショに基づく個別アイコン画像を割り当て
-            spirits.value[3].treeData.tier1[0].customImage = S4_ART_IMAGES.emote_generic; // エモートLv1
-            spirits.value[3].treeData.tier1[1].customImage = S4_ART_IMAGES.seasonal_painting; // 季節アイテム①（村の絵）
-            spirits.value[3].treeData.tier2[2].customImage = S4_ART_IMAGES.emote_generic; // アドパスエモートLv2
-            spirits.value[3].treeData.tier3[0].customImage = S4_ART_IMAGES.emote_generic; // エモートLv3
-            spirits.value[3].treeData.tier3[2].customImage = S4_ART_IMAGES.seasonal_hair; // 季節アイテム②（巻き毛）
-            spirits.value[3].treeData.tier4[0].customImage = S4_ART_IMAGES.seasonal_jacket; // 季節アイテム③（青い服）
-            spirits.value[3].treeData.tier4[1].customImage = S4_ART_IMAGES.dye_black; // 黒染料
-
-            // 🔀 喜びの思い出: 実機スクショで確認したところ、他の精霊と異なりアドパス専用枠（コスト0）は
-            // 第4層ではなく第2層に存在する。ベーステンプレートの第4層アドパス枠(bonus4)を取り除き、
-            // 第2層に付け替える（アドパスエモートLv4は通常通り第4層に残る）。
-            spirits.value[3].treeData.tier4.splice(3, 1); // 第4層のbonus4（アドパスアイテム）を削除
-            spirits.value[3].treeData.tier4[3].customImage = S4_ART_IMAGES.emote_generic; // アドパスエモートLv4（繰上後のindex）
-            spirits.value[3].treeData.tier2.push({ id: 's4_bonus2c', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, requiresSeasonPass: true, wrapRow: true, checked: false, excluded: false, customImage: S4_ART_IMAGES.adpass_cap });
+            const spirits = ref(createDefaultSpiritsData());
 
             const activeSpirit = computed(() => spirits.value[activeIndex.value]);
 
@@ -3654,7 +3866,13 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
             watch(isDarkMode, () => { applyThemeToDOM(); });
 
-            // 💾 保存処理
+            // 🗂️ 記録（データ）の保存キーを組み立てるヘルパー。
+            // id === 'default' の場合は、旧バージョンからそのまま使っていた保存キーを使い続ける。
+            // これにより、既存ユーザーの保存済みデータは移行処理なしでそのまま「データ1」になる。
+            const RECORDS_META_KEY = 'sky_companion_records_meta_v1';
+            const dataKeyForRecord = (id) => id === 'default' ? 'sky_companion_v4_data' : ('sky_companion_v4_data__' + id);
+
+            // 💾 保存処理（現在アクティブな記録のデータを、その記録専用のキーへ保存する）
             const save = () => {
                 const data = { 
                     activeIndex: activeIndex.value, 
@@ -3665,10 +3883,110 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                     ownedCandles: ownedCandles.value,
                     treeCostVersion: TREE_COST_VERSION
                 };
-                localStorage.setItem('sky_companion_v4_data', JSON.stringify(data));
+                try {
+                    localStorage.setItem(dataKeyForRecord(activeRecordId.value), JSON.stringify(data));
+                } catch (e) { /* 保存領域の上限などで失敗した場合、今回の保存のみスキップする */ }
             };
 
-            // 📂 読み込み処理
+            // 🗂️ 記録一覧（id・名前）とアクティブな記録idを保存する
+            const saveRecordsMeta = () => {
+                try {
+                    localStorage.setItem(RECORDS_META_KEY, JSON.stringify({
+                        activeId: activeRecordId.value,
+                        list: records.value.map(r => ({ id: r.id, name: r.name }))
+                    }));
+                } catch (e) { /* noop */ }
+            };
+
+            // 📦 記録データ（1件分のJSON）を、現在の作業用state（activeIndex/spirits等）へ反映する。
+            // 記録の切り替え・初回読み込みの両方から呼ばれる共通処理。
+            const applyLoadedData = (parsed) => {
+                if (!parsed) return;
+                if (parsed.activeIndex !== undefined) activeIndex.value = parsed.activeIndex;
+                if (parsed.sharedNotes !== undefined) sharedNotes.value = parsed.sharedNotes; // 共通メモの復元
+
+                if (parsed.sharedCalcFormula !== undefined) sharedCalcFormula.value = parsed.sharedCalcFormula;
+                if (parsed.hasSeasonPass !== undefined) hasSeasonPass.value = parsed.hasSeasonPass;
+                if (parsed.ownedCandles !== undefined) ownedCandles.value = parsed.ownedCandles;
+
+                // 🔖 保存時と現在でツリーのコスト表バージョンが違う場合、
+                // 古いキャンドルコスト/種別の上書きは復元しない（最新の値を優先する）。
+                // それ以外（チェック状態・連れ歩き日数など）は引き続き復元する。
+                const costDataIsCurrent = parsed.treeCostVersion === TREE_COST_VERSION;
+
+                if (parsed.spirits && Array.isArray(parsed.spirits)) {
+                    parsed.spirits.forEach((savedSpirit, sIdx) => {
+                        if (spirits.value[sIdx]) {
+                            if (savedSpirit.walkDays !== undefined) spirits.value[sIdx].walkDays = savedSpirit.walkDays;
+                            if (savedSpirit.currentPreset) spirits.value[sIdx].currentPreset = savedSpirit.currentPreset;
+
+                            Object.keys(savedSpirit.treeData).forEach(tierKey => {
+                                if (spirits.value[sIdx].treeData[tierKey]) {
+                                    savedSpirit.treeData[tierKey].forEach((savedItem, iIdx) => {
+                                        const targetItem = spirits.value[sIdx].treeData[tierKey][iIdx];
+                                        // 🔁 保存済み配列と現在の構成でid対応が取れない場合（ツリー構造が変わった場合）は
+                                        // このアイテムの復元自体をスキップする。
+                                        if (!targetItem || (savedItem.id && targetItem.id !== savedItem.id)) return;
+                                        targetItem.checked = savedItem.checked;
+                                        // 🚫 「取りたくない」指定はコスト表バージョンに関係のないユーザーの意思なので常に復元する
+                                        if (savedItem.excluded !== undefined) targetItem.excluded = savedItem.excluded;
+                                        if (costDataIsCurrent) {
+                                            // 🕯️ 精霊ごとに調整したキャンドルコストがあれば復元（最新版のみ）
+                                            if (savedItem.candles !== undefined) targetItem.candles = savedItem.candles;
+                                            // 🔁 種別（魔法⇄季節アイテム⇄染料など）の変更を復元。
+                                            // 名前は type と層の位置から自動計算されるため保存不要。
+                                            if (savedItem.type !== undefined) targetItem.type = savedItem.type;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            };
+
+            // 🔄 作業用state（activeIndex/spirits/共通メモ等）を、まっさらな初期値に戻す。
+            // 記録の切り替え・新規追加のたびに呼び出し、前の記録の内容が混ざらないようにする。
+            const resetWorkingStateToDefault = () => {
+                activeIndex.value = 0;
+                spirits.value = createDefaultSpiritsData();
+                sharedNotes.value = '';
+                sharedCalcFormula.value = '';
+                hasSeasonPass.value = true;
+                ownedCandles.value = 0;
+            };
+
+            // 📂 指定した記録idのデータを読み込み、作業用stateへ反映する
+            // （まだ何も保存されていない新規の記録の場合は、まっさらな初期状態のままになる）
+            const loadRecordData = (id) => {
+                resetWorkingStateToDefault();
+                try {
+                    const saved = localStorage.getItem(dataKeyForRecord(id));
+                    if (saved) applyLoadedData(JSON.parse(saved));
+                } catch (e) { console.error(e); }
+            };
+
+            // 🗂️ 記録一覧を復元する。保存がまだない場合（初回利用 or 記録機能追加前のバージョンからの利用）は、
+            // 現在の言語設定に合わせた既定の記録名（データ1）を設定する。
+            const loadRecordsMeta = () => {
+                try {
+                    const saved = localStorage.getItem(RECORDS_META_KEY);
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (parsed.list && Array.isArray(parsed.list) && parsed.list.length > 0) {
+                            records.value = parsed.list;
+                        }
+                        if (parsed.activeId && records.value.some(r => r.id === parsed.activeId)) {
+                            activeRecordId.value = parsed.activeId;
+                        }
+                        return;
+                    }
+                } catch (e) { console.error(e); }
+                records.value = [{ id: 'default', name: currentLang.value === 'en' ? 'Data 1' : 'データ1' }];
+                activeRecordId.value = 'default';
+            };
+
+            // 📂 読み込み処理（テーマ・言語・記録一覧を復元し、アクティブな記録のデータを読み込む）
             const load = () => {
                 try {
                     const savedTheme = localStorage.getItem('sky_app_theme');
@@ -3688,53 +4006,123 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 } catch (e) { /* 未設定・利用不可の場合は既定の 'ja' のまま */ }
                 applyLangToDOM();
 
-                const saved = localStorage.getItem('sky_companion_v4_data');
-                if (saved) {
+                // 🗂️ 記録（データ）一覧を復元してから、アクティブな記録のデータを読み込む
+                loadRecordsMeta();
+                loadRecordData(activeRecordId.value);
+            };
+
+            // 🔀 記録（データ）を切り替える
+            const switchRecord = (id) => {
+                confirmingDeleteId.value = null; // 🔓 削除確認中だった場合はキャンセル扱いにする
+                if (id === activeRecordId.value) return;
+                save(); // 切り替え前に、今の記録の内容を確実に保存しておく
+                activeRecordId.value = id;
+                loadRecordData(id);
+                saveRecordsMeta();
+            };
+
+            // 🆔 新しい記録用の簡易ユニークID（同一ブラウザ内で重複しなければ十分なので、日時+乱数で生成）
+            const generateRecordId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+            // 🏷️ 次の既定名（データN）を決める。まず「現在の総記録数+1」から始め、
+            // 万一その名前が既に使われていたら（リネーム等で偶然重複した場合）空くまで数字を進める。
+            const nextDefaultRecordName = () => {
+                const base = currentLang.value === 'en' ? 'Data ' : 'データ';
+                let n = records.value.length + 1;
+                while (records.value.some(r => r.name === base + n)) n++;
+                return base + n;
+            };
+
+            // ➕ 新しい記録（データ）を追加する。
+            // duplicateCurrent=true の場合は、現在表示中の内容をそのまま複製した状態で作成する
+            // （現状の記録から「予測用データ」を作り始めたい場合などに便利）。
+            // false の場合はまっさらな状態で作成する（別アカウントの記録などに便利）。
+            const addRecord = (duplicateCurrent) => {
+                confirmingDeleteId.value = null; // 🔓 削除確認中だった場合はキャンセル扱いにする
+                save(); // 追加前に、今の記録の内容を確実に保存しておく
+                const newId = generateRecordId();
+
+                if (duplicateCurrent) {
+                    const snapshot = {
+                        activeIndex: activeIndex.value,
+                        spirits: JSON.parse(JSON.stringify(spirits.value)), // 🔁 参照を共有しないよう複製する
+                        sharedNotes: sharedNotes.value,
+                        sharedCalcFormula: sharedCalcFormula.value,
+                        hasSeasonPass: hasSeasonPass.value,
+                        ownedCandles: ownedCandles.value,
+                        treeCostVersion: TREE_COST_VERSION
+                    };
                     try {
-                        const parsed = JSON.parse(saved);
-                        if (parsed.activeIndex !== undefined) activeIndex.value = parsed.activeIndex;
-                        if (parsed.sharedNotes !== undefined) sharedNotes.value = parsed.sharedNotes; // 共通メモの復元
-                        
-                        if (parsed.sharedCalcFormula !== undefined) sharedCalcFormula.value = parsed.sharedCalcFormula;
-                        if (parsed.hasSeasonPass !== undefined) hasSeasonPass.value = parsed.hasSeasonPass;
-                        if (parsed.ownedCandles !== undefined) ownedCandles.value = parsed.ownedCandles;
-
-                        // 🔖 保存時と現在でツリーのコスト表バージョンが違う場合、
-                        // 古いキャンドルコスト/種別の上書きは復元しない（最新の値を優先する）。
-                        // それ以外（チェック状態・連れ歩き日数など）は引き続き復元する。
-                        const costDataIsCurrent = parsed.treeCostVersion === TREE_COST_VERSION;
-
-                        if (parsed.spirits && Array.isArray(parsed.spirits)) {
-                            parsed.spirits.forEach((savedSpirit, sIdx) => {
-                                if (spirits.value[sIdx]) {
-                                    if (savedSpirit.walkDays !== undefined) spirits.value[sIdx].walkDays = savedSpirit.walkDays;
-                                    if (savedSpirit.currentPreset) spirits.value[sIdx].currentPreset = savedSpirit.currentPreset;
-                                    
-                                    Object.keys(savedSpirit.treeData).forEach(tierKey => {
-                                        if (spirits.value[sIdx].treeData[tierKey]) {
-                                            savedSpirit.treeData[tierKey].forEach((savedItem, iIdx) => {
-                                                const targetItem = spirits.value[sIdx].treeData[tierKey][iIdx];
-                                                // 🔁 保存済み配列と現在の構成でid対応が取れない場合（ツリー構造が変わった場合）は
-                                                // このアイテムの復元自体をスキップする。
-                                                if (!targetItem || (savedItem.id && targetItem.id !== savedItem.id)) return;
-                                                targetItem.checked = savedItem.checked;
-                                                // 🚫 「取りたくない」指定はコスト表バージョンに関係のないユーザーの意思なので常に復元する
-                                                if (savedItem.excluded !== undefined) targetItem.excluded = savedItem.excluded;
-                                                if (costDataIsCurrent) {
-                                                    // 🕯️ 精霊ごとに調整したキャンドルコストがあれば復元（最新版のみ）
-                                                    if (savedItem.candles !== undefined) targetItem.candles = savedItem.candles;
-                                                    // 🔁 種別（魔法⇄季節アイテム⇄染料など）の変更を復元。
-                                                    // 名前は type と層の位置から自動計算されるため保存不要。
-                                                    if (savedItem.type !== undefined) targetItem.type = savedItem.type;
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    } catch (e) { console.error(e); }
+                        localStorage.setItem(dataKeyForRecord(newId), JSON.stringify(snapshot));
+                    } catch (e) { /* noop */ }
                 }
+
+                records.value.push({ id: newId, name: nextDefaultRecordName() });
+                activeRecordId.value = newId;
+                loadRecordData(newId); // duplicateCurrent=falseなら空、trueなら複製済みデータを読み込む
+                saveRecordsMeta();
+            };
+
+            // ✏️ 記録名の編集を開始する
+            const startRenameRecord = (record) => {
+                confirmingDeleteId.value = null; // 🔓 削除確認中だった場合はキャンセル扱いにする
+                editingRecordId.value = record.id;
+                editingRecordName.value = record.name;
+            };
+
+            // ✅ 記録名の編集を確定する（空欄の場合は変更しない）
+            const confirmRenameRecord = () => {
+                if (!editingRecordId.value) return;
+                const target = records.value.find(r => r.id === editingRecordId.value);
+                if (target) {
+                    const trimmed = editingRecordName.value.trim();
+                    if (trimmed) target.name = trimmed.slice(0, 20);
+                    saveRecordsMeta();
+                }
+                editingRecordId.value = null;
+            };
+
+            // ❌ 記録名の編集をキャンセルする
+            const cancelRenameRecord = () => {
+                editingRecordId.value = null;
+            };
+
+            // 🗑️ 記録の削除をリクエストする（ボタン@clickから呼ばれる）。
+            // 環境によってはブラウザ標準の confirm() ダイアログが動かない/表示されないことがあるため、
+            // ネイティブダイアログには頼らず、「もう一度押すと削除されます」の2タップ方式で確認する。
+            const requestDeleteRecord = (id) => {
+                if (records.value.length <= 1) return;
+                if (confirmingDeleteId.value === id) {
+                    // 2回目のタップ → 実際に削除する
+                    deleteRecord(id);
+                    return;
+                }
+                // 1回目のタップ → 確認待ち状態にする（数秒以内に押されなければ自動的に解除）
+                confirmingDeleteId.value = id;
+                if (confirmingDeleteTimer) clearTimeout(confirmingDeleteTimer);
+                confirmingDeleteTimer = setTimeout(() => {
+                    confirmingDeleteId.value = null;
+                }, 4000);
+            };
+
+            // 🗑️ 記録を削除する（記録は最低1件残す。削除後、削除したのが今の記録なら先頭の記録に切り替える）
+            const deleteRecord = (id) => {
+                if (records.value.length <= 1) return;
+                const target = records.value.find(r => r.id === id);
+                if (!target) return;
+
+                confirmingDeleteId.value = null;
+                if (confirmingDeleteTimer) clearTimeout(confirmingDeleteTimer);
+
+                try { localStorage.removeItem(dataKeyForRecord(id)); } catch (e) { /* noop */ }
+                records.value = records.value.filter(r => r.id !== id);
+
+                if (activeRecordId.value === id) {
+                    const fallback = records.value[0];
+                    activeRecordId.value = fallback.id;
+                    loadRecordData(fallback.id);
+                }
+                saveRecordsMeta();
             };
 
             onMounted(() => {
@@ -3761,7 +4149,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonCountdown, pad2,
                 activeFastestHeartPlan,
-                spiritForecasts, grandTotalCandles, getForecastIconId
+                spiritForecasts, grandTotalCandles, getForecastIconId,
+                records, activeRecordId, editingRecordId, editingRecordName, confirmingDeleteId,
+                switchRecord, addRecord, startRenameRecord, confirmRenameRecord, cancelRenameRecord, requestDeleteRecord
             };
         }
     }).mount('#app');
