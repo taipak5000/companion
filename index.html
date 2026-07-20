@@ -134,6 +134,14 @@
             border-top: 1px dashed rgba(255, 149, 0, 0.3);
         }
 
+        .season-countdown-note {
+            flex-basis: 100%;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-gray);
+        }
+
         [data-theme="dark"] .season-countdown {
             border-top-color: rgba(255, 149, 0, 0.35);
         }
@@ -223,6 +231,23 @@
             align-items: center;
             gap: 4px;
             transition: all 0.2s;
+        }
+
+        /* 🌐 言語選択セレクト（テーマ切替ボタンと見た目を揃える） */
+        .lang-select {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            appearance: none;
+            -webkit-appearance: none;
+            text-align: center;
+            text-align-last: center;
         }
 
         .main-layout {
@@ -1734,7 +1759,12 @@
             <button class="sidebar-toggle-btn" @click="showSidebar = !showSidebar">{{ t('sidebar_toggle') }}</button>
             <h1>{{ t('app_title') }}</h1>
             <div style="display:flex; gap:6px;">
-                <button class="theme-toggle-btn" @click="toggleLang">{{ t('lang_toggle') }}</button>
+                <select class="lang-select" :value="currentLang" @change="setLang($event.target.value)" aria-label="Language / 言語 / 語言 / 언어">
+                    <option value="ja">🌐 日本語</option>
+                    <option value="en">🌐 English</option>
+                    <option value="zh-TW">🌐 繁體中文</option>
+                    <option value="ko">🌐 한국어</option>
+                </select>
                 <button class="theme-toggle-btn" @click="toggleTheme">
                     <span v-if="isDarkMode">{{ t('theme_dark') }}</span>
                     <span v-else>{{ t('theme_light') }}</span>
@@ -1752,6 +1782,7 @@
                         <span class="cd-days">{{ seasonCountdown.days }}<i>{{ t('countdown_day_suffix') }}</i></span>
                         <span class="cd-time">{{ pad2(seasonCountdown.hours) }}:{{ pad2(seasonCountdown.minutes) }}:{{ pad2(seasonCountdown.seconds) }}</span>
                     </span>
+                    <span class="season-countdown-note">{{ t('countdown_jst_note') }}</span>
                 </template>
                 <template v-else>
                     <span class="season-countdown-label">{{ t('countdown_ended') }}</span>
@@ -2773,8 +2804,27 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
         '芸術の思い出': 'Artistic Memory',
         '喜びの思い出': 'Joyful Memory'
     };
+    const SPIRIT_NAME_ZH_TW = {
+        'オランダの思い出': '荷蘭的回憶',
+        '素朴な思い出': '質樸的回憶',
+        '芸術の思い出': '藝術的回憶',
+        '喜びの思い出': '喜悅的回憶'
+    };
+    const SPIRIT_NAME_KO = {
+        'オランダの思い出': '네덜란드의 추억',
+        '素朴な思い出': '소박한 추억',
+        '芸術の思い出': '예술의 추억',
+        '喜びの思い出': '기쁨의 추억'
+    };
+    // 🌐 精霊名辞書を言語コードでまとめたもの（'ja' はキーの値そのものを使うため未収録）
+    const SPIRIT_NAME_I18N = { en: SPIRIT_NAME_EN, 'zh-TW': SPIRIT_NAME_ZH_TW, ko: SPIRIT_NAME_KO };
+
     // アイテム種別の英語表記（type別の自動採番ラベルに使用。TYPE_LABELS と同じキー構成）
     const TYPE_LABELS_EN = { walk: 'Emote', magic: 'Spell', seasonal: 'Seasonal Item', dye: 'Dye' };
+    const TYPE_LABELS_ZH_TW = { walk: '動作', magic: '法術', seasonal: '季節道具', dye: '染料' };
+    const TYPE_LABELS_KO = { walk: '감정표현', magic: '마법', seasonal: '시즌 아이템', dye: '염료' };
+    const TYPE_LABELS_I18N = { en: TYPE_LABELS_EN, 'zh-TW': TYPE_LABELS_ZH_TW, ko: TYPE_LABELS_KO };
+
     // customLabel／name（type未設定アイテム）の個別英語訳。完全一致でこの表を引く
     const NAME_EN = {
         'エモートLv3': 'Emote Lv3',
@@ -2789,7 +2839,45 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
         'アドパスアイテム': 'Season Pass Item',
         '♡ ハートと交換': '♡ Trade for Heart'
     };
+    const NAME_ZH_TW = {
+        'エモートLv3': '動作Lv3',
+        '魔法③': '法術③',
+        '魔法④': '法術④',
+        '白染料': '白色染料',
+        '赤染料': '紅色染料',
+        '黄色染料': '黃色染料',
+        '黒染料': '黑色染料',
+        'アドパスエモートLv2': '季節通行證動作Lv2',
+        'アドパスエモートLv4': '季節通行證動作Lv4',
+        'アドパスアイテム': '季節通行證道具',
+        '♡ ハートと交換': '♡ 兌換心'
+    };
+    const NAME_KO = {
+        'エモートLv3': '감정표현 Lv3',
+        '魔法③': '마법③',
+        '魔法④': '마법④',
+        '白染料': '흰색 염료',
+        '赤染料': '빨간색 염료',
+        '黄色染料': '노란색 염료',
+        '黒染料': '검은색 염료',
+        'アドパスエモートLv2': '시즌 패스 감정표현 Lv2',
+        'アドパスエモートLv4': '시즌 패스 감정표현 Lv4',
+        'アドパスアイテム': '시즌 패스 아이템',
+        '♡ ハートと交換': '♡ 하트 교환'
+    };
+    const NAME_I18N = { en: NAME_EN, 'zh-TW': NAME_ZH_TW, ko: NAME_KO };
+
     const SEASON_NAME_EN = 'Dear Van Gogh';
+    const SEASON_NAME_ZH_TW = '親愛的梵谷';
+    const SEASON_NAME_KO = '친애하는 반 고흐에게';
+    const SEASON_NAME_I18N = { en: SEASON_NAME_EN, 'zh-TW': SEASON_NAME_ZH_TW, ko: SEASON_NAME_KO };
+
+    // 🌐 対応言語一覧（'ja' が既定・フォールバック先）
+    const SUPPORTED_LANGS = ['ja', 'en', 'zh-TW', 'ko'];
+    // 🌐 「初回解放」サフィックスの多言語訳
+    const FIRST_UNLOCK_SUFFIX_I18N = { en: ' (Initial Unlock)', 'zh-TW': ' (初次解鎖)', ko: ' (최초 해금)' };
+    // 🌐 記録の既定名プレフィックス（末尾に連番が続くため、言語ごとの体裁差はここで吸収する）
+    const RECORD_DEFAULT_NAME_PREFIX_I18N = { en: 'Data ', 'zh-TW': '資料', ko: '데이터 ' };
 
     // 🌐 UI文言辞書。キーは機能の頭文字＋連番的に区切って管理（例: calc_ = キャンドル計算機）
     const UI_TEXT = {
@@ -2799,10 +2887,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             sidebar_toggle: '☰ ツール',
             theme_dark: '🌙 ダーク',
             theme_light: '☀️ ライト',
-            lang_toggle: '🌐 English',
             countdown_label: '⏳ 残り',
             countdown_day_suffix: '日',
             countdown_ended: '🏁 シーズン終了しました',
+            countdown_jst_note: '※ 日本時間（JST）で表示しています',
             side_related_tools: '🔗 関連ツール',
             side_current_tool: '✨ 精霊同行ツール',
             side_star_candle_tool: '🕯️ 星のキャンドル計算機',
@@ -3007,10 +3095,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             sidebar_toggle: '☰ Tools',
             theme_dark: '🌙 Dark',
             theme_light: '☀️ Light',
-            lang_toggle: '🌐 日本語',
             countdown_label: '⏳ Remaining',
             countdown_day_suffix: 'd',
             countdown_ended: '🏁 Season has ended',
+            countdown_jst_note: '※ Times shown are in Japan Standard Time (JST)',
             side_related_tools: '🔗 Related Tools',
             side_current_tool: '✨ Spirit Companion Tool',
             side_star_candle_tool: '🕯️ Star Candle Calculator',
@@ -3208,6 +3296,422 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             footer_disclaimer: 'This site is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
             footer_credit_pre: 'Made by / feedback:',
             footer_sources: 'Reference data & image sources:'
+        },
+        'zh-TW': {
+            app_title: '✨ Sky 精靈同行點數計算機',
+            app_subtitle: '同行天數與道具兌換的最佳化模擬器',
+            sidebar_toggle: '☰ 工具',
+            theme_dark: '🌙 深色',
+            theme_light: '☀️ 淺色',
+            countdown_label: '⏳ 剩餘',
+            countdown_day_suffix: '天',
+            countdown_ended: '🏁 本季已結束',
+            countdown_jst_note: '※ 顯示時間為日本標準時間（JST）',
+            side_related_tools: '🔗 相關工具',
+            side_current_tool: '✨ 精靈同行工具',
+            side_star_candle_tool: '🕯️ 星之蠟燭計算機',
+
+            record_title: '🗂️ 切換記錄',
+            record_hint: '適合用來區分預測用與實際用的記錄，或管理多個帳號',
+            record_add: '新增一筆記錄',
+            record_add_short: '新增',
+            record_rename: '重新命名',
+            record_duplicate: '複製此記錄並新建',
+            record_delete: '刪除此記錄',
+            record_name_placeholder: '記錄名稱',
+            record_delete_confirm_short: '刪除？',
+            record_delete_confirm_tap: '再點一次即可刪除',
+
+            fc_title: '🔮 精靈樹（4隻並排比較）',
+            fc_close: '關閉 ▲',
+            fc_open: '查看比較表 ▼',
+            fc_desc: '此列表根據公開的樹狀圖製作，數值會與下方個別的樹連動。',
+            fc_legend_magic: '法術',
+            fc_legend_walk: '動作',
+            fc_legend_seasonal: '季節道具',
+            fc_legend_dye: '染料',
+            fc_legend_adpass: '季節通行證',
+            fc_legend_heart: '兌換心',
+            fc_no_slot: '無此欄位',
+            fc_grand_total: '🕯️ 4隻合計',
+
+            mobile_owned: '🕯️ 持有',
+            mobile_unit: '',
+            mobile_add_today: '（今日份）',
+
+            goal_hearts: '🧡 獲得季節之心：{n} / 4 個',
+            goal_complete_msg: '🎉 恭喜！你已獲得所有精靈的季節之心！',
+
+            calc_title: '🕯️ 季節蠟燭計算機',
+            calc_adpass_label: '季節通行證',
+            calc_pass_yes: '有（每日6根）',
+            calc_pass_no: '沒有（每日5根）',
+            calc_owned_label: '🕯️ 目前持有的蠟燭數',
+            calc_owned_placeholder: '例: 20',
+            calc_unit: '',
+            calc_add_today: '🕯️ 加上今天的份（+{n}）',
+            calc_add_today_note: '沒領到的日子不用點，也可以直接在上方欄位調整數值',
+            calc_add_bonus: '🎁 加上購買特典 +30根',
+            calc_add_bonus_note: '購買季節通行證時僅發放一次的30根，可點擊加到持有數中',
+            calc_total_remaining: '全部精靈剩餘所需數量',
+            calc_days_to_go: '到達所需天數',
+            calc_achieved: '已達成✓',
+            calc_day_unit: '天',
+            calc_advice_ok: '🎉 以目前的持有數，已足夠支付所有精靈樹剩餘的花費！',
+            calc_advice_pace_pre: '💡 若以每天',
+            calc_advice_pace_mid: '根的節奏，預計在',
+            calc_advice_pace_post: '左右達到所需數量。',
+
+            comp_title: '🏁 除法術外的完成度診斷（4隻・至本季結束{date}為止）',
+            comp_ok_zero: '🎉 以目前的持有數與同行天數，已經滿足除法術外的完成條件！',
+            comp_ok_pre: '🎉 從現在開始，預計再過',
+            comp_ok_mid: '天左右即可完成（距本季結束還剩',
+            comp_ok_post: '天）。',
+            comp_bad_pre: '⚠️ 照這個節奏可能會有點吃緊（剩餘',
+            comp_bad_post: '天）。',
+            comp_candle_short: '🕯️ 預計蠟燭將短少約 {n} 根。',
+            comp_walk_short: '👣 同行天數預計還差 {n} 天（以4隻合計判定）。',
+            comp_note1: '※「完成」是指除法術道具外的所有道具（含季節通行證道具、兌換心），取得季節通行證相關道具需另外持有季節通行證。',
+            comp_note2: '※ 蠟燭是以精靈間共用的持有數計算。各道具的花費可從樹狀圖內的「編輯花費」依精靈個別調整。',
+
+            plan_title: '🧭 高效進行方式建議（4隻・不含法術）',
+            plan_close: '關閉 ▲',
+            plan_open: '開啟 ▼',
+            plan_all_done: '🎉 除法術外的道具，4隻皆已全部完成！',
+            plan_today_reco: '☀️ 今日建議',
+            plan_walk_pre: '👣 同行對象:',
+            plan_walk_post: '（因4隻中點數最低而優先）',
+            plan_walk_none: '👣 同行: 對象精靈全員已達280p',
+            plan_buy_now_pre: '🕯️ 以目前持有數（',
+            plan_buy_now_post: '根）可兌換的道具:',
+            plan_buy_none: '🕯️ 目前沒有可兌換的道具（候補尚未解鎖，或蠟燭不足）',
+            plan_item_open: '（',
+            plan_item_close: '）',
+            plan_overall_title: '📆 4隻整體完成預估',
+            plan_unreachable: '以目前的節奏無法預估完成時間。',
+            plan_total_pre: '照這個節奏，預計再過',
+            plan_total_post: '天4隻就能全部完成。',
+            plan_log_toggle: '📋 查看每日計畫（{n}天份）',
+            plan_log_close: '關閉 ▲',
+            plan_log_open: '開啟 ▼',
+            plan_day_prefix: '第',
+            plan_day_suffix: '天',
+            plan_note: '※ 此模擬假設同行對象每天優先選擇「4隻中點數最低的精靈」，兌換則優先選擇「點數效率較好的道具」。季節通行證道具可隨時取得，因此不列入此計畫。請作為實際進行方式的參考。',
+
+            tabs_complete: '🧡 完成',
+
+            pts_progress_suffix: '的進度',
+            pts_current_status: '目前狀態',
+            pts_remaining_to_heart: '距離心還差',
+            pts_congrats_label: '恭喜！',
+            pts_congrats_rest: '已達成所需點數。',
+            pts_advice_label: '建議:',
+            pts_advice_pre: '再',
+            pts_advice_day_unit: '天',
+            pts_advice_post: '同行即可達到280p！',
+            pts_advice_warn: '⚠️ 注意: 這會超過本季剩餘天數，因此還需要法術等額外的兌換方式。',
+
+            heart_title: '🚀 最快兌換心模擬',
+            heart_done: '🎉 已經兌換過心了！',
+            heart_unreachable: '⚠️ 目前的設定無法計算預估結果，請確認同行天數與蠟燭持有數。',
+            heart_ready: '🎉 點數與蠟燭皆已滿足兌換心的條件！',
+            heart_plan_pre: '若將同行（每天皆選擇此精靈）與蠟燭購買都集中在此精靈身上，最快預計',
+            heart_plan_day_unit: '天後',
+            heart_plan_post: '即可兌換心。',
+            heart_total_cost_pre: '🕯️ 從現在起所需蠟燭合計:',
+            heart_total_cost_unit: '',
+            heart_total_cost_note_pre: '（含兌換心所需 🕯️',
+            heart_total_cost_note_mid: '，不含目前持有數',
+            heart_total_cost_note_post: '根）',
+            heart_pass_needed: '⚠️ 兌換心需要季節通行證（目前: 未持有）。',
+            heart_order_toggle: '📋 兌換優先順序（僅列出到達心所需的部分）',
+            heart_order_close: '關閉 ▲',
+            heart_order_open: '查看 ▼',
+            heart_order_day_suffix: '天',
+            heart_order_note: '※ 未達280p所需的道具（例如季節道具②等）在最快路線中會被省略。若也想收集這些道具，請另外兌換。',
+            heart_note: '※ 同行每天限一隻，若與其他精靈分配同行天數，會比此天數更慢。此為假設所有蠟燭皆用於此精靈的最快預估。',
+
+            preset_custom: '自由輸入',
+            preset_no_magic: '🪄 略過法術',
+            preset_reset: '💥 重置',
+
+            shared_title: '📌 全精靈共用備忘錄・計算',
+            shared_close: '關閉 ▲',
+            shared_open: '開啟 ▼',
+            shared_formula_label: '🧮 計算式',
+            shared_formula_note: '（可使用 ＋ － × ÷ 及半形符號、括號）',
+            shared_formula_placeholder: '例: 100+30+20 或 (15+7)×4÷2',
+            shared_formula_unit: '',
+            shared_formula_error: '⚠️ 算式錯誤',
+            shared_formula_empty: '＝ —',
+            shared_notes_label: '📋 整季備忘錄・目標',
+            shared_notes_placeholder: '例: 已購買季節通行證。別忘記每天同行！也可自由記錄剩餘所需蠟燭數等...',
+
+            walk_title_pre: '👣 與',
+            walk_title_post: '的同行天數',
+            walk_unit: '/ 77 天',
+
+            tree_title_pre: '🌳',
+            tree_title_post: '的樹',
+            tree_right_col_note: '💜 右側欄位不計入點數',
+            tree_remaining_pre: '🕯️ 此樹剩餘:',
+            tree_remaining_mid: '根（已分配:',
+            tree_remaining_excluded: '・已排除:',
+            tree_remaining_unit: '',
+            tree_remaining_post: '根）',
+            tree_edit_close: '關閉編輯 ▲',
+            tree_edit_open: '🕯️ 編輯花費 ▼',
+            tree_pass_heart_label: '兌換心',
+            tree_pass_frag1: '（🕯️',
+            tree_pass_frag2: '）與各層右側欄位的',
+            tree_pass_adpass_label: '季節通行證道具',
+            tree_pass_frag3: '僅限',
+            tree_pass_holder_label: '季節通行證持有者',
+            tree_pass_frag4: '可兌換',
+            tree_pass_note_have: '（目前: 持有）',
+            tree_pass_note_none: '（目前: 未持有 — 可從「季節蠟燭計算機」的季節通行證切換更改）',
+            tree_edit_type_walk: '💨 動作',
+            tree_edit_type_magic: '🪄 法術',
+            tree_edit_type_seasonal: '✨ 季節道具',
+            tree_edit_type_dye: '🎨 染料',
+            tree_edit_note: '※ 變更種類後，圖示與名稱（①②③…）會自動重新編號。編號依據從最下層數來同種類的第幾個決定。',
+            tree_pass_required: '需要季節通行證',
+            tree_no_points: 'P外',
+            tree_exclude_undo: '取消排除',
+            tree_exclude_do: '標記為不想要的道具而排除',
+
+            tier1_title: '第1層（基礎階段）',
+            status_complete: '完成！',
+            status_tier4: '第4層',
+            status_tier3: '第3層',
+            status_tier2: '第2層',
+            status_tier1: '第1層',
+            tier2_title: '第2層（累計所需: 40p）',
+            tier3_title: '第3層（累計所需: 100p）',
+            tier4_title: '第4層（累計所需: 180p）',
+            tier_unlocked: '🎉 已解鎖',
+            tier_remaining_pre: '還差 ',
+            tier_remaining_post: 'p',
+
+            heart_node_name: '季節之心',
+            heart_node_got: '🎉 已獲得!',
+
+            info_title: '📌 同行系統的規則備忘:',
+            info_1: '・即使不同行，只要取得該層的所有道具，就能進入下一層。',
+            info_2: '・先靠累積點數解鎖上層後，之後再回收先前略過的道具，點數依然會生效。',
+            info_3: '・🕯️ 各道具的蠟燭花費僅供參考，請依實際精靈狀況，從樹狀圖內的「編輯花費」依精靈個別調整。',
+
+            footer_disclaimer: '本網站為《Sky：光・遇》的非官方粉絲網站，thatgamecompany 概不參與。',
+            footer_credit_pre: '製作・意見回饋:',
+            footer_sources: '參考資料・圖片引用來源:'
+        },
+        ko: {
+            app_title: '✨ Sky 정령 동행 포인트 계산기',
+            app_subtitle: '동행 일수와 아이템 교환을 최적화하는 시뮬레이터',
+            sidebar_toggle: '☰ 도구',
+            theme_dark: '🌙 다크',
+            theme_light: '☀️ 라이트',
+            countdown_label: '⏳ 남은 시간',
+            countdown_day_suffix: '일',
+            countdown_ended: '🏁 시즌이 종료되었습니다',
+            countdown_jst_note: '※ 표시된 시간은 일본 표준시(JST) 기준입니다',
+            side_related_tools: '🔗 관련 도구',
+            side_current_tool: '✨ 정령 동행 도구',
+            side_star_candle_tool: '🕯️ 별의 초 계산기',
+
+            record_title: '🗂️ 기록 전환',
+            record_hint: '예측용・실적용 기록 구분이나 여러 계정 관리에 편리합니다',
+            record_add: '새 기록 추가',
+            record_add_short: '추가',
+            record_rename: '이름 변경',
+            record_duplicate: '이 기록을 복제하여 새로 만들기',
+            record_delete: '이 기록 삭제',
+            record_name_placeholder: '기록 이름',
+            record_delete_confirm_short: '삭제할까요?',
+            record_delete_confirm_tap: '다시 누르면 삭제됩니다',
+
+            fc_title: '🔮 정령 트리 (4마리 비교)',
+            fc_close: '닫기 ▲',
+            fc_open: '비교표 보기 ▼',
+            fc_desc: '공개된 트리 이미지를 바탕으로 한 목록입니다. 수치는 아래 개별 트리와 연동됩니다.',
+            fc_legend_magic: '마법',
+            fc_legend_walk: '감정표현',
+            fc_legend_seasonal: '시즌 아이템',
+            fc_legend_dye: '염료',
+            fc_legend_adpass: '시즌 패스',
+            fc_legend_heart: '하트 교환',
+            fc_no_slot: '슬롯 없음',
+            fc_grand_total: '🕯️ 4마리 합계',
+
+            mobile_owned: '🕯️ 보유',
+            mobile_unit: '',
+            mobile_add_today: '(오늘 분)',
+
+            goal_hearts: '🧡 시즌 하트 획득: {n} / 4개',
+            goal_complete_msg: '🎉 축하합니다! 모든 정령의 시즌 하트를 획득했습니다!',
+
+            calc_title: '🕯️ 시즌 초 계산기',
+            calc_adpass_label: '시즌 패스',
+            calc_pass_yes: '있음 (하루 6개)',
+            calc_pass_no: '없음 (하루 5개)',
+            calc_owned_label: '🕯️ 현재 보유 중인 초 개수',
+            calc_owned_placeholder: '예: 20',
+            calc_unit: '',
+            calc_add_today: '🕯️ 오늘 분 추가 (+{n})',
+            calc_add_today_note: '받지 못한 날은 누르지 않아도 됩니다. 위 입력란에서 직접 조정도 가능합니다',
+            calc_add_bonus: '🎁 구매 특전 +30개 추가',
+            calc_add_bonus_note: '시즌 패스 구매 시 한 번만 지급되는 30개를 탭하여 보유 수량에 더할 수 있습니다',
+            calc_total_remaining: '전체 정령의 남은 필요 수량',
+            calc_days_to_go: '도달까지',
+            calc_achieved: '달성✓',
+            calc_day_unit: '일',
+            calc_advice_ok: '🎉 현재 보유 수량으로 모든 정령 트리의 남은 비용을 충당할 수 있습니다!',
+            calc_advice_pace_pre: '💡 하루',
+            calc_advice_pace_mid: '개 페이스라면',
+            calc_advice_pace_post: '경 필요한 수량에 도달할 예정입니다.',
+
+            comp_title: '🏁 마법 제외 컴플리트 진단 (4마리・시즌 종료 {date}까지)',
+            comp_ok_zero: '🎉 현재 보유 수량과 동행 일수로 마법을 제외한 컴플리트 조건을 이미 충족했습니다!',
+            comp_ok_pre: '🎉 지금부터라도 앞으로',
+            comp_ok_mid: '일 정도면 컴플리트 가능할 것으로 보입니다 (시즌 종료까지 남은 기간',
+            comp_ok_post: '일).',
+            comp_bad_pre: '⚠️ 이 페이스라면 다소 빠듯할 수 있습니다 (남은',
+            comp_bad_post: '일).',
+            comp_candle_short: '🕯️ 초가 약 {n}개 부족할 것으로 예상됩니다.',
+            comp_walk_short: '👣 동행 일수가 약 {n}일 부족합니다 (4마리 합산 기준).',
+            comp_note1: '※ "컴플리트"는 마법 아이템을 제외한 모든 아이템(시즌 패스 아이템, 하트 교환 포함)이 대상입니다. 시즌 패스 관련 아이템을 얻으려면 별도로 시즌 패스를 보유해야 합니다.',
+            comp_note2: '※ 초는 정령 간 공통으로 보유한 수량으로 계산됩니다. 각 아이템의 비용은 트리 내 "비용 편집"에서 정령별로 조정할 수 있습니다.',
+
+            plan_title: '🧭 효율적인 진행 추천 (4마리・마법 제외)',
+            plan_close: '닫기 ▲',
+            plan_open: '열기 ▼',
+            plan_all_done: '🎉 마법을 제외한 아이템은 4마리 모두 완료했습니다!',
+            plan_today_reco: '☀️ 오늘의 추천',
+            plan_walk_pre: '👣 동행 상대:',
+            plan_walk_post: '(4마리 중 포인트가 가장 낮아 우선)',
+            plan_walk_none: '👣 동행: 대상 정령 모두 280p에 도달했습니다',
+            plan_buy_now_pre: '🕯️ 현재 보유 수량 (',
+            plan_buy_now_post: '개)으로 교환 가능한 아이템:',
+            plan_buy_none: '🕯️ 지금 바로 교환 가능한 아이템이 없습니다 (후보가 잠겨 있거나 초가 부족합니다)',
+            plan_item_open: '(',
+            plan_item_close: ')',
+            plan_overall_title: '📆 4마리 전체 완료 예상',
+            plan_unreachable: '현재 페이스로는 완료 시기를 예측할 수 없었습니다.',
+            plan_total_pre: '이 페이스라면 앞으로',
+            plan_total_post: '일이면 4마리 모두 완료될 것으로 예상됩니다.',
+            plan_log_toggle: '📋 일별 계획 보기 ({n}일)',
+            plan_log_close: '닫기 ▲',
+            plan_log_open: '열기 ▼',
+            plan_day_prefix: '',
+            plan_day_suffix: '일차',
+            plan_note: '※ 이 시뮬레이션은 매일 "4마리 중 포인트가 가장 낮은 정령"과 동행하고, "포인트 효율이 좋은 아이템"을 우선 교환한다는 가정하에 진행됩니다. 시즌 패스 아이템은 원하는 때에 얻을 수 있으므로 계획 대상에서 제외됩니다. 실제 진행 시 참고용으로 활용해 주세요.',
+
+            tabs_complete: '🧡 완료',
+
+            pts_progress_suffix: '의 진행도',
+            pts_current_status: '현재 상태',
+            pts_remaining_to_heart: '하트까지 남은 양',
+            pts_congrats_label: '축하합니다!',
+            pts_congrats_rest: '필요한 포인트에 도달했습니다.',
+            pts_advice_label: '조언:',
+            pts_advice_pre: '앞으로',
+            pts_advice_day_unit: '일',
+            pts_advice_post: '동행하면 280p에 도달합니다!',
+            pts_advice_warn: '⚠️ 주의: 시즌 남은 일수를 초과하게 되므로, 마법 등 추가 교환 수단이 필요합니다.',
+
+            heart_title: '🚀 최단 하트 교환 시뮬레이션',
+            heart_done: '🎉 이미 하트로 교환했습니다!',
+            heart_unreachable: '⚠️ 현재 설정으로는 예상치를 계산할 수 없었습니다. 동행 일수와 초 보유 수량을 확인해 주세요.',
+            heart_ready: '🎉 포인트와 초 모두 하트 교환 조건을 이미 충족했습니다!',
+            heart_plan_pre: '동행(매일 이 정령을 선택)과 초 구매를 이 정령에 집중하면, 최단',
+            heart_plan_day_unit: '일 후',
+            heart_plan_post: '하트로 교환할 수 있을 것으로 예상됩니다.',
+            heart_total_cost_pre: '🕯️ 지금부터 필요한 초 합계:',
+            heart_total_cost_unit: '',
+            heart_total_cost_note_pre: '(하트 교환분 🕯️',
+            heart_total_cost_note_mid: '포함 / 현재 보유 수량',
+            heart_total_cost_note_post: '개는 별도)',
+            heart_pass_needed: '⚠️ 하트 교환에는 시즌 패스가 필요합니다 (현재: 미보유).',
+            heart_order_toggle: '📋 교환 우선순위 (하트 도달에 필요한 것만)',
+            heart_order_close: '닫기 ▲',
+            heart_order_open: '보기 ▼',
+            heart_order_day_suffix: '일',
+            heart_order_note: '※ 280p 도달에 불필요한 아이템(예: 시즌 아이템② 등)은 최단 루트에서 생략됩니다. 완성도를 위해 수집하고 싶다면 별도로 교환해 주세요.',
+            heart_note: '※ 동행은 하루 1마리까지만 가능하므로, 다른 정령과 동행 시간을 나누면 이 일수보다 늦어집니다. 이는 초도 모두 이 정령에게만 사용한다고 가정한 최단 예상치입니다.',
+
+            preset_custom: '자유 입력',
+            preset_no_magic: '🪄 마법 건너뛰기',
+            preset_reset: '💥 초기화',
+
+            shared_title: '📌 전체 정령 공통 메모・계산',
+            shared_close: '닫기 ▲',
+            shared_open: '열기 ▼',
+            shared_formula_label: '🧮 계산식',
+            shared_formula_note: '(+ − × ÷ 및 반각 기호・괄호 사용 가능)',
+            shared_formula_placeholder: '예: 100+30+20 또는 (15+7)×4÷2',
+            shared_formula_unit: '',
+            shared_formula_error: '⚠️ 수식 오류',
+            shared_formula_empty: '= —',
+            shared_notes_label: '📋 시즌 전체 메모・목표',
+            shared_notes_placeholder: '예: 시즌 패스 구매 완료. 매일 동행 잊지 마세요! 남은 필요 초 개수 등 자유롭게 메모하세요...',
+
+            walk_title_pre: '👣',
+            walk_title_post: '와(과)의 동행 일수',
+            walk_unit: '/ 77일',
+
+            tree_title_pre: '🌳',
+            tree_title_post: '의 트리',
+            tree_right_col_note: '💜 오른쪽 열은 포인트 대상 외',
+            tree_remaining_pre: '🕯️ 이 트리의 남은 양:',
+            tree_remaining_mid: '개 (사용:',
+            tree_remaining_excluded: '・제외:',
+            tree_remaining_unit: '',
+            tree_remaining_post: '개)',
+            tree_edit_close: '편집 닫기 ▲',
+            tree_edit_open: '🕯️ 비용 편집 ▼',
+            tree_pass_heart_label: '하트 교환',
+            tree_pass_frag1: ' (🕯️',
+            tree_pass_frag2: ') 및 각 티어 오른쪽 열의',
+            tree_pass_adpass_label: '시즌 패스 아이템',
+            tree_pass_frag3: '은(는)',
+            tree_pass_holder_label: '시즌 패스 보유자',
+            tree_pass_frag4: '만 이용 가능합니다',
+            tree_pass_note_have: ' (현재: 보유)',
+            tree_pass_note_none: ' (현재: 미보유 — "시즌 초 계산기"의 시즌 패스 전환에서 변경 가능)',
+            tree_edit_type_walk: '💨 감정표현',
+            tree_edit_type_magic: '🪄 마법',
+            tree_edit_type_seasonal: '✨ 시즌 아이템',
+            tree_edit_type_dye: '🎨 염료',
+            tree_edit_note: '※ 종류를 변경하면 아이콘과 이름(①②③…)이 자동으로 재배정됩니다. 번호는 아래 티어부터 세어 같은 종류가 몇 번째인지로 결정됩니다.',
+            tree_pass_required: '시즌 패스가 필요합니다',
+            tree_no_points: '포인트 외',
+            tree_exclude_undo: '제외 해제',
+            tree_exclude_do: '원하지 않는 아이템으로 제외',
+
+            tier1_title: '티어 1 (기초 단계)',
+            status_complete: '완료!',
+            status_tier4: '티어 4',
+            status_tier3: '티어 3',
+            status_tier2: '티어 2',
+            status_tier1: '티어 1',
+            tier2_title: '티어 2 (누적 필요: 40p)',
+            tier3_title: '티어 3 (누적 필요: 100p)',
+            tier4_title: '티어 4 (누적 필요: 180p)',
+            tier_unlocked: '🎉 해금 완료',
+            tier_remaining_pre: '',
+            tier_remaining_post: 'p 남음',
+
+            heart_node_name: '시즌 하트',
+            heart_node_got: '🎉 획득!',
+
+            info_title: '📌 동행 시스템 안내:',
+            info_1: '・동행하지 않아도 각 티어의 아이템을 모두 획득하면 다음 티어로 진행할 수 있습니다.',
+            info_2: '・먼저 포인트를 모아 상위 티어를 해금한 뒤, 건너뛴 아이템을 나중에 회수해도 포인트는 반영됩니다.',
+            info_3: '・🕯️ 각 아이템의 초 비용은 참고용입니다. 실제 정령에 맞춰 트리 내 "비용 편집"에서 정령별로 조정해 주세요.',
+
+            footer_disclaimer: '이 사이트는 Sky: Children of the Light의 비공식 팬 사이트입니다. thatgamecompany는 전혀 관여하지 않습니다.',
+            footer_credit_pre: '제작・의견:',
+            footer_sources: '참고 데이터・이미지 출처:'
         }
     };
 
@@ -3342,13 +3846,16 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 個別ツリーと同じ column-reverse で下から第1層→上へ積み上げる。見た目は上＝ハート→第4層→…→下＝第1層になる）。
             const FORECAST_TIER_LABELS = { tier4: '第4層', tier3: '第3層', tier2: '第2層', tier1: '第1層' };
             const FORECAST_TIER_LABELS_EN = { tier4: 'Tier 4', tier3: 'Tier 3', tier2: 'Tier 2', tier1: 'Tier 1' };
+            const FORECAST_TIER_LABELS_ZH_TW = { tier4: '第4層', tier3: '第3層', tier2: '第2層', tier1: '第1層' };
+            const FORECAST_TIER_LABELS_KO = { tier4: '티어 4', tier3: '티어 3', tier2: '티어 2', tier1: '티어 1' };
+            const FORECAST_TIER_LABELS_I18N = { en: FORECAST_TIER_LABELS_EN, 'zh-TW': FORECAST_TIER_LABELS_ZH_TW, ko: FORECAST_TIER_LABELS_KO };
 
             const getForecastData = (spirit) => {
                 let heartItem = null;
                 const tierOrder = ['tier1', 'tier2', 'tier3', 'tier4'];
                 const rows = tierOrder.map(key => ({
                     key,
-                    label: (currentLang.value === 'en' ? FORECAST_TIER_LABELS_EN : FORECAST_TIER_LABELS)[key],
+                    label: (FORECAST_TIER_LABELS_I18N[currentLang.value] || FORECAST_TIER_LABELS)[key],
                     items: spirit.treeData[key].filter(item => {
                         if (item.isHeartGoal) { heartItem = item; return false; }
                         if (isPhantomItem(item)) return false;
@@ -3722,11 +4229,11 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                         if (i.id === item.id) break;
                     }
                 }
-                const labels = currentLang.value === 'en' ? TYPE_LABELS_EN : TYPE_LABELS;
+                const labels = TYPE_LABELS_I18N[currentLang.value] || TYPE_LABELS;
                 const base = item.type === 'walk'
                     ? labels.walk + 'Lv' + count
                     : (labels[item.type] || item.type) + (CIRCLED_NUMS[count - 1] || ('#' + count));
-                const firstUnlockSuffix = currentLang.value === 'en' ? ' (Initial Unlock)' : ' (初回解放)';
+                const firstUnlockSuffix = FIRST_UNLOCK_SUFFIX_I18N[currentLang.value] || ' (初回解放)';
                 return item.firstUnlock ? base + firstUnlockSuffix : base;
             };
 
@@ -3744,11 +4251,11 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                         if (i.id === item.id) break;
                     }
                 }
-                const labels = currentLang.value === 'en' ? TYPE_LABELS_EN : TYPE_LABELS;
+                const labels = TYPE_LABELS_I18N[currentLang.value] || TYPE_LABELS;
                 const base = item.type === 'walk'
                     ? labels.walk + 'Lv' + count
                     : (labels[item.type] || item.type) + (CIRCLED_NUMS[count - 1] || ('#' + count));
-                const firstUnlockSuffix = currentLang.value === 'en' ? ' (Initial Unlock)' : ' (初回解放)';
+                const firstUnlockSuffix = FIRST_UNLOCK_SUFFIX_I18N[currentLang.value] || ' (初回解放)';
                 return item.firstUnlock ? base + firstUnlockSuffix : base;
             };
 
@@ -3848,16 +4355,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             };
 
             // 🌐 精霊名・アイテム名（customLabel／type未設定のname）を現在の言語で表示するヘルパー
-            const spiritName = (spirit) => currentLang.value === 'en' ? (SPIRIT_NAME_EN[spirit.name] || spirit.name) : spirit.name;
-            const translateItemName = (str) => currentLang.value === 'en' ? (NAME_EN[str] || str) : str;
-            const seasonNameDisplay = computed(() => currentLang.value === 'en' ? SEASON_NAME_EN : CURRENT_SEASON_NAME);
+            const spiritName = (spirit) => currentLang.value === 'ja' ? spirit.name : ((SPIRIT_NAME_I18N[currentLang.value] || {})[spirit.name] || spirit.name);
+            const translateItemName = (str) => currentLang.value === 'ja' ? str : ((NAME_I18N[currentLang.value] || {})[str] || str);
+            const seasonNameDisplay = computed(() => currentLang.value === 'ja' ? CURRENT_SEASON_NAME : (SEASON_NAME_I18N[currentLang.value] || CURRENT_SEASON_NAME));
 
             const applyLangToDOM = () => {
-                document.documentElement.setAttribute('lang', currentLang.value === 'en' ? 'en' : 'ja');
+                document.documentElement.setAttribute('lang', currentLang.value);
             };
 
-            const toggleLang = () => {
-                currentLang.value = currentLang.value === 'en' ? 'ja' : 'en';
+            // 🌐 言語を明示的に切り替える（対応言語一覧にない値が来た場合は既定の 'ja' にフォールバック）
+            const setLang = (lang) => {
+                currentLang.value = SUPPORTED_LANGS.includes(lang) ? lang : 'ja';
                 applyLangToDOM();
                 try {
                     localStorage.setItem('sky_app_lang', currentLang.value);
@@ -3982,7 +4490,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                         return;
                     }
                 } catch (e) { console.error(e); }
-                records.value = [{ id: 'default', name: currentLang.value === 'en' ? 'Data 1' : 'データ1' }];
+                records.value = [{ id: 'default', name: (RECORD_DEFAULT_NAME_PREFIX_I18N[currentLang.value] || 'データ') + '1' }];
                 activeRecordId.value = 'default';
             };
 
@@ -4002,7 +4510,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
                 try {
                     const savedLang = localStorage.getItem('sky_app_lang');
-                    if (savedLang === 'en' || savedLang === 'ja') currentLang.value = savedLang;
+                    if (SUPPORTED_LANGS.includes(savedLang)) currentLang.value = savedLang;
                 } catch (e) { /* 未設定・利用不可の場合は既定の 'ja' のまま */ }
                 applyLangToDOM();
 
@@ -4027,7 +4535,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 🏷️ 次の既定名（データN）を決める。まず「現在の総記録数+1」から始め、
             // 万一その名前が既に使われていたら（リネーム等で偶然重複した場合）空くまで数字を進める。
             const nextDefaultRecordName = () => {
-                const base = currentLang.value === 'en' ? 'Data ' : 'データ';
+                const base = RECORD_DEFAULT_NAME_PREFIX_I18N[currentLang.value] || 'データ';
                 let n = records.value.length + 1;
                 while (records.value.some(r => r.name === base + n)) n++;
                 return base + n;
@@ -4140,7 +4648,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
                 getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, toggleTheme,
-                currentLang, toggleLang, t, spiritName, translateItemName, seasonNameDisplay,
+                currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay,
                 showSidebar, showSharedTools, sharedNotes,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
