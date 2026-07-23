@@ -2534,7 +2534,7 @@
                         <div class="game-node-btn heart-node"
                              :class="{'node-checked': activeSpirit.treeData.tier4[2].checked, 'node-disabled': (activePoints < 280 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked), 'node-pass-locked': !hasSeasonPass && !activeSpirit.treeData.tier4[2].checked}"
                              :title="(!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked) ? t('tree_pass_required') : null"
-                             @click="if(!((activePoints < 280 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked))) { activeSpirit.treeData.tier4[2].checked = !activeSpirit.treeData.tier4[2].checked; activeSpirit.currentPreset = 'custom'; }">
+                             @click="toggleTreeItem(activeSpirit.treeData.tier4[2], 280)">
                             <div class="node-candle-badge">🕯️{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
                             <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
