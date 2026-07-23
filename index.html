@@ -2531,15 +2531,15 @@
                     </div>
 
                     <div class="heart-goal-container">
-                        <div class="game-node-btn heart-node" 
-                             :class="{'node-checked': activePoints >= 280 || activeSpirit.treeData.tier4[2].checked, 'node-disabled': (activePoints < 180 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked), 'node-pass-locked': !hasSeasonPass && !activeSpirit.treeData.tier4[2].checked}"
+                        <div class="game-node-btn heart-node"
+                             :class="{'node-checked': activeSpirit.treeData.tier4[2].checked, 'node-disabled': (activePoints < 280 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked), 'node-pass-locked': !hasSeasonPass && !activeSpirit.treeData.tier4[2].checked}"
                              :title="(!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked) ? t('tree_pass_required') : null"
-                             @click="if(!((activePoints < 180 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked))) { activeSpirit.treeData.tier4[2].checked = !activeSpirit.treeData.tier4[2].checked; activeSpirit.currentPreset = 'custom'; }">
+                             @click="if(!((activePoints < 280 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked))) { activeSpirit.treeData.tier4[2].checked = !activeSpirit.treeData.tier4[2].checked; activeSpirit.currentPreset = 'custom'; }">
                             <div class="node-candle-badge">🕯️{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
                             <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
                             <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">{{ t('heart_node_name') }}</div>
-                            <div class="node-cost" style="color: #ff5e7e;">{{ (activePoints >= 280 || activeSpirit.treeData.tier4[2].checked) ? t('heart_node_got') : '280p' }}</div>
+                            <div class="node-cost" style="color: #ff5e7e;">{{ activeSpirit.treeData.tier4[2].checked ? t('heart_node_got') : '280p' }}</div>
                         </div>
                     </div>
                 </div>
@@ -3823,7 +3823,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             };
 
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
-            const totalHearts = computed(() => spirits.value.filter(s => getSpiritPoints(s) >= 280).length);
+            const totalHearts = computed(() => spirits.value.filter(s => s.treeData.tier4[2].checked).length);
 
             // 🕯️ ツリーのアイテムをチェック/解除する共通処理。
             // ・前層の必要ポイント(minPoints)未達、またはアドパス未保有でのパス限定アイテムは新規チェック不可
