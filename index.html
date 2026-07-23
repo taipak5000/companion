@@ -2355,10 +2355,10 @@
                 </div>
                 
                 <div class="tree-container">
-                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 40}">
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= activeTier2Unlock}">
                         <div class="tier-header">
                             <span class="tier-title">{{ t('tier1_title') }}</span>
-                            <span class="tier-req">{{ activePoints >= 40 ? t('tier_unlocked') : t('tier_remaining_pre') + (40 - activePoints) + t('tier_remaining_post') }}</span>
+                            <span class="tier-req">{{ activePoints >= activeTier2Unlock ? t('tier_unlocked') : t('tier_remaining_pre') + (activeTier2Unlock - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier1.filter(i => !isPhantomItem(i))" :key="item.id" 
@@ -2387,8 +2387,8 @@
 
                     <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 100}">
                         <div class="tier-header">
-                            <span class="tier-title">{{ t('tier2_title') }}</span>
-                            <span class="tier-req">{{ activePoints >= 100 ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < 40 ? 60 : 100 - activePoints) + t('tier_remaining_post') }}</span>
+                            <span class="tier-title">{{ t('tier2_title', { n: activeTier2Unlock }) }}</span>
+                            <span class="tier-req">{{ activePoints >= 100 ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < activeTier2Unlock ? (100 - activeTier2Unlock) : 100 - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: 喜びの思い出のアドパスアイテム）を右寄せで表示 -->
                         <div class="game-node-wrapper" style="margin-bottom: 16px;" v-if="activeSpirit.treeData.tier2.some(i => i.wrapRow && !isPhantomItem(i))">
@@ -2396,9 +2396,9 @@
                             <div class="node-placeholder"></div>
                             <div v-for="item in activeSpirit.treeData.tier2.filter(i => i.wrapRow && !isPhantomItem(i))" :key="item.id"
                                  class="game-node-btn"
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < activeTier2Unlock && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? t('tree_pass_required') : null"
-                                 @click="toggleTreeItem(item, 40)">
+                                 @click="toggleTreeItem(item, activeTier2Unlock)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -2422,9 +2422,9 @@
                                 <div v-if="!item" class="node-placeholder"></div>
                                 <div v-else
                                      class="game-node-btn" 
-                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < activeTier2Unlock && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                      :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? t('tree_pass_required') : null"
-                                     @click="toggleTreeItem(item, 40)">
+                                     @click="toggleTreeItem(item, activeTier2Unlock)">
                                     <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                     <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                     <div class="node-icon">
@@ -3103,7 +3103,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier3: '第3層',
             status_tier2: '第2層',
             status_tier1: '第1層',
-            tier2_title: '第2層（必要累計: 40p）',
+            tier2_title: '第2層（必要累計: {n}p）',
             tier3_title: '第3層（必要累計: 100p）',
             tier4_title: '第4層（必要累計: 180p）',
             tier_unlocked: '🎉 解放完了',
@@ -3313,7 +3313,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier3: 'Tier 3',
             status_tier2: 'Tier 2',
             status_tier1: 'Tier 1',
-            tier2_title: 'Tier 2 (cumulative required: 40p)',
+            tier2_title: 'Tier 2 (cumulative required: {n}p)',
             tier3_title: 'Tier 3 (cumulative required: 100p)',
             tier4_title: 'Tier 4 (cumulative required: 180p)',
             tier_unlocked: '🎉 Unlocked',
@@ -3523,7 +3523,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier3: '第3層',
             status_tier2: '第2層',
             status_tier1: '第1層',
-            tier2_title: '第2層（累計所需: 40p）',
+            tier2_title: '第2層（累計所需: {n}p）',
             tier3_title: '第3層（累計所需: 100p）',
             tier4_title: '第4層（累計所需: 180p）',
             tier_unlocked: '🎉 已解鎖',
@@ -3733,7 +3733,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier3: '티어 3',
             status_tier2: '티어 2',
             status_tier1: '티어 1',
-            tier2_title: '티어 2 (누적 필요: 40p)',
+            tier2_title: '티어 2 (누적 필요: {n}p)',
             tier3_title: '티어 3 (누적 필요: 100p)',
             tier4_title: '티어 4 (누적 필요: 180p)',
             tier_unlocked: '🎉 해금 완료',
@@ -3824,6 +3824,13 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
             const totalHearts = computed(() => spirits.value.filter(s => s.treeData.tier4[2].checked).length);
+
+            // 🔓 第2層解放に必要な累計ポイント。通常は40pだが、喜びの思い出(id:4)は実機確認により70p
+            // （第2層アイテム自体の獲得ポイント(60p)は変更しない。第1層完了(40p)だけでは足りず、
+            // 　連れ歩き日数などと合わせて70pに到達する必要がある）
+            const TIER2_UNLOCK_OVERRIDES = { 4: 70 };
+            const getTier2UnlockPoints = (spirit) => TIER2_UNLOCK_OVERRIDES[spirit.id] || 40;
+            const activeTier2Unlock = computed(() => getTier2UnlockPoints(activeSpirit.value));
 
             // 🕯️ ツリーのアイテムをチェック/解除する共通処理。
             // ・前層の必要ポイント(minPoints)未達、またはアドパス未保有でのパス限定アイテムは新規チェック不可
@@ -4003,9 +4010,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // ・キャンドル交換は「ポイント効率(points/candles)が良いアイテム」を、解放済み＆購入可能な範囲で毎日優先
             // ・アドパス①〜③（noPoints系ボーナス）はプレイヤーが好きなタイミングで取得するため、プランの対象外
             // ・ハートとの交換はアドパス未保有の場合、対象から除外する
-            const tierThresholds = { tier1: 0, tier2: 40, tier3: 100, tier4: 180 };
-
             const buildMultiSpiritState = () => spirits.value.map(spirit => {
+                const tierThresholds = { tier1: 0, tier2: getTier2UnlockPoints(spirit), tier3: 100, tier4: 180 };
                 const remaining = [];
                 Object.keys(spirit.treeData).forEach(tierKey => {
                     spirit.treeData[tierKey].forEach(item => {
@@ -4104,7 +4110,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const activeFastestHeartPlan = computed(() => {
                 const spirit = activeSpirit.value;
                 const heartItem = spirit.treeData.tier4[2];
-                const tierThreshold = { tier1: 0, tier2: 40, tier3: 100, tier4: 180 };
+                const tierThreshold = { tier1: 0, tier2: getTier2UnlockPoints(spirit), tier3: 100, tier4: 180 };
 
                 // まだ購入していない、アドパス枠でもハートでもない通常アイテムを集める
                 let remaining = [];
@@ -4693,7 +4699,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
             return {
-                activeIndex, spirits, activeSpirit, activePoints, totalHearts, toggleTreeItem, toggleExcluded,
+                activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeTier2Unlock, toggleTreeItem, toggleExcluded,
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
