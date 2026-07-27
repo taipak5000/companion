@@ -2762,13 +2762,16 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
         // 第3層 エモートのコストのみ変更(🕯️22) / 魔法③は自動で②に繰上(🕯️8のまま)
         //       季節アイテム②を新規追加(🕯️22)。第3層は3アイテム構成・獲得ポイント合計は80になるよう
         //       26.4/26.4/27.2で配分（表示は丸めて+26p/+26p/+27p。芸術の思い出と同じ考え方）
-        // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)
+        // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)。
+        //       獲得ポイントは実機確認により季節アイテム・黒染料それぞれ50p（合計100p）に修正
         data[3].treeData.tier1[1].type = 'seasonal';
         data[3].treeData.tier2[1].points = 60; // 魔法①（自動繰上後の表示名）
         data[3].treeData.tier3[0].points = 26.4; // エモートLv3
         data[3].treeData.tier3[1].points = 26.4; // 魔法②
         data[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 27.2, candles: 22, checked: false, excluded: false });
+        data[3].treeData.tier4[0].points = 50; // 季節アイテム③
         data[3].treeData.tier4[1].type = 'dye';
+        data[3].treeData.tier4[1].points = 50; // 黒染料
         data[3].treeData.tier4[1].customLabel = '黒染料';
 
         // 🖼️ 喜びの思い出: 実機スクショに基づく個別アイコン画像を割り当て
