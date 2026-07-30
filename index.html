@@ -1468,6 +1468,20 @@
             font-size: 14px;
             cursor: pointer;
         }
+        .pf-row-input {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--accent-blue);
+            border-radius: 6px;
+            padding: 6px 8px;
+            color: var(--text-color);
+            font-size: 14px;
+            font-family: inherit;
+            min-width: 0;
+        }
+        .pf-row-confirm-text { flex: 1; font-size: 12.5px; color: var(--text-color); line-height: 1.4; }
+        .pf-row-btn-ok { background: var(--accent-blue); color: #fff; border: none; }
+        .pf-row-btn-danger { background: var(--accent-red); color: #fff; border: none; }
 
         /* --------------------------------------------------------------------------------- */
         /* 🔮 精霊ツリー（4体横並び比較）エリア — 公開されたツリー画像のレイアウト参考 */
@@ -1793,17 +1807,38 @@
     </header>
 
     <!-- ═══ プロフィール（記録）の切り替え ═══ -->
-    <div class="pf-bar" @click="showProfileModal = true">🗂️ <b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</div>
+    <div class="pf-bar" @click="pfOpenModal">🗂️ <b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</div>
 
-    <div class="pf-modal-overlay" :class="{ 'is-visible': showProfileModal }" @click.self="showProfileModal = false">
+    <div class="pf-modal-overlay" :class="{ 'is-visible': showProfileModal }" @click.self="pfCloseModal">
         <div class="pf-modal-card">
             <h3>{{ t('record_title') }}</h3>
             <div>
-                <div v-for="rec in records" :key="rec.id" class="pf-row" :class="{ active: rec.id === activeRecordId }">
-                    <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false">{{ rec.id === activeRecordId ? '✅ ' : '' }}{{ rec.name }}</span>
-                    <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false">⧉</button>
-                    <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfPromptRename(rec)">✏️</button>
-                    <button v-if="records.length > 1" type="button" class="pf-icon-btn" :title="t('record_delete')" @click="pfConfirmDelete(rec)">🗑️</button>
+                <div v-for="rec in records" :key="rec.id" class="pf-row" :class="{ active: rec.id === activeRecordId }" style="flex-wrap: wrap;">
+                    <template v-if="pfEditingId === rec.id">
+                        <input
+                            type="text"
+                            class="pf-row-input"
+                            v-model="pfEditingName"
+                            maxlength="20"
+                            autofocus
+                            @focus="$event.target.select()"
+                            @keyup.enter="pfConfirmRenameInline(rec)"
+                            @keyup.esc="pfCancelRowState"
+                        >
+                        <button type="button" class="pf-icon-btn pf-row-btn-ok" @click="pfConfirmRenameInline(rec)">{{ t('record_save') }}</button>
+                        <button type="button" class="pf-icon-btn" @click="pfCancelRowState">{{ t('record_cancel') }}</button>
+                    </template>
+                    <template v-else-if="pfDeletingId === rec.id">
+                        <span class="pf-row-confirm-text">{{ t('record_delete_confirm', { name: rec.name }) }}</span>
+                        <button type="button" class="pf-icon-btn pf-row-btn-danger" @click="pfConfirmDeleteInline(rec)">{{ t('record_delete_short') }}</button>
+                        <button type="button" class="pf-icon-btn" @click="pfCancelRowState">{{ t('record_cancel') }}</button>
+                    </template>
+                    <template v-else>
+                        <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false">{{ rec.id === activeRecordId ? '✅ ' : '' }}{{ rec.name }}</span>
+                        <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false">⧉</button>
+                        <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfStartRename(rec)">✏️</button>
+                        <button v-if="records.length > 1" type="button" class="pf-icon-btn" :title="t('record_delete')" @click="pfStartDelete(rec)">🗑️</button>
+                    </template>
                 </div>
             </div>
             <div class="pf-add-row">
@@ -1811,7 +1846,7 @@
                 <button type="button" class="pf-add-btn" @click="pfAddRecord">{{ t('record_add_short') }}</button>
             </div>
             <p class="pf-hint">{{ t('record_hint') }}</p>
-            <button type="button" class="pf-close-btn" @click="showProfileModal = false">{{ t('record_close') }}</button>
+            <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
 
@@ -2893,7 +2928,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             record_add: '新しい記録を追加',
             record_add_short: '追加',
             record_rename: '名前を変更',
-            record_rename_prompt: '新しい記録名を入力してください',
+            record_save: '保存',
+            record_cancel: '取消',
+            record_delete_short: '削除',
             record_duplicate: 'この記録を複製して新規作成',
             record_delete: 'この記録を削除',
             record_delete_confirm: '「{name}」を削除しますか？この記録の保存データも削除されます。',
@@ -3106,7 +3143,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             record_add: 'Add a new record',
             record_add_short: 'Add',
             record_rename: 'Rename',
-            record_rename_prompt: 'Enter a new record name',
+            record_save: 'Save',
+            record_cancel: 'Cancel',
+            record_delete_short: 'Delete',
             record_duplicate: 'Duplicate this record',
             record_delete: 'Delete this record',
             record_delete_confirm: 'Delete "{name}"? This record\'s saved data will also be removed.',
@@ -3319,7 +3358,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             record_add: '新增一筆記錄',
             record_add_short: '新增',
             record_rename: '重新命名',
-            record_rename_prompt: '請輸入新的記錄名稱',
+            record_save: '儲存',
+            record_cancel: '取消',
+            record_delete_short: '刪除',
             record_duplicate: '複製此記錄並新建',
             record_delete: '刪除此記錄',
             record_delete_confirm: '確定要刪除「{name}」嗎？此記錄的已儲存資料也會一併刪除。',
@@ -3532,7 +3573,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             record_add: '새 기록 추가',
             record_add_short: '추가',
             record_rename: '이름 변경',
-            record_rename_prompt: '새 기록 이름을 입력해주세요',
+            record_save: '저장',
+            record_cancel: '취소',
+            record_delete_short: '삭제',
             record_duplicate: '이 기록을 복제하여 새로 만들기',
             record_delete: '이 기록 삭제',
             record_delete_confirm: '「{name}」을(를) 삭제하시겠습니까? 이 기록의 저장된 데이터도 삭제됩니다.',
@@ -3776,6 +3819,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const activeRecordId = ref('default'); // 現在アクティブな記録のid
             const showProfileModal = ref(false); // プロフィール（記録）切り替えモーダルの表示状態
             const newRecordName = ref(''); // モーダル内の新規追加用テキストボックスの内容
+            const pfEditingId = ref(null); // 名前変更中の記録id（null=変更していない）
+            const pfEditingName = ref(''); // 名前変更中のテキストボックスの内容
+            const pfDeletingId = ref(null); // 削除確認中の記録id（null=確認していない）
             const activeRecordName = computed(() => (records.value.find(r => r.id === activeRecordId.value) || {}).name || '');
 
             const spirits = ref(createDefaultSpiritsData());
@@ -4601,17 +4647,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const pfAddRecord = () => {
                 addRecord(false, newRecordName.value);
                 newRecordName.value = '';
-                showProfileModal.value = false;
-            };
-
-            // ✏️ 記録名を変更する（他ツールと同じくネイティブの prompt() で確認する）
-            const pfPromptRename = (record) => {
-                const next = prompt(t('record_rename_prompt'), record.name);
-                if (next === null) return;
-                const trimmed = next.trim();
-                if (!trimmed) return;
-                record.name = trimmed.slice(0, 20);
-                saveRecordsMeta();
+                pfCloseModal();
             };
 
             // 🗑️ 記録を削除する（記録は最低1件残す。削除後、削除したのが今の記録なら先頭の記録に切り替える）
@@ -4631,10 +4667,41 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 saveRecordsMeta();
             };
 
-            // 🗑️ 記録の削除を確認する（他ツールと同じくネイティブの confirm() で確認する）
-            const pfConfirmDelete = (record) => {
-                if (records.value.length <= 1) return;
-                if (!confirm(t('record_delete_confirm', { name: record.name }))) return;
+            // 🗂️ プロフィールモーダルの開閉・行内での名前変更/削除確認の状態管理。
+            // ポップアップブロックの影響を受ける prompt()/confirm() は使わず、
+            // モーダル内にインラインで表示する（他ツールと同じ方式）。
+            const pfOpenModal = () => {
+                pfEditingId.value = null;
+                pfDeletingId.value = null;
+                showProfileModal.value = true;
+            };
+            const pfCloseModal = () => {
+                pfEditingId.value = null;
+                pfDeletingId.value = null;
+                showProfileModal.value = false;
+            };
+            const pfStartRename = (record) => {
+                pfDeletingId.value = null;
+                pfEditingId.value = record.id;
+                pfEditingName.value = record.name;
+            };
+            const pfStartDelete = (record) => {
+                pfEditingId.value = null;
+                pfDeletingId.value = record.id;
+            };
+            const pfCancelRowState = () => {
+                pfEditingId.value = null;
+                pfDeletingId.value = null;
+            };
+            const pfConfirmRenameInline = (record) => {
+                const trimmed = pfEditingName.value.trim();
+                pfEditingId.value = null;
+                if (!trimmed) return;
+                record.name = trimmed.slice(0, 20);
+                saveRecordsMeta();
+            };
+            const pfConfirmDeleteInline = (record) => {
+                pfDeletingId.value = null;
                 deleteRecord(record.id);
             };
 
@@ -4664,7 +4731,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 activeFastestHeartPlan,
                 spiritForecasts, grandTotalCandles, getForecastIconId,
                 records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
-                switchRecord, addRecord, pfAddRecord, pfPromptRename, pfConfirmDelete
+                pfEditingId, pfEditingName, pfDeletingId,
+                switchRecord, addRecord, pfAddRecord,
+                pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
+                pfConfirmRenameInline, pfConfirmDeleteInline
             };
         }
     }).mount('#app');
