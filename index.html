@@ -2379,7 +2379,7 @@
                     <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 100}">
                         <div class="tier-header">
                             <span class="tier-title">{{ t('tier2_title') }}</span>
-                            <span class="tier-req">{{ activePoints >= 100 ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < 40 ? activeTier2RemainingPlaceholder : 100 - activePoints) + t('tier_remaining_post') }}</span>
+                            <span class="tier-req">{{ activePoints >= activeTier2Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < 40 ? activeTier2Total - 40 : activeTier2Total - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: 喜びの思い出のアドパスアイテム）を右寄せで表示 -->
                         <div class="game-node-wrapper" style="margin-bottom: 16px;" v-if="activeSpirit.treeData.tier2.some(i => i.wrapRow && !isPhantomItem(i))">
@@ -2438,7 +2438,7 @@
                     <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 180}">
                         <div class="tier-header">
                             <span class="tier-title">{{ t('tier3_title') }}</span>
-                            <span class="tier-req">{{ activePoints >= 180 ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < 100 ? 80 : 180 - activePoints) + t('tier_remaining_post') }}</span>
+                            <span class="tier-req">{{ activePoints >= activeTier3Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < activeTier2Total ? activeTier3Total - activeTier2Total : activeTier3Total - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <div class="game-node-wrapper">
                             <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isPhantomItem(i))" :key="item.id" 
@@ -2467,7 +2467,7 @@
                     <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 280}">
                         <div class="tier-header">
                             <span class="tier-title">{{ t('tier4_title') }}</span>
-                            <span class="tier-req">{{ activePoints >= 280 ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < 180 ? 100 : 280 - activePoints) + t('tier_remaining_post') }}</span>
+                            <span class="tier-req">{{ activePoints >= activeTier4Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < activeTier3Total ? activeTier4Total - activeTier3Total : activeTier4Total - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: アドパスアイテム）を右寄せで表示 -->
                         <div class="game-node-wrapper" style="margin-bottom: 16px;" v-if="activeSpirit.treeData.tier4.some(i => i.wrapRow && !isPhantomItem(i))">
@@ -2646,7 +2646,7 @@
         s1: { em1: 0, mag1: 4,  it1: 18, mag2: 6, em2: 22, mag3: 10, it2: 26, extra: 0,  heart: 3 }, // 合計89（第3層は「白染料」。下のspirits初期化直後でtype/customLabelを上書き）
         s2: { em1: 0, mag1: 4,  it1: 18, mag2: 8, em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計89（第2層は「赤染料」、魔法④は枠が存在しないため削除）
         s3: { em1: 0, mag1: 12, it1: 18, mag2: 6, em2: 22, mag3: 10, it2: 10, extra: 0,  heart: 3 }, // 合計91（第1層は季節アイテム①、第2層magは①へ繰上、第3層は季節アイテム③、第4層itは魔法②へ）
-        s4: { em1: 0, mag1: 12, it1: 0,  mag2: 6, em2: 22, mag3: 8,  it2: 26, extra: 12, heart: 3 }  // 合計111（第1層は季節アイテム①、第2層itは削除・magは①へ繰上、第3層magは②へ・季節アイテム②を追加、第4層extraは「黒染料」）
+        s4: { em1: 0, mag1: 12, it1: 0,  mag2: 6, em2: 22, mag3: 8,  it2: 26, extra: 12, heart: 3 }  // 合計93（第1層は季節アイテム①、第2層itは削除・magは①へ繰上、第3層magは②へ・季節アイテム②を追加、第4層extraは「黒染料」。キャンドルコストは変更なし、獲得ポイントのみ下記で27p/27p/27pに修正）
     };
     // 🔖 上記コストの表を書き換えたら、この番号を+1すること。
     // ブラウザに保存済みの古いキャンドルコスト（localStorage）を無効化し、
@@ -2751,15 +2751,15 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
         // 第2層 季節アイテム①は枠が存在しないため削除（コスト0化。typeはseasonalのまま維持し非表示に）
         //       魔法②は自動で①に繰上(🕯️6のまま)。獲得ポイントは実機確認により60pに修正
         // 第3層 エモートのコストのみ変更(🕯️22) / 魔法③は自動で②に繰上(🕯️8のまま)
-        //       季節アイテム②を新規追加(🕯️22)。第3層は3アイテム構成・獲得ポイント合計は80になるよう
-        //       26.4/26.4/27.2で配分（表示は丸めて+26p/+26p/+27p。芸術の思い出と同じ考え方）
+        //       季節アイテム②を新規追加(🕯️22)。キャンドルコストは変更なし、獲得ポイントは
+        //       実機確認によりエモート・魔法・季節アイテムいずれも27p（第3層合計81p）に修正
         // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)。
         //       獲得ポイントは実機確認により季節アイテム・黒染料それぞれ50p（合計100p）に修正
         data[3].treeData.tier1[1].type = 'seasonal';
         data[3].treeData.tier2[1].points = 60; // 魔法①（自動繰上後の表示名）
-        data[3].treeData.tier3[0].points = 26.4; // エモートLv3
-        data[3].treeData.tier3[1].points = 26.4; // 魔法②
-        data[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 27.2, candles: 22, checked: false, excluded: false });
+        data[3].treeData.tier3[0].points = 27; // エモートLv3
+        data[3].treeData.tier3[1].points = 27; // 魔法②
+        data[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 27, candles: 22, checked: false, excluded: false });
         data[3].treeData.tier4[0].points = 50; // 季節アイテム③
         data[3].treeData.tier4[1].type = 'dye';
         data[3].treeData.tier4[1].points = 50; // 黒染料
@@ -3835,16 +3835,22 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                     tier.forEach(item => { if (item.checked && !item.noPoints) points += item.points; });
                 });
                 points += (spirit.walkDays * 10);
-                return Math.min(280, Math.round(points)); // 🔢 第3層を3分割した端数(26.4等)が進捗表示に出ないよう丸める
+                // 🔢 第3層を3分割した端数(26.4等)が進捗表示に出ないよう丸める。
+                // 上限は通常280だが、第4層の必要合計ポイントが精霊ごとに異なる場合があるため、
+                // その精霊の第4層合計(TIER_TOTAL_OVERRIDES)を上限として使う。
+                const cap = (TIER_TOTAL_OVERRIDES[spirit.id] || {}).t4 || 280;
+                return Math.min(cap, Math.round(points));
             };
 
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
             const totalHearts = computed(() => spirits.value.filter(s => s.treeData.tier4[2].checked).length);
 
-            // 🔓 第2層の見出しに表示する「あと◯◯p」の、第1層未解放時点でのプレースホルダー値。
-            // 通常は60p（=100-40）だが、喜びの思い出(id:4)は実機確認により90p
-            const TIER2_REMAINING_PLACEHOLDER_OVERRIDES = { 4: 90 };
-            const activeTier2RemainingPlaceholder = computed(() => TIER2_REMAINING_PLACEHOLDER_OVERRIDES[activeSpirit.value.id] || 60);
+            // 🔓 各層の解除に必要な合計ポイント数。通常は第2層100・第3層180・第4層280だが、
+            // 喜びの思い出(id:4)はツリー構成が異なるため、実機確認により第2層180・第3層180・第4層280に修正。
+            const TIER_TOTAL_OVERRIDES = { 4: { t2: 180, t3: 180, t4: 280 } };
+            const activeTier2Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t2 || 100);
+            const activeTier3Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t3 || 180);
+            const activeTier4Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t4 || 280);
 
             // 🕯️ ツリーのアイテムをチェック/解除する共通処理。
             // ・前層の必要ポイント(minPoints)未達、またはアドパス未保有でのパス限定アイテムは新規チェック不可
@@ -4716,7 +4722,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
             return {
-                activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeTier2RemainingPlaceholder, toggleTreeItem, toggleExcluded,
+                activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeTier2Total, activeTier3Total, activeTier4Total, toggleTreeItem, toggleExcluded,
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
