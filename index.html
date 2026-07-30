@@ -1368,135 +1368,105 @@
         }
 
         /* --------------------------------------------------------------------------------- */
-        /* 🗂️ 記録（データ）の切り替え — 現状の記録・予測用の記録や、複数アカウントの使い分けに使う */
+        /* 🗂️ プロフィール（記録）の切り替え — 他ツール（share/wings/item/star-candle）と統一したデザイン */
         /* --------------------------------------------------------------------------------- */
 
-        .record-switch-card {
-            margin-bottom: 16px;
-            padding: 14px 16px;
-        }
-
-        .record-switch-head {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: baseline;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .record-switch-title {
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .record-switch-hint {
-            font-size: 11px;
-            color: var(--text-gray);
-        }
-
-        .record-tabs {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            overflow-x: auto;
-            padding-bottom: 2px;
-        }
-        .record-tabs::-webkit-scrollbar { height: 6px; }
-        .record-tabs::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-
-        .record-tab {
-            display: flex;
-            align-items: center;
-            gap: 1px;
-            flex-shrink: 0;
-            background: var(--tab-bg);
-            border-radius: 8px;
-            padding: 2px;
-            transition: background-color 0.2s;
-        }
-
-        /* 🟢 今アクティブな記録は、他のアイテムと色が被らない accent-green で目立たせる */
-        .record-tab.active {
-            background: rgba(52, 199, 89, 0.14);
-        }
-        [data-theme="dark"] .record-tab.active {
-            background: rgba(48, 209, 88, 0.2);
-        }
-
-        .record-tab-btn {
-            border: none;
-            background: transparent;
-            padding: 7px 10px;
-            font-size: 12.5px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            color: var(--text-color);
-            white-space: nowrap;
-            max-width: 140px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .record-tab.active .record-tab-btn { color: var(--accent-green); }
-        [data-theme="dark"] .record-tab.active .record-tab-btn { color: #30d158; }
-
-        .record-icon-btn {
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 12px;
-            padding: 6px 5px;
-            border-radius: 6px;
-            line-height: 1;
-            flex-shrink: 0;
-            opacity: 0.7;
-        }
-        .record-icon-btn:hover { opacity: 1; filter: brightness(0.95); }
-        .record-icon-danger:hover { color: var(--danger-text); }
-
-        /* 🔴 削除ボタンの「もう一度押すと削除されます」確認状態。
-           ネイティブのconfirm()ダイアログが動かない環境でも確実に機能するよう、
-           ボタン自体の見た目を変えて2回タップさせる方式にしている。 */
-        .record-icon-confirming {
-            opacity: 1;
-            background: var(--danger-text);
-            color: #ffffff;
-            padding: 6px 8px;
-            font-size: 11px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .record-icon-confirming:hover { color: #ffffff; filter: brightness(1.1); }
-
-        .record-name-input {
-            box-sizing: border-box;
-            padding: 6px 8px;
-            border: 1px solid var(--accent-green);
-            border-radius: 6px;
-            font-size: 12.5px;
-            font-weight: bold;
+        .pf-bar {
+            max-width: 600px;
+            margin: 0 auto 16px;
             background: var(--card-bg);
-            color: var(--text-color);
-            width: 112px;
-            outline: none;
-        }
-
-        .record-add-btn {
-            flex-shrink: 0;
-            border: 1px dashed var(--border-color);
-            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
             color: var(--text-gray);
-            padding: 7px 12px;
-            font-size: 12.5px;
-            font-weight: bold;
-            border-radius: 8px;
+            text-align: center;
             cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
         }
-        .record-add-btn:hover {
-            color: var(--accent-green);
-            border-color: var(--accent-green);
+        .pf-bar b { color: var(--accent-blue); font-weight: 700; }
+        .pf-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .pf-modal-overlay.is-visible { display: flex; }
+        .pf-modal-card {
+            width: 100%;
+            max-width: 360px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+        }
+        .pf-modal-card h3 { margin: 0 0 14px; font-size: 16px; color: var(--text-color); }
+        .pf-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 4px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .pf-row:last-of-type { border-bottom: none; }
+        .pf-row-name {
+            flex: 1;
+            font-size: 14.5px;
+            color: var(--text-color);
+            cursor: pointer;
+            word-break: break-all;
+        }
+        .pf-row.active .pf-row-name { color: var(--accent-blue); font-weight: 700; }
+        .pf-icon-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-gray);
+            border-radius: 6px;
+            padding: 5px 9px;
+            font-size: 13px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .pf-add-row { display: flex; gap: 8px; margin-top: 14px; }
+        .pf-input {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: var(--text-color);
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .pf-add-btn {
+            background: var(--accent-blue);
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .pf-hint { margin: 12px 0 0; font-size: 11.5px; color: var(--text-gray); line-height: 1.5; }
+        .pf-close-btn {
+            display: block;
+            width: 100%;
+            margin-top: 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
         }
 
         /* --------------------------------------------------------------------------------- */
@@ -1822,44 +1792,26 @@
         </div>
     </header>
 
-    <!-- ═══ 記録（データ）の切り替え ═══ -->
-    <div class="section-card record-switch-card">
-        <div class="record-switch-head">
-            <span class="record-switch-title">{{ t('record_title') }}</span>
-            <span class="record-switch-hint">{{ t('record_hint') }}</span>
-        </div>
-        <div class="record-tabs">
-            <div v-for="rec in records" :key="rec.id" class="record-tab" :class="{ active: rec.id === activeRecordId }">
-                <input
-                    v-if="editingRecordId === rec.id"
-                    type="text"
-                    class="record-name-input"
-                    v-model="editingRecordName"
-                    :placeholder="t('record_name_placeholder')"
-                    maxlength="20"
-                    autofocus
-                    @focus="$event.target.select()"
-                    @keyup.enter="confirmRenameRecord"
-                    @keyup.esc="cancelRenameRecord"
-                    @blur="confirmRenameRecord"
-                    @click.stop
-                >
-                <template v-else>
-                    <button class="record-tab-btn" @click="switchRecord(rec.id)" :title="rec.name">{{ rec.name }}</button>
-                    <template v-if="rec.id === activeRecordId">
-                        <button class="record-icon-btn" @click.stop="startRenameRecord(rec)" :title="t('record_rename')">✏️</button>
-                        <button class="record-icon-btn" @click.stop="addRecord(true)" :title="t('record_duplicate')">⧉</button>
-                        <button
-                            v-if="records.length > 1"
-                            class="record-icon-btn record-icon-danger"
-                            :class="{ 'record-icon-confirming': confirmingDeleteId === rec.id }"
-                            @click.stop="requestDeleteRecord(rec.id)"
-                            :title="confirmingDeleteId === rec.id ? t('record_delete_confirm_tap') : t('record_delete')"
-                        >{{ confirmingDeleteId === rec.id ? t('record_delete_confirm_short') : '🗑️' }}</button>
-                    </template>
-                </template>
+    <!-- ═══ プロフィール（記録）の切り替え ═══ -->
+    <div class="pf-bar" @click="showProfileModal = true">🗂️ <b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</div>
+
+    <div class="pf-modal-overlay" :class="{ 'is-visible': showProfileModal }" @click.self="showProfileModal = false">
+        <div class="pf-modal-card">
+            <h3>{{ t('record_title') }}</h3>
+            <div>
+                <div v-for="rec in records" :key="rec.id" class="pf-row" :class="{ active: rec.id === activeRecordId }">
+                    <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false">{{ rec.id === activeRecordId ? '✅ ' : '' }}{{ rec.name }}</span>
+                    <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false">⧉</button>
+                    <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfPromptRename(rec)">✏️</button>
+                    <button v-if="records.length > 1" type="button" class="pf-icon-btn" :title="t('record_delete')" @click="pfConfirmDelete(rec)">🗑️</button>
+                </div>
             </div>
-            <button class="record-add-btn" @click="addRecord(false)" :title="t('record_add')">＋ {{ t('record_add_short') }}</button>
+            <div class="pf-add-row">
+                <input type="text" class="pf-input" v-model="newRecordName" :placeholder="t('record_name_placeholder')" maxlength="20" @keyup.enter="pfAddRecord">
+                <button type="button" class="pf-add-btn" @click="pfAddRecord">{{ t('record_add_short') }}</button>
+            </div>
+            <p class="pf-hint">{{ t('record_hint') }}</p>
+            <button type="button" class="pf-close-btn" @click="showProfileModal = false">{{ t('record_close') }}</button>
         </div>
     </div>
 
@@ -2936,15 +2888,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             side_share_tool: '📍 創作物管理ツール',
 
             record_title: '🗂️ 記録の切り替え',
+            record_bar_suffix: 'に切替中（タップで切替）',
             record_hint: '予測用・実績用の記録や、複数アカウントの使い分けに便利です',
             record_add: '新しい記録を追加',
             record_add_short: '追加',
             record_rename: '名前を変更',
+            record_rename_prompt: '新しい記録名を入力してください',
             record_duplicate: 'この記録を複製して新規作成',
             record_delete: 'この記録を削除',
+            record_delete_confirm: '「{name}」を削除しますか？この記録の保存データも削除されます。',
             record_name_placeholder: '記録名',
-            record_delete_confirm_short: '削除？',
-            record_delete_confirm_tap: 'もう一度押すと削除されます',
+            record_close: '閉じる',
 
             fc_title: '🔮 精霊ツリー（4体横並び比較）',
             fc_close: '閉じる ▲',
@@ -3147,15 +3101,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             side_share_tool: '📍 Creation Manager',
 
             record_title: '🗂️ Switch Records',
+            record_bar_suffix: 'active (tap to switch)',
             record_hint: 'Handy for tracking predicted vs. actual progress, or managing multiple accounts',
             record_add: 'Add a new record',
             record_add_short: 'Add',
             record_rename: 'Rename',
+            record_rename_prompt: 'Enter a new record name',
             record_duplicate: 'Duplicate this record',
             record_delete: 'Delete this record',
+            record_delete_confirm: 'Delete "{name}"? This record\'s saved data will also be removed.',
             record_name_placeholder: 'Record name',
-            record_delete_confirm_short: 'Delete?',
-            record_delete_confirm_tap: 'Tap again to delete',
+            record_close: 'Close',
 
             fc_title: '🔮 Spirit Trees (4-way comparison)',
             fc_close: 'Close ▲',
@@ -3358,15 +3314,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             side_share_tool: '📍 創作物管理工具',
 
             record_title: '🗂️ 切換記錄',
+            record_bar_suffix: '使用中（點按切換）',
             record_hint: '適合用來區分預測用與實際用的記錄，或管理多個帳號',
             record_add: '新增一筆記錄',
             record_add_short: '新增',
             record_rename: '重新命名',
+            record_rename_prompt: '請輸入新的記錄名稱',
             record_duplicate: '複製此記錄並新建',
             record_delete: '刪除此記錄',
+            record_delete_confirm: '確定要刪除「{name}」嗎？此記錄的已儲存資料也會一併刪除。',
             record_name_placeholder: '記錄名稱',
-            record_delete_confirm_short: '刪除？',
-            record_delete_confirm_tap: '再點一次即可刪除',
+            record_close: '關閉',
 
             fc_title: '🔮 精靈樹（4隻並排比較）',
             fc_close: '關閉 ▲',
@@ -3569,15 +3527,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             side_share_tool: '📍 창작물 관리 도구',
 
             record_title: '🗂️ 기록 전환',
+            record_bar_suffix: '전환 중 (탭하여 전환)',
             record_hint: '예측용・실적용 기록 구분이나 여러 계정 관리에 편리합니다',
             record_add: '새 기록 추가',
             record_add_short: '추가',
             record_rename: '이름 변경',
+            record_rename_prompt: '새 기록 이름을 입력해주세요',
             record_duplicate: '이 기록을 복제하여 새로 만들기',
             record_delete: '이 기록 삭제',
+            record_delete_confirm: '「{name}」을(를) 삭제하시겠습니까? 이 기록의 저장된 데이터도 삭제됩니다.',
             record_name_placeholder: '기록 이름',
-            record_delete_confirm_short: '삭제할까요?',
-            record_delete_confirm_tap: '다시 누르면 삭제됩니다',
+            record_close: '닫기',
 
             fc_title: '🔮 정령 트리 (4마리 비교)',
             fc_close: '닫기 ▲',
@@ -3814,10 +3774,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 「現状の記録」「予測用の記録」のように、丸ごと別のセーブ枠を複数持てるようにする。
             const records = ref([{ id: 'default', name: 'データ1' }]); // [{id, name}] の一覧（load()内で復元・調整される）
             const activeRecordId = ref('default'); // 現在アクティブな記録のid
-            const editingRecordId = ref(null); // 名前編集中の記録id（null=編集していない）
-            const editingRecordName = ref(''); // 名前編集中のテキストボックスの内容
-            const confirmingDeleteId = ref(null); // 削除確認中（ボタンを2回押す必要がある）の記録id
-            let confirmingDeleteTimer = null; // 削除確認状態を自動解除するタイマー
+            const showProfileModal = ref(false); // プロフィール（記録）切り替えモーダルの表示状態
+            const newRecordName = ref(''); // モーダル内の新規追加用テキストボックスの内容
+            const activeRecordName = computed(() => (records.value.find(r => r.id === activeRecordId.value) || {}).name || '');
 
             const spirits = ref(createDefaultSpiritsData());
 
@@ -4588,7 +4547,6 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
             // 🔀 記録（データ）を切り替える
             const switchRecord = (id) => {
-                confirmingDeleteId.value = null; // 🔓 削除確認中だった場合はキャンセル扱いにする
                 if (id === activeRecordId.value) return;
                 save(); // 切り替え前に、今の記録の内容を確実に保存しておく
                 activeRecordId.value = id;
@@ -4612,8 +4570,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // duplicateCurrent=true の場合は、現在表示中の内容をそのまま複製した状態で作成する
             // （現状の記録から「予測用データ」を作り始めたい場合などに便利）。
             // false の場合はまっさらな状態で作成する（別アカウントの記録などに便利）。
-            const addRecord = (duplicateCurrent) => {
-                confirmingDeleteId.value = null; // 🔓 削除確認中だった場合はキャンセル扱いにする
+            // customName が指定されていればその名前を使い、無ければ既定名（データN）を使う。
+            const addRecord = (duplicateCurrent, customName) => {
                 save(); // 追加前に、今の記録の内容を確実に保存しておく
                 const newId = generateRecordId();
 
@@ -4632,52 +4590,28 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                     } catch (e) { /* noop */ }
                 }
 
-                records.value.push({ id: newId, name: nextDefaultRecordName() });
+                const trimmedName = (customName || '').trim();
+                records.value.push({ id: newId, name: trimmedName ? trimmedName.slice(0, 20) : nextDefaultRecordName() });
                 activeRecordId.value = newId;
                 loadRecordData(newId); // duplicateCurrent=falseなら空、trueなら複製済みデータを読み込む
                 saveRecordsMeta();
             };
 
-            // ✏️ 記録名の編集を開始する
-            const startRenameRecord = (record) => {
-                confirmingDeleteId.value = null; // 🔓 削除確認中だった場合はキャンセル扱いにする
-                editingRecordId.value = record.id;
-                editingRecordName.value = record.name;
+            // ➕ プロフィールモーダルの「追加」ボタンから呼ばれる
+            const pfAddRecord = () => {
+                addRecord(false, newRecordName.value);
+                newRecordName.value = '';
+                showProfileModal.value = false;
             };
 
-            // ✅ 記録名の編集を確定する（空欄の場合は変更しない）
-            const confirmRenameRecord = () => {
-                if (!editingRecordId.value) return;
-                const target = records.value.find(r => r.id === editingRecordId.value);
-                if (target) {
-                    const trimmed = editingRecordName.value.trim();
-                    if (trimmed) target.name = trimmed.slice(0, 20);
-                    saveRecordsMeta();
-                }
-                editingRecordId.value = null;
-            };
-
-            // ❌ 記録名の編集をキャンセルする
-            const cancelRenameRecord = () => {
-                editingRecordId.value = null;
-            };
-
-            // 🗑️ 記録の削除をリクエストする（ボタン@clickから呼ばれる）。
-            // 環境によってはブラウザ標準の confirm() ダイアログが動かない/表示されないことがあるため、
-            // ネイティブダイアログには頼らず、「もう一度押すと削除されます」の2タップ方式で確認する。
-            const requestDeleteRecord = (id) => {
-                if (records.value.length <= 1) return;
-                if (confirmingDeleteId.value === id) {
-                    // 2回目のタップ → 実際に削除する
-                    deleteRecord(id);
-                    return;
-                }
-                // 1回目のタップ → 確認待ち状態にする（数秒以内に押されなければ自動的に解除）
-                confirmingDeleteId.value = id;
-                if (confirmingDeleteTimer) clearTimeout(confirmingDeleteTimer);
-                confirmingDeleteTimer = setTimeout(() => {
-                    confirmingDeleteId.value = null;
-                }, 4000);
+            // ✏️ 記録名を変更する（他ツールと同じくネイティブの prompt() で確認する）
+            const pfPromptRename = (record) => {
+                const next = prompt(t('record_rename_prompt'), record.name);
+                if (next === null) return;
+                const trimmed = next.trim();
+                if (!trimmed) return;
+                record.name = trimmed.slice(0, 20);
+                saveRecordsMeta();
             };
 
             // 🗑️ 記録を削除する（記録は最低1件残す。削除後、削除したのが今の記録なら先頭の記録に切り替える）
@@ -4685,9 +4619,6 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 if (records.value.length <= 1) return;
                 const target = records.value.find(r => r.id === id);
                 if (!target) return;
-
-                confirmingDeleteId.value = null;
-                if (confirmingDeleteTimer) clearTimeout(confirmingDeleteTimer);
 
                 try { localStorage.removeItem(dataKeyForRecord(id)); } catch (e) { /* noop */ }
                 records.value = records.value.filter(r => r.id !== id);
@@ -4698,6 +4629,13 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                     loadRecordData(fallback.id);
                 }
                 saveRecordsMeta();
+            };
+
+            // 🗑️ 記録の削除を確認する（他ツールと同じくネイティブの confirm() で確認する）
+            const pfConfirmDelete = (record) => {
+                if (records.value.length <= 1) return;
+                if (!confirm(t('record_delete_confirm', { name: record.name }))) return;
+                deleteRecord(record.id);
             };
 
             onMounted(() => {
@@ -4725,8 +4663,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonCountdown, seasonDayInfo, pad2,
                 activeFastestHeartPlan,
                 spiritForecasts, grandTotalCandles, getForecastIconId,
-                records, activeRecordId, editingRecordId, editingRecordName, confirmingDeleteId,
-                switchRecord, addRecord, startRenameRecord, confirmRenameRecord, cancelRenameRecord, requestDeleteRecord
+                records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
+                switchRecord, addRecord, pfAddRecord, pfPromptRename, pfConfirmDelete
             };
         }
     }).mount('#app');
