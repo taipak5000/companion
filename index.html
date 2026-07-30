@@ -1433,9 +1433,10 @@
             cursor: pointer;
             flex-shrink: 0;
         }
-        .pf-add-row { display: flex; gap: 8px; margin-top: 14px; }
+        .pf-add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
         .pf-input {
             flex: 1;
+            min-width: 0;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 6px;
