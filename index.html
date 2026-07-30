@@ -4442,7 +4442,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 🗂️ 記録（データ）の保存キーを組み立てるヘルパー。
             // id === 'default' の場合は、旧バージョンからそのまま使っていた保存キーを使い続ける。
             // これにより、既存ユーザーの保存済みデータは移行処理なしでそのまま「データ1」になる。
-            const RECORDS_META_KEY = 'sky_companion_records_meta_v1';
+            // 🔗 記録一覧・アクティブIDは taipak5000.github.io 配下の各ツール共通のキーで保存する
+            // （羽トラッカー・アイテム所持管理などとプロフィール（保存枠）を一括管理できるようにするため）
+            const PROFILES_KEY = 'skyProfiles_v1';
+            const ACTIVE_PROFILE_KEY = 'skyActiveProfile_v1';
             const dataKeyForRecord = (id) => id === 'default' ? 'sky_companion_v4_data' : ('sky_companion_v4_data__' + id);
 
             // 💾 保存処理（現在アクティブな記録のデータを、その記録専用のキーへ保存する）
@@ -4464,10 +4467,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 🗂️ 記録一覧（id・名前）とアクティブな記録idを保存する
             const saveRecordsMeta = () => {
                 try {
-                    localStorage.setItem(RECORDS_META_KEY, JSON.stringify({
-                        activeId: activeRecordId.value,
-                        list: records.value.map(r => ({ id: r.id, name: r.name }))
-                    }));
+                    localStorage.setItem(PROFILES_KEY, JSON.stringify(records.value.map(r => ({ id: r.id, name: r.name }))));
+                    localStorage.setItem(ACTIVE_PROFILE_KEY, activeRecordId.value);
                 } catch (e) { /* noop */ }
             };
 
@@ -4543,16 +4544,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // 現在の言語設定に合わせた既定の記録名（データ1）を設定する。
             const loadRecordsMeta = () => {
                 try {
-                    const saved = localStorage.getItem(RECORDS_META_KEY);
-                    if (saved) {
-                        const parsed = JSON.parse(saved);
-                        if (parsed.list && Array.isArray(parsed.list) && parsed.list.length > 0) {
-                            records.value = parsed.list;
+                    const savedList = localStorage.getItem(PROFILES_KEY);
+                    if (savedList) {
+                        const parsedList = JSON.parse(savedList);
+                        if (Array.isArray(parsedList) && parsedList.length > 0) {
+                            records.value = parsedList;
+                            const savedActive = localStorage.getItem(ACTIVE_PROFILE_KEY);
+                            if (savedActive && records.value.some(r => r.id === savedActive)) {
+                                activeRecordId.value = savedActive;
+                            }
+                            return;
                         }
-                        if (parsed.activeId && records.value.some(r => r.id === parsed.activeId)) {
-                            activeRecordId.value = parsed.activeId;
-                        }
-                        return;
                     }
                 } catch (e) { console.error(e); }
                 records.value = [{ id: 'default', name: (RECORD_DEFAULT_NAME_PREFIX_I18N[currentLang.value] || 'データ') + '1' }];
