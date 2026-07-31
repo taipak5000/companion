@@ -2376,7 +2376,7 @@
                         </div>
                     </div>
 
-                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 100}">
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= activeTier2Total}">
                         <div class="tier-header">
                             <span class="tier-title">{{ t('tier2_title') }}</span>
                             <span class="tier-req">{{ activePoints >= activeTier2Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < 40 ? activeTier2Total - 40 : activeTier2Total - activePoints) + t('tier_remaining_post') }}</span>
@@ -2435,9 +2435,9 @@
                         </div>
                     </div>
 
-                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 180}">
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= activeTier3Total}">
                         <div class="tier-header">
-                            <span class="tier-title">{{ t('tier3_title') }}</span>
+                            <span class="tier-title">{{ t('tier3_title', {n: activeTier2Total}) }}</span>
                             <span class="tier-req">{{ activePoints >= activeTier3Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < activeTier2Total ? activeTier3Total - activeTier2Total : activeTier3Total - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <div class="game-node-wrapper">
@@ -2464,9 +2464,9 @@
                         </div>
                     </div>
 
-                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 280}">
+                    <div class="tree-tier" :class="{'tier-unlocked': activePoints >= activeTier4Total}">
                         <div class="tier-header">
-                            <span class="tier-title">{{ t('tier4_title') }}</span>
+                            <span class="tier-title">{{ t('tier4_title', {n: activeTier3Total}) }}</span>
                             <span class="tier-req">{{ activePoints >= activeTier4Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < activeTier3Total ? activeTier4Total - activeTier3Total : activeTier4Total - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: アドパスアイテム）を右寄せで表示 -->
@@ -3103,8 +3103,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier2: '第2層',
             status_tier1: '第1層',
             tier2_title: '第2層（必要累計: 40p）',
-            tier3_title: '第3層（必要累計: 100p）',
-            tier4_title: '第4層（必要累計: 180p）',
+            tier3_title: '第3層（必要累計: {n}p）',
+            tier4_title: '第4層（必要累計: {n}p）',
             tier_unlocked: '🎉 解放完了',
             tier_remaining_pre: 'あと ',
             tier_remaining_post: 'p',
@@ -3318,8 +3318,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier2: 'Tier 2',
             status_tier1: 'Tier 1',
             tier2_title: 'Tier 2 (cumulative required: 40p)',
-            tier3_title: 'Tier 3 (cumulative required: 100p)',
-            tier4_title: 'Tier 4 (cumulative required: 180p)',
+            tier3_title: 'Tier 3 (cumulative required: {n}p)',
+            tier4_title: 'Tier 4 (cumulative required: {n}p)',
             tier_unlocked: '🎉 Unlocked',
             tier_remaining_pre: '',
             tier_remaining_post: 'p to go',
@@ -3533,8 +3533,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier2: '第2層',
             status_tier1: '第1層',
             tier2_title: '第2層（累計所需: 40p）',
-            tier3_title: '第3層（累計所需: 100p）',
-            tier4_title: '第4層（累計所需: 180p）',
+            tier3_title: '第3層（累計所需: {n}p）',
+            tier4_title: '第4層（累計所需: {n}p）',
             tier_unlocked: '🎉 已解鎖',
             tier_remaining_pre: '還差 ',
             tier_remaining_post: 'p',
@@ -3748,8 +3748,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             status_tier2: '티어 2',
             status_tier1: '티어 1',
             tier2_title: '티어 2 (누적 필요: 40p)',
-            tier3_title: '티어 3 (누적 필요: 100p)',
-            tier4_title: '티어 4 (누적 필요: 180p)',
+            tier3_title: '티어 3 (누적 필요: {n}p)',
+            tier4_title: '티어 4 (누적 필요: {n}p)',
             tier_unlocked: '🎉 해금 완료',
             tier_remaining_pre: '',
             tier_remaining_post: 'p 남음',
@@ -3846,8 +3846,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const totalHearts = computed(() => spirits.value.filter(s => s.treeData.tier4[2].checked).length);
 
             // 🔓 各層の解除に必要な合計ポイント数。通常は第2層100・第3層180・第4層280だが、
-            // 喜びの思い出(id:4)はツリー構成が異なるため、実機確認により第2層180・第3層180・第4層280に修正。
-            const TIER_TOTAL_OVERRIDES = { 4: { t2: 180, t3: 180, t4: 280 } };
+            // 喜びの思い出(id:4)はツリー構成が異なるため、実機確認により第2層180・第3層280・第4層280に修正。
+            const TIER_TOTAL_OVERRIDES = { 4: { t2: 180, t3: 280, t4: 280 } };
             const activeTier2Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t2 || 100);
             const activeTier3Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t3 || 180);
             const activeTier4Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t4 || 280);
