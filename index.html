@@ -4030,9 +4030,15 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // ・キャンドル交換は「ポイント効率(points/candles)が良いアイテム」を、解放済み＆購入可能な範囲で毎日優先
             // ・アドパス①〜③（noPoints系ボーナス）はプレイヤーが好きなタイミングで取得するため、プランの対象外
             // ・ハートとの交換はアドパス未保有の場合、対象から除外する
-            const tierThresholds = { tier1: 0, tier2: 40, tier3: 100, tier4: 180 };
+            // 各層のアイテムが「候補として提案されてよい」ようになる、必要累計ポイントの下限。
+            // 通常は0/40/100/180だが、喜びの思い出(id:4)はTIER_TOTAL_OVERRIDESに合わせて100→180・180→280に修正。
+            const getTierThresholds = (spiritId) => {
+                const o = TIER_TOTAL_OVERRIDES[spiritId];
+                return { tier1: 0, tier2: 40, tier3: o ? o.t2 : 100, tier4: o ? o.t4 : 180 };
+            };
 
             const buildMultiSpiritState = () => spirits.value.map(spirit => {
+                const tierThresholds = getTierThresholds(spirit.id);
                 const remaining = [];
                 Object.keys(spirit.treeData).forEach(tierKey => {
                     spirit.treeData[tierKey].forEach(item => {
@@ -4131,7 +4137,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const activeFastestHeartPlan = computed(() => {
                 const spirit = activeSpirit.value;
                 const heartItem = spirit.treeData.tier4[2];
-                const tierThreshold = { tier1: 0, tier2: 40, tier3: 100, tier4: 180 };
+                const tierThreshold = getTierThresholds(spirit.id);
 
                 // まだ購入していない、アドパス枠でもハートでもない通常アイテムを集める
                 let remaining = [];
