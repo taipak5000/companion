@@ -4558,9 +4558,44 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 } catch (e) { console.error(e); }
             };
 
+            // 🛟 旧バージョンのサブ記録を復旧する。
+            // 記録一覧を共有プロフィール(skyProfiles_v1)へ切り替えた際、companion独自の旧一覧
+            // (sky_companion_records_meta_v1)にだけ載っていたサブ記録が一覧から見えなくなった。
+            // データ本体(sky_companion_v4_data__ID)は削除されず残っているため、
+            // 「一覧に無いが、データ本体が存在する」記録をここで一覧へ復帰させる。
+            // ※データ本体が無い記録は復元しない（UIから削除した記録が蘇らないようにするため）
+            const recoverLegacyRecords = () => {
+                let recovered = 0;
+                try {
+                    const legacy = localStorage.getItem('sky_companion_records_meta_v1');
+                    if (legacy) {
+                        const parsed = JSON.parse(legacy);
+                        const list = (parsed && Array.isArray(parsed.list)) ? parsed.list : [];
+                        list.forEach(rec => {
+                            if (!rec || !rec.id || rec.id === 'default') return;
+                            if (records.value.some(r => r.id === rec.id)) return;
+                            if (localStorage.getItem(dataKeyForRecord(rec.id)) === null) return;
+                            records.value.push({ id: rec.id, name: rec.name || ('復元データ' + (records.value.length + 1)) });
+                            recovered++;
+                        });
+                    }
+                    // 旧一覧自体が失われている場合に備え、孤立したデータ本体キーも走査して復帰させる
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (!key || !key.startsWith('sky_companion_v4_data__')) continue;
+                        const id = key.slice('sky_companion_v4_data__'.length);
+                        if (!id || records.value.some(r => r.id === id)) continue;
+                        records.value.push({ id, name: '復元データ' + (records.value.length + 1) });
+                        recovered++;
+                    }
+                } catch (e) { console.error(e); }
+                return recovered;
+            };
+
             // 🗂️ 記録一覧を復元する。保存がまだない場合（初回利用 or 記録機能追加前のバージョンからの利用）は、
             // 現在の言語設定に合わせた既定の記録名（データ1）を設定する。
             const loadRecordsMeta = () => {
+                let loaded = false;
                 try {
                     const savedList = localStorage.getItem(PROFILES_KEY);
                     if (savedList) {
@@ -4571,12 +4606,16 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                             if (savedActive && records.value.some(r => r.id === savedActive)) {
                                 activeRecordId.value = savedActive;
                             }
-                            return;
+                            loaded = true;
                         }
                     }
                 } catch (e) { console.error(e); }
-                records.value = [{ id: 'default', name: (RECORD_DEFAULT_NAME_PREFIX_I18N[currentLang.value] || 'データ') + '1' }];
-                activeRecordId.value = 'default';
+                if (!loaded) {
+                    records.value = [{ id: 'default', name: (RECORD_DEFAULT_NAME_PREFIX_I18N[currentLang.value] || 'データ') + '1' }];
+                    activeRecordId.value = 'default';
+                }
+                // 🛟 共有プロフィール化で一覧から漏れた旧サブ記録があれば復帰させ、共有一覧にも反映する
+                if (recoverLegacyRecords() > 0) saveRecordsMeta();
             };
 
             // 📂 読み込み処理（テーマ・言語・記録一覧を復元し、アクティブな記録のデータを読み込む）
