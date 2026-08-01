@@ -3845,9 +3845,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const activePoints = computed(() => getSpiritPoints(activeSpirit.value));
             const totalHearts = computed(() => spirits.value.filter(s => s.treeData.tier4[2].checked).length);
 
-            // 🔓 各層の解除に必要な合計ポイント数。通常は第2層100・第3層180・第4層280だが、
-            // 喜びの思い出(id:4)はツリー構成が異なるため、実機確認により第2層180・第3層280・第4層280に修正。
-            const TIER_TOTAL_OVERRIDES = { 4: { t2: 180, t3: 280, t4: 280 } };
+            // 🔓 各層の「完了時の累計ポイント」。t2=第2層完了(第3層解放)、t3=第3層完了(第4層解放)、
+            // t4=第4層まで全アイテム取得後の最終累計。通常は100/180/280だが、
+            // 喜びの思い出(id:4)はツリー構成が異なるため、実機確認により180/280/380（280+第4層の50+50）に修正。
+            const TIER_TOTAL_OVERRIDES = { 4: { t2: 180, t3: 280, t4: 380 } };
             const activeTier2Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t2 || 100);
             const activeTier3Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t3 || 180);
             const activeTier4Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t4 || 280);
@@ -4031,10 +4032,11 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             // ・アドパス①〜③（noPoints系ボーナス）はプレイヤーが好きなタイミングで取得するため、プランの対象外
             // ・ハートとの交換はアドパス未保有の場合、対象から除外する
             // 各層のアイテムが「候補として提案されてよい」ようになる、必要累計ポイントの下限。
+            // 第3層の解放累計=t2、第4層の解放累計=t3（t4は「全取得後の最終累計」なのでここでは使わない）。
             // 通常は0/40/100/180だが、喜びの思い出(id:4)はTIER_TOTAL_OVERRIDESに合わせて100→180・180→280に修正。
             const getTierThresholds = (spiritId) => {
                 const o = TIER_TOTAL_OVERRIDES[spiritId];
-                return { tier1: 0, tier2: 40, tier3: o ? o.t2 : 100, tier4: o ? o.t4 : 180 };
+                return { tier1: 0, tier2: 40, tier3: o ? o.t2 : 100, tier4: o ? o.t3 : 180 };
             };
 
             const buildMultiSpiritState = () => spirits.value.map(spirit => {
@@ -4226,9 +4228,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
             const activeStatusText = computed(() => {
                 const p = activePoints.value;
-                if (p >= 280) return t('status_complete');
-                if (p >= 180) return t('status_tier4');
-                if (p >= 100) return t('status_tier3');
+                // 精霊ごとの累計しきい値（喜びの思い出はTIER_TOTAL_OVERRIDESで180/280/380に上書きされる）
+                if (p >= activeTier4Total.value) return t('status_complete');
+                if (p >= activeTier3Total.value) return t('status_tier4');
+                if (p >= activeTier2Total.value) return t('status_tier3');
                 if (p >= 40) return t('status_tier2');
                 return t('status_tier1');
             });
