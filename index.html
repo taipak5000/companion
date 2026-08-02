@@ -1505,7 +1505,7 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* ── 🎯 交換オプティマイザー ── */
+        /* ── 🎯 交換アイテムの取得順計算 ── */
         .opt-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
         .opt-select {
             flex: 1; min-width: 180px;
@@ -2292,7 +2292,7 @@
                 <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">{{ t('preset_reset') }}</button>
             </div>
 
-            <!-- 🎯 交換オプティマイザー: ツリーの未購入アイテムを優先順に並べ、
+            <!-- 🎯 交換アイテムの取得順計算: ツリーの未購入アイテムを優先順に並べ、
                  所持キャンドルと1日の獲得数から「いつ交換できるか」をシーズン終了日と突き合わせる -->
             <div class="section-card" style="padding-bottom: 16px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showOptimizer = !showOptimizer">
@@ -3165,7 +3165,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             preset_no_magic: '🪄 魔法スルー',
             preset_reset: '💥 リセット',
 
-            opt_title: '交換オプティマイザー（取る順番の計画）',
+            opt_title: '交換アイテムを取る順番の計算',
             opt_desc: '欲しいアイテムを優先順に登録すると、所持キャンドルと1日の獲得数から「いつ交換できるか」を上から順に計算し、シーズン終了日に間に合うかを表示します。',
             opt_select_placeholder: '― ツリーからアイテムを選ぶ ―',
             opt_add_btn: '追加',
@@ -4667,7 +4667,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const ACTIVE_PROFILE_KEY = 'skyActiveProfile_v1';
             const dataKeyForRecord = (id) => id === 'default' ? 'sky_companion_v4_data' : ('sky_companion_v4_data__' + id);
 
-            /* ═══ 🎯 交換オプティマイザー ═══
+            /* ═══ 🎯 交換アイテムの取得順計算 ═══
                ツリーの未購入アイテムを優先順に登録し、所持キャンドルと1日の獲得数から
                「上から順に交換すると、それぞれ何日ごろ交換できるか」を計算して
                シーズン終了日(SEASON_END)と突き合わせる。記録（データ）ごとに保存される。 */
