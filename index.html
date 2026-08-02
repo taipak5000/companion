@@ -1505,6 +1505,57 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        /* ── 🎯 交換オプティマイザー ── */
+        .opt-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+        .opt-select {
+            flex: 1; min-width: 180px;
+            background: var(--input-bg, rgba(0,0,0,0.03)); color: var(--text-color);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 9px 10px; font-size: 13px; font-family: inherit; outline: none;
+        }
+        .opt-daily-input {
+            width: 74px; background: var(--input-bg, rgba(0,0,0,0.03)); color: var(--text-color);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 9px 10px; font-size: 13px; font-family: inherit; outline: none; text-align: right;
+        }
+        .opt-add-btn {
+            background: var(--accent-blue); color: #fff; border: none; border-radius: 8px;
+            padding: 9px 16px; font-size: 13px; font-weight: bold; font-family: inherit; cursor: pointer;
+            flex-shrink: 0;
+        }
+        .opt-add-btn:disabled { opacity: 0.4; cursor: default; }
+        .opt-row {
+            display: flex; align-items: center; gap: 9px;
+            padding: 9px 2px; border-bottom: 1px solid var(--border-color);
+        }
+        .opt-row:last-child { border-bottom: none; }
+        .opt-row.done { opacity: 0.55; }
+        .opt-order { font-size: 12px; font-weight: bold; color: var(--text-gray); width: 18px; text-align: center; flex-shrink: 0; }
+        .opt-info { flex: 1; min-width: 0; }
+        .opt-name { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .opt-when { font-size: 11px; }
+        .opt-when.ok { color: var(--accent-green); }
+        .opt-when.late { color: var(--accent-red); }
+        .opt-when.now { color: var(--accent-orange); font-weight: bold; }
+        .opt-cost { font-size: 12.5px; font-weight: bold; color: var(--accent-orange); flex-shrink: 0; text-align: right; line-height: 1.35; }
+        .opt-cost small { font-weight: 500; font-size: 10px; color: var(--text-gray); }
+        .opt-btns { display: flex; gap: 3px; flex-shrink: 0; }
+        .opt-mini-btn {
+            background: var(--tab-bg, rgba(0,0,0,0.05)); border: 1px solid var(--border-color);
+            color: var(--text-color); border-radius: 7px; padding: 4px 7px;
+            font-size: 11.5px; font-family: inherit; cursor: pointer; line-height: 1;
+        }
+        .opt-mini-btn:disabled { opacity: 0.3; cursor: default; }
+        .opt-mini-btn.danger { color: var(--accent-red); }
+        .opt-summary {
+            background: rgba(0,122,255,0.06); border: 1px solid rgba(0,122,255,0.18);
+            border-radius: 10px; padding: 10px 13px; margin-top: 12px;
+            font-size: 12.5px; line-height: 1.8;
+        }
+        [data-theme="dark"] .opt-summary { background: rgba(0,122,255,0.12); }
+        .opt-summary strong { color: var(--accent-orange); }
+        .opt-empty { font-size: 12px; color: var(--text-gray); text-align: center; padding: 12px 0; }
+
         .forecast-head { margin-bottom: 10px; }
         .forecast-title { font-size: 15px; font-weight: bold; }
         .forecast-desc {
@@ -2239,6 +2290,69 @@
                 <button class="btn-sm" :class="{'btn-active': activeSpirit.currentPreset === 'custom'}" @click="activeSpirit.currentPreset = 'custom'">{{ t('preset_custom') }}</button>
                 <button class="btn-sm" @click="applyPreset('no-magic')">{{ t('preset_no_magic') }}</button>
                 <button class="btn-sm" @click="applyPreset('reset')" style="color: var(--text-gray);">{{ t('preset_reset') }}</button>
+            </div>
+
+            <!-- 🎯 交換オプティマイザー: ツリーの未購入アイテムを優先順に並べ、
+                 所持キャンドルと1日の獲得数から「いつ交換できるか」をシーズン終了日と突き合わせる -->
+            <div class="section-card" style="padding-bottom: 16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showOptimizer = !showOptimizer">
+                    <span style="font-weight: bold; font-size: 14px; color: var(--text-color);">
+                        🎯 {{ t('opt_title') }}
+                    </span>
+                    <span style="font-size: 11px; color: var(--text-gray); font-weight: bold; white-space: nowrap;">{{ showOptimizer ? t('shared_close') : t('shared_open') }}</span>
+                </div>
+
+                <div v-if="showOptimizer" style="margin-top: 12px;">
+                    <div style="font-size: 11.5px; color: var(--text-gray); line-height: 1.6;">{{ t('opt_desc') }}</div>
+
+                    <div class="opt-controls">
+                        <select class="opt-select" v-model="optSelectedId">
+                            <option value="">{{ t('opt_select_placeholder') }}</option>
+                            <option v-for="cand in optimizerCandidates" :key="cand.id" :value="cand.id">
+                                {{ cand.label }}
+                            </option>
+                        </select>
+                        <button type="button" class="opt-add-btn" :disabled="!optSelectedId" @click="optAdd()">{{ t('opt_add_btn') }}</button>
+                    </div>
+                    <div class="opt-controls" style="margin-top:8px;">
+                        <label style="font-size:12px; color:var(--text-gray); display:flex; align-items:center; gap:7px;">
+                            🕯️ {{ t('opt_daily_label') }}
+                            <input type="number" class="opt-daily-input" min="0" max="99" v-model.number="optimizerDaily" @change="save()">
+                        </label>
+                        <span style="font-size:11px; color:var(--text-gray);">{{ t('opt_owned_note') }} {{ ownedCandles }}</span>
+                    </div>
+
+                    <div v-if="optimizerRows.length === 0" class="opt-empty">{{ t('opt_empty') }}</div>
+                    <div v-else style="margin-top: 6px;">
+                        <div v-for="(row, idx) in optimizerRows" :key="row.id" class="opt-row" :class="{done: row.done}">
+                            <span class="opt-order">{{ idx + 1 }}</span>
+                            <div class="opt-info">
+                                <div class="opt-name">{{ row.name }}</div>
+                                <span v-if="row.done" class="opt-when now">✓ {{ t('opt_done') }}</span>
+                                <span v-else-if="row.affordableNow" class="opt-when now">{{ t('opt_now') }}</span>
+                                <span v-else-if="row.unreachable" class="opt-when late">{{ t('opt_unreachable') }}</span>
+                                <span v-else class="opt-when" :class="row.inSeason ? 'ok' : 'late'">
+                                    {{ row.dateText }}{{ t('opt_est_suffix') }}{{ row.inSeason ? ' ✓' + t('opt_within') : ' ⚠' + t('opt_over') }}
+                                </span>
+                            </div>
+                            <span class="opt-cost">🕯️{{ row.candles }}<br><small>{{ t('opt_cum') }} {{ row.cumulative }}</small></span>
+                            <div class="opt-btns">
+                                <button type="button" class="opt-mini-btn" @click="optMove(idx, -1)" :disabled="idx === 0">↑</button>
+                                <button type="button" class="opt-mini-btn" @click="optMove(idx, 1)" :disabled="idx === optimizerRows.length - 1">↓</button>
+                                <button type="button" class="opt-mini-btn danger" @click="optRemove(idx)">✕</button>
+                            </div>
+                        </div>
+
+                        <div class="opt-summary">
+                            {{ t('opt_total_pre') }} <strong>{{ optimizerSummary.totalCost }}</strong>{{ t('opt_total_unit') }}
+                            （{{ t('opt_lack') }} <strong>{{ optimizerSummary.lack }}</strong>{{ t('opt_total_unit') }}）<br>
+                            {{ t('opt_reachable_pre') }} <strong>{{ optimizerSummary.reachable }} / {{ optimizerSummary.total }}</strong>{{ t('opt_reachable_post') }}
+                            <span v-if="optimizerSummary.reachable < optimizerSummary.total">　{{ t('opt_reorder_hint') }}</span>
+                            <span v-else>　🎉</span>
+                        </div>
+                        <div style="font-size: 10.5px; color: var(--text-gray); margin-top: 8px; line-height: 1.5;">{{ t('opt_note') }}</div>
+                    </div>
+                </div>
             </div>
 
             <div class="section-card" style="padding-bottom: 14px;">
@@ -3051,6 +3165,27 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             preset_no_magic: '🪄 魔法スルー',
             preset_reset: '💥 リセット',
 
+            opt_title: '交換オプティマイザー（取る順番の計画）',
+            opt_desc: '欲しいアイテムを優先順に登録すると、所持キャンドルと1日の獲得数から「いつ交換できるか」を上から順に計算し、シーズン終了日に間に合うかを表示します。',
+            opt_select_placeholder: '― ツリーからアイテムを選ぶ ―',
+            opt_add_btn: '追加',
+            opt_daily_label: '1日の獲得キャンドル',
+            opt_owned_note: '所持:',
+            opt_empty: 'まだ登録がありません。上のリストから欲しいアイテムを追加してください。',
+            opt_done: '交換済み',
+            opt_now: '今すぐ交換可能',
+            opt_unreachable: '獲得ペースが0のため到達できません',
+            opt_est_suffix: 'ごろ',
+            opt_within: 'シーズン内',
+            opt_over: 'シーズン終了後',
+            opt_cum: '累計',
+            opt_total_pre: '合計',
+            opt_total_unit: '本',
+            opt_lack: '不足',
+            opt_reachable_pre: 'シーズン内に交換できる見込み：',
+            opt_reachable_post: '個',
+            opt_reorder_hint: '→ 並び順を見直すと結果が変わります',
+            opt_note: '※ 各層の解放に必要な累計ポイントは考慮していません。交換には該当する層の解放が必要です。',
             shared_title: '📌 全精霊共通のメモ・計算',
             shared_close: '閉じる ▲',
             shared_open: '開く ▼',
@@ -3266,6 +3401,27 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             preset_no_magic: '🪄 Skip Spells',
             preset_reset: '💥 Reset',
 
+            opt_title: 'Exchange Optimizer (purchase order planner)',
+            opt_desc: 'Register the items you want in priority order. Using your owned candles and daily candle income, it estimates when each can be exchanged and whether it fits within the season.',
+            opt_select_placeholder: '― Pick an item from the trees ―',
+            opt_add_btn: 'Add',
+            opt_daily_label: 'Candles per day',
+            opt_owned_note: 'Owned:',
+            opt_empty: 'Nothing registered yet. Add items you want from the list above.',
+            opt_done: 'Exchanged',
+            opt_now: 'Affordable now',
+            opt_unreachable: 'Unreachable with a pace of 0',
+            opt_est_suffix: '',
+            opt_within: 'within season',
+            opt_over: 'after season ends',
+            opt_cum: 'cum.',
+            opt_total_pre: 'Total',
+            opt_total_unit: '',
+            opt_lack: 'short',
+            opt_reachable_pre: 'Expected within the season: ',
+            opt_reachable_post: '',
+            opt_reorder_hint: '→ Reordering may change the result',
+            opt_note: '* Tier unlock points are not taken into account. Exchanging requires the corresponding tier to be unlocked.',
             shared_title: '📌 Shared notes & calculator (all spirits)',
             shared_close: 'Close ▲',
             shared_open: 'Open ▼',
@@ -3481,6 +3637,27 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             preset_no_magic: '🪄 略過法術',
             preset_reset: '💥 重置',
 
+            opt_title: '兌換最佳化（規劃兌換順序）',
+            opt_desc: '依優先順序登錄想要的物品後，會根據持有蠟燭與每日獲得數，由上而下計算「大約何時能兌換」，並顯示是否來得及在季節結束前完成。',
+            opt_select_placeholder: '― 從樹狀圖選擇物品 ―',
+            opt_add_btn: '新增',
+            opt_daily_label: '每日獲得蠟燭',
+            opt_owned_note: '持有:',
+            opt_empty: '尚未登錄。請從上方清單加入想要的物品。',
+            opt_done: '已兌換',
+            opt_now: '現在即可兌換',
+            opt_unreachable: '獲得速度為0，無法達成',
+            opt_est_suffix: '左右',
+            opt_within: '季節內',
+            opt_over: '季節結束後',
+            opt_cum: '累計',
+            opt_total_pre: '合計',
+            opt_total_unit: '根',
+            opt_lack: '不足',
+            opt_reachable_pre: '預計季節內可兌換：',
+            opt_reachable_post: '個',
+            opt_reorder_hint: '→ 調整順序可能改變結果',
+            opt_note: '※ 未考慮各層解鎖所需的累計點數。兌換前需先解鎖對應的層。',
             shared_title: '📌 全精靈共用備忘錄・計算',
             shared_close: '關閉 ▲',
             shared_open: '開啟 ▼',
@@ -3696,6 +3873,27 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             preset_no_magic: '🪄 마법 건너뛰기',
             preset_reset: '💥 초기화',
 
+            opt_title: '교환 최적화 (구매 순서 계획)',
+            opt_desc: '원하는 아이템을 우선순위대로 등록하면 보유 양초와 하루 획득량을 바탕으로 「언제 교환할 수 있는지」를 위에서부터 계산하고, 시즌 종료일 안에 가능한지 표시합니다.',
+            opt_select_placeholder: '― 트리에서 아이템 선택 ―',
+            opt_add_btn: '추가',
+            opt_daily_label: '하루 획득 양초',
+            opt_owned_note: '보유:',
+            opt_empty: '아직 등록이 없습니다. 위 목록에서 원하는 아이템을 추가하세요.',
+            opt_done: '교환 완료',
+            opt_now: '지금 바로 교환 가능',
+            opt_unreachable: '획득 속도가 0이라 도달할 수 없습니다',
+            opt_est_suffix: '쯤',
+            opt_within: '시즌 내',
+            opt_over: '시즌 종료 후',
+            opt_cum: '누계',
+            opt_total_pre: '합계',
+            opt_total_unit: '개',
+            opt_lack: '부족',
+            opt_reachable_pre: '시즌 내 교환 가능 예상: ',
+            opt_reachable_post: '개',
+            opt_reorder_hint: '→ 순서를 바꾸면 결과가 달라질 수 있습니다',
+            opt_note: '※ 각 층 해금에 필요한 누적 포인트는 고려하지 않습니다. 교환하려면 해당 층이 해금되어 있어야 합니다.',
             shared_title: '📌 전체 정령 공통 메모・계산',
             shared_close: '닫기 ▲',
             shared_open: '열기 ▼',
@@ -4469,15 +4667,119 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const ACTIVE_PROFILE_KEY = 'skyActiveProfile_v1';
             const dataKeyForRecord = (id) => id === 'default' ? 'sky_companion_v4_data' : ('sky_companion_v4_data__' + id);
 
+            /* ═══ 🎯 交換オプティマイザー ═══
+               ツリーの未購入アイテムを優先順に登録し、所持キャンドルと1日の獲得数から
+               「上から順に交換すると、それぞれ何日ごろ交換できるか」を計算して
+               シーズン終了日(SEASON_END)と突き合わせる。記録（データ）ごとに保存される。 */
+            const showOptimizer = ref(false);
+            const optSelectedId = ref('');
+            const optimizerIds = ref([]);      // 優先順に並んだアイテムid
+            const optimizerDaily = ref(20);    // 1日に獲得するキャンドル数（ユーザー入力）
+
+            // 全精霊のツリーから「コストがあり、まだ除外されていない」アイテムを候補として列挙
+            const findTreeItemById = (id) => {
+                for (const spirit of spirits.value) {
+                    for (const tierKey of Object.keys(spirit.treeData)) {
+                        const item = spirit.treeData[tierKey].find(i => i && i.id === id);
+                        if (item) return { spirit, item };
+                    }
+                }
+                return null;
+            };
+            const optimizerCandidates = computed(() => {
+                const list = [];
+                spirits.value.forEach(spirit => {
+                    Object.keys(spirit.treeData).forEach(tierKey => {
+                        spirit.treeData[tierKey].forEach(item => {
+                            if (!item || item.noPoints || !(item.candles > 0)) return;
+                            if (item.checked || item.excluded) return;
+                            if (optimizerIds.value.includes(item.id)) return;
+                            list.push({
+                                id: item.id,
+                                label: `${spiritName(spirit)}／${getItemLabelForSpirit(item, spirit)}（🕯️${item.candles}）`
+                            });
+                        });
+                    });
+                });
+                return list;
+            });
+
+            const optAdd = () => {
+                if (!optSelectedId.value) return;
+                optimizerIds.value.push(optSelectedId.value);
+                optSelectedId.value = '';
+                save();
+            };
+            const optMove = (idx, dir) => {
+                const to = idx + dir;
+                if (to < 0 || to >= optimizerIds.value.length) return;
+                const it = optimizerIds.value.splice(idx, 1)[0];
+                optimizerIds.value.splice(to, 0, it);
+                save();
+            };
+            const optRemove = (idx) => {
+                optimizerIds.value.splice(idx, 1);
+                save();
+            };
+
+            const optimizerRows = computed(() => {
+                const daily = Math.max(0, Number(optimizerDaily.value) || 0);
+                const owned = Math.max(0, Number(ownedCandles.value) || 0);
+                let cumulative = 0;
+                const now = new Date();
+                return optimizerIds.value.map(id => {
+                    const found = findTreeItemById(id);
+                    if (!found) return null;
+                    const { spirit, item } = found;
+                    const row = {
+                        id,
+                        name: `${getItemLabelForSpirit(item, spirit)}（${spiritName(spirit)}）`,
+                        candles: item.candles,
+                        done: !!item.checked,
+                        affordableNow: false, unreachable: false, inSeason: true,
+                        dateText: '', cumulative: 0
+                    };
+                    if (row.done) { row.cumulative = cumulative; return row; }
+                    cumulative += item.candles;
+                    row.cumulative = cumulative;
+                    if (cumulative <= owned) {
+                        row.affordableNow = true;
+                    } else if (daily <= 0) {
+                        row.unreachable = true;
+                    } else {
+                        const daysNeeded = Math.ceil((cumulative - owned) / daily);
+                        const estDate = new Date(now);
+                        estDate.setDate(estDate.getDate() + daysNeeded);
+                        row.inSeason = estDate <= SEASON_END;
+                        row.dateText = `${estDate.getMonth() + 1}/${estDate.getDate()}`;
+                    }
+                    return row;
+                }).filter(Boolean);
+            });
+
+            const optimizerSummary = computed(() => {
+                const rows = optimizerRows.value.filter(r => !r.done);
+                const totalCost = rows.reduce((a, r) => a + r.candles, 0);
+                const owned = Math.max(0, Number(ownedCandles.value) || 0);
+                const reachable = rows.filter(r => r.affordableNow || (!r.unreachable && r.inSeason)).length;
+                return {
+                    totalCost,
+                    lack: Math.max(0, totalCost - owned),
+                    reachable,
+                    total: rows.length
+                };
+            });
+
             // 💾 保存処理（現在アクティブな記録のデータを、その記録専用のキーへ保存する）
             const save = () => {
-                const data = { 
-                    activeIndex: activeIndex.value, 
+                const data = {
+                    activeIndex: activeIndex.value,
                     spirits: spirits.value,
                     sharedNotes: sharedNotes.value,
                     sharedCalcFormula: sharedCalcFormula.value,
                     hasSeasonPass: hasSeasonPass.value,
                     ownedCandles: ownedCandles.value,
+                    optimizerPlan: { ids: optimizerIds.value, daily: optimizerDaily.value },
                     treeCostVersion: TREE_COST_VERSION
                 };
                 try {
@@ -4503,6 +4805,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 if (parsed.sharedCalcFormula !== undefined) sharedCalcFormula.value = parsed.sharedCalcFormula;
                 if (parsed.hasSeasonPass !== undefined) hasSeasonPass.value = parsed.hasSeasonPass;
                 if (parsed.ownedCandles !== undefined) ownedCandles.value = parsed.ownedCandles;
+                if (parsed.optimizerPlan) {
+                    optimizerIds.value = Array.isArray(parsed.optimizerPlan.ids) ? parsed.optimizerPlan.ids : [];
+                    if (parsed.optimizerPlan.daily !== undefined) optimizerDaily.value = Number(parsed.optimizerPlan.daily) || 0;
+                }
 
                 // 🔖 保存時と現在でツリーのコスト表バージョンが違う場合、
                 // 古いキャンドルコスト/種別の上書きは復元しない（最新の値を優先する）。
@@ -4549,6 +4855,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 sharedCalcFormula.value = '';
                 hasSeasonPass.value = true;
                 ownedCandles.value = 0;
+                optimizerIds.value = [];
+                optimizerDaily.value = 20;
+                optSelectedId.value = '';
             };
 
             // 📂 指定した記録idのデータを読み込み、作業用stateへ反映する
@@ -4777,6 +5086,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, toggleTheme,
                 currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay,
                 showSidebar, showSharedTools, sharedNotes,
+                showOptimizer, optSelectedId, optimizerDaily, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles, activeExcludedCandles,
