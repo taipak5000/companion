@@ -1483,6 +1483,13 @@
         .pf-row-confirm-text { flex: 1; font-size: 12.5px; color: var(--text-color); line-height: 1.4; }
         .pf-row-btn-ok { background: var(--accent-blue); color: #fff; border: none; }
         .pf-row-btn-danger { background: var(--accent-red); color: #fff; border: none; }
+        .pf-currency-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color); }
+        .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .pf-currency-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 2px; }
+        .pf-currency-label { font-size: 13px; color: var(--text-color); }
+        .pf-currency-input { width: 90px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px;
+          padding: 6px 8px; font-size: 14px; color: var(--text-color); font-family: inherit; outline: none; box-sizing: border-box; text-align: right; }
+        .pf-currency-input:focus { border-color: var(--accent-blue); }
 
         /* --------------------------------------------------------------------------------- */
         /* 🔮 精霊ツリー（4体横並び比較）エリア — 公開されたツリー画像のレイアウト参考 */
@@ -1898,6 +1905,33 @@
                 <button type="button" class="pf-add-btn" @click="pfAddRecord">{{ t('record_add_short') }}</button>
             </div>
             <p class="pf-hint">{{ t('record_hint') }}</p>
+            <div class="pf-currency-section">
+                <div class="pf-currency-title">💰 所持通貨</div>
+                <div class="pf-currency-row">
+                    <span class="pf-currency-label">🕯️ キャンドル</span>
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyCandle" @change="saveCurrencyCandleHeart">
+                </div>
+                <div class="pf-currency-row">
+                    <span class="pf-currency-label">💗 ハート</span>
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyHeart" @change="saveCurrencyCandleHeart">
+                </div>
+                <div class="pf-currency-row">
+                    <span class="pf-currency-label">🕯️✨ 昇華キャンドル</span>
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyExtra">
+                </div>
+                <div class="pf-currency-row">
+                    <span class="pf-currency-label">🕯️🍂 シーズンキャンドル</span>
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="ownedCandles">
+                </div>
+                <div class="pf-currency-row">
+                    <span class="pf-currency-label">💗🍂 シーズンハート</span>
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencySeasonHeart" @change="saveCurrencyExtra">
+                </div>
+                <div class="pf-currency-row">
+                    <span class="pf-currency-label">🎫 イベント通貨</span>
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyEvent" @change="saveCurrencyExtra">
+                </div>
+            </div>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
@@ -5031,12 +5065,54 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 saveRecordsMeta();
             };
 
+            // 💰 所持通貨の統一管理（プロフィール切替モーダル内、全サイト共通）
+            // candle/heartはitem自身のwishOwnCurrencyを、seasonCandleは
+            // companion自身のownedCandles（既存の季節キャンドル計算機の値）を
+            // そのまま使うことで二重管理を避ける。昇華キャンドル・シーズン
+            // ハート・イベント通貨はどのサイトにも記録先が無いため、
+            // 新規キー（skyCurrencyExtra_v1）で管理する。
+            const currencyCandle = ref(0);
+            const currencyHeart = ref(0);
+            const currencyAscended = ref(0);
+            const currencySeasonHeart = ref(0);
+            const currencyEvent = ref(0);
+            const pfCurrencyNsKey = (rawKey) => activeRecordId.value === 'default' ? rawKey : (rawKey + '__p_' + activeRecordId.value);
+            const loadCurrencyFields = () => {
+                let wish;
+                try { wish = JSON.parse(localStorage.getItem(pfCurrencyNsKey('wishOwnCurrency'))) || {}; } catch (e) { wish = {}; }
+                let extra;
+                try { extra = JSON.parse(localStorage.getItem(pfCurrencyNsKey('skyCurrencyExtra_v1'))) || {}; } catch (e) { extra = {}; }
+                currencyCandle.value = wish.candle || 0;
+                currencyHeart.value = wish.heart || 0;
+                currencyAscended.value = extra.ascendedCandle || 0;
+                currencySeasonHeart.value = extra.seasonHeart || 0;
+                currencyEvent.value = extra.eventCurrency || 0;
+            };
+            const saveCurrencyCandleHeart = () => {
+                const key = pfCurrencyNsKey('wishOwnCurrency');
+                let wish;
+                try { wish = JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { wish = {}; }
+                wish.candle = Math.max(0, Number(currencyCandle.value) || 0);
+                wish.heart = Math.max(0, Number(currencyHeart.value) || 0);
+                localStorage.setItem(key, JSON.stringify(wish));
+            };
+            const saveCurrencyExtra = () => {
+                const key = pfCurrencyNsKey('skyCurrencyExtra_v1');
+                const extra = {
+                    ascendedCandle: Math.max(0, Number(currencyAscended.value) || 0),
+                    seasonHeart: Math.max(0, Number(currencySeasonHeart.value) || 0),
+                    eventCurrency: Math.max(0, Number(currencyEvent.value) || 0)
+                };
+                localStorage.setItem(key, JSON.stringify(extra));
+            };
+
             // 🗂️ プロフィールモーダルの開閉・行内での名前変更/削除確認の状態管理。
             // ポップアップブロックの影響を受ける prompt()/confirm() は使わず、
             // モーダル内にインラインで表示する（他ツールと同じ方式）。
             const pfOpenModal = () => {
                 pfEditingId.value = null;
                 pfDeletingId.value = null;
+                loadCurrencyFields();
                 showProfileModal.value = true;
             };
             const pfCloseModal = () => {
@@ -5099,7 +5175,9 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
-                pfConfirmRenameInline, pfConfirmDeleteInline
+                pfConfirmRenameInline, pfConfirmDeleteInline,
+                currencyCandle, currencyHeart, currencyAscended, currencySeasonHeart, currencyEvent,
+                saveCurrencyCandleHeart, saveCurrencyExtra
             };
         }
     }).mount('#app');
