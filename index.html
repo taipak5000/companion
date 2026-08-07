@@ -1433,6 +1433,12 @@
             cursor: pointer;
             flex-shrink: 0;
         }
+        .pf-color-input { width: 28px; height: 28px; padding: 0; border: 1px solid var(--border-color); border-radius: 50%;
+            background: none; cursor: pointer; flex-shrink: 0; overflow: hidden; }
+        .pf-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+        .pf-color-input::-webkit-color-swatch { border: none; border-radius: 50%; }
+        .pf-color-input::-moz-color-swatch { border: none; border-radius: 50%; }
+        .pf-color-clear-btn { font-size: 10px; }
         .pf-add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
         .pf-input {
             flex: 1;
@@ -1893,7 +1899,9 @@
                         <button type="button" class="pf-icon-btn" @click="pfCancelRowState">{{ t('record_cancel') }}</button>
                     </template>
                     <template v-else>
+                        <input type="color" class="pf-color-input" :value="rec.color || '#FF9500'" title="アカウントカラー" @change="setRecordColor(rec, $event.target.value)">
                         <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false">{{ rec.id === activeRecordId ? '✅ ' : '' }}{{ rec.name }}</span>
+                        <button v-if="rec.color" type="button" class="pf-icon-btn pf-color-clear-btn" title="カラーを初期値に戻す" @click="clearRecordColor(rec)">↺</button>
                         <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false">⧉</button>
                         <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfStartRename(rec)">✏️</button>
                         <button v-if="records.length > 1" type="button" class="pf-icon-btn" :title="t('record_delete')" @click="pfStartDelete(rec)">🗑️</button>
@@ -4827,12 +4835,33 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 } catch (e) { /* 保存領域の上限などで失敗した場合、今回の保存のみスキップする */ }
             };
 
-            // 🗂️ 記録一覧（id・名前）とアクティブな記録idを保存する
+            // 🗂️ 記録一覧（id・名前・任意のアカウントカラー）とアクティブな記録idを保存する
             const saveRecordsMeta = () => {
                 try {
-                    localStorage.setItem(PROFILES_KEY, JSON.stringify(records.value.map(r => ({ id: r.id, name: r.name }))));
+                    localStorage.setItem(PROFILES_KEY, JSON.stringify(records.value.map(r => ({ id: r.id, name: r.name, color: r.color }))));
                     localStorage.setItem(ACTIVE_PROFILE_KEY, activeRecordId.value);
                 } catch (e) { /* noop */ }
+            };
+
+            // 🎨 アカウントカラー（任意）。#RRGGBB 形式のみを許可する。
+            const isSafeColor = (c) => typeof c === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c);
+            const ACCENT_COLOR_VAR = '--accent-orange';
+            // このサイトのイメージカラー（オレンジ）を、選んだ色に上書きする
+            const applyAccentColor = (hex) => {
+                const root = document.documentElement.style;
+                if (!hex || !isSafeColor(hex)) { root.removeProperty(ACCENT_COLOR_VAR); return; }
+                root.setProperty(ACCENT_COLOR_VAR, hex);
+            };
+            const setRecordColor = (rec, color) => {
+                if (!isSafeColor(color)) return;
+                rec.color = color;
+                saveRecordsMeta();
+                if (rec.id === activeRecordId.value) applyAccentColor(color);
+            };
+            const clearRecordColor = (rec) => {
+                delete rec.color;
+                saveRecordsMeta();
+                if (rec.id === activeRecordId.value) applyAccentColor(null);
             };
 
             // 📦 記録データ（1件分のJSON）を、現在の作業用state（activeIndex/spirits等）へ反映する。
@@ -4953,7 +4982,10 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                     if (savedList) {
                         const parsedList = JSON.parse(savedList);
                         if (Array.isArray(parsedList) && parsedList.length > 0) {
-                            records.value = parsedList;
+                            records.value = parsedList.map(r => {
+                                if (r && r.color !== undefined && !isSafeColor(r.color)) { const { color, ...rest } = r; return rest; }
+                                return r;
+                            });
                             const savedActive = localStorage.getItem(ACTIVE_PROFILE_KEY);
                             if (savedActive && records.value.some(r => r.id === savedActive)) {
                                 activeRecordId.value = savedActive;
@@ -4993,6 +5025,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 // 🗂️ 記録（データ）一覧を復元してから、アクティブな記録のデータを読み込む
                 loadRecordsMeta();
                 loadRecordData(activeRecordId.value);
+                const activeRec = records.value.find(r => r.id === activeRecordId.value);
+                applyAccentColor(activeRec && activeRec.color);
             };
 
             // 🔀 記録（データ）を切り替える
@@ -5002,6 +5036,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 activeRecordId.value = id;
                 loadRecordData(id);
                 saveRecordsMeta();
+                const rec = records.value.find(r => r.id === id);
+                applyAccentColor(rec && rec.color);
             };
 
             // 🆔 新しい記録用の簡易ユニークID（同一ブラウザ内で重複しなければ十分なので、日時+乱数で生成）
@@ -5182,6 +5218,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
+                setRecordColor, clearRecordColor,
                 currencyCandle, currencyHeart, currencyAscended, currencySeasonHeart, currencyEvent,
                 saveCurrencyCandleHeart, saveCurrencyExtra
             };
