@@ -1439,6 +1439,8 @@
         .pf-color-input::-webkit-color-swatch { border: none; border-radius: 50%; }
         .pf-color-input::-moz-color-swatch { border: none; border-radius: 50%; }
         .pf-color-clear-btn { font-size: 10px; }
+        .pf-tint-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 2;
+          background-color: var(--pf-tint-rgb, transparent); }
         .pf-add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
         .pf-input {
             flex: 1;
@@ -1786,6 +1788,8 @@
     </style>
 </head>
 <body>
+
+<div class="pf-tint-overlay" aria-hidden="true"></div>
 
 <!-- 🔮 精霊ツリーエリアで使う共通アイコン（SVGスプライト。表示はされず #id で参照される） -->
 <svg width="0" height="0" style="position:absolute; overflow:hidden;" aria-hidden="true">
@@ -4849,12 +4853,17 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
 
             // 🎨 アカウントカラー（任意）。#RRGGBB 形式のみを許可する。
             const isSafeColor = (c) => typeof c === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c);
-            const ACCENT_COLOR_VAR = '--accent-orange';
-            // このサイトのイメージカラー（オレンジ）を、選んだ色に上書きする
+            const PF_TINT_VAR = '--pf-tint-rgb';
+            const pfHexToRgb = (hex) => {
+                const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+                return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
+            };
+            // フォントやボタンではなく画面背景へのうっすらとした色重ねとして、選んだ色を反映する
             const applyAccentColor = (hex) => {
                 const root = document.documentElement.style;
-                if (!hex || !isSafeColor(hex)) { root.removeProperty(ACCENT_COLOR_VAR); return; }
-                root.setProperty(ACCENT_COLOR_VAR, hex);
+                if (!hex || !isSafeColor(hex)) { root.removeProperty(PF_TINT_VAR); return; }
+                const c = pfHexToRgb(hex);
+                root.setProperty(PF_TINT_VAR, `rgba(${c.r}, ${c.g}, ${c.b}, 0.07)`);
             };
             const setRecordColor = (rec, color) => {
                 if (!isSafeColor(color)) return;
@@ -5188,12 +5197,20 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 deleteRecord(record.id);
             };
 
+            const onStorageChange = (e) => {
+                if (e.key === PROFILES_KEY) {
+                    const rec = records.value.find(r => r.id === activeRecordId.value);
+                    applyAccentColor(rec && rec.color);
+                }
+            };
             onMounted(() => {
                 load();
                 seasonCountdownTimer = setInterval(() => { nowForCountdown.value = new Date(); }, 1000);
+                window.addEventListener('storage', onStorageChange);
             });
             onUnmounted(() => {
                 if (seasonCountdownTimer) clearInterval(seasonCountdownTimer);
+                window.removeEventListener('storage', onStorageChange);
             });
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
