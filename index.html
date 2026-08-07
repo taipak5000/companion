@@ -1490,7 +1490,9 @@
         .pf-row-btn-ok { background: var(--accent-blue); color: #fff; border: none; }
         .pf-row-btn-danger { background: var(--accent-red); color: #fff; border: none; }
         .pf-currency-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color); }
-        .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px;
+          display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+        .pf-currency-toggle-label { font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; }
         .pf-currency-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 2px; }
         .pf-currency-label { font-size: 13px; color: var(--text-color); }
         .pf-currency-input { width: 90px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px;
@@ -1914,7 +1916,11 @@
             </div>
             <p class="pf-hint">{{ t('record_hint') }}</p>
             <div class="pf-currency-section">
-                <div class="pf-currency-title">💰 所持通貨</div>
+                <div class="pf-currency-title" @click="pfCurrencyOpen = !pfCurrencyOpen">
+                    <span>💰 所持通貨</span>
+                    <span class="pf-currency-toggle-label">{{ pfCurrencyOpen ? '閉じる ▲' : '開く ▼' }}</span>
+                </div>
+                <template v-if="pfCurrencyOpen">
                 <div class="pf-currency-row">
                     <span class="pf-currency-label">🕯️ キャンドル</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyCandle" @change="saveCurrencyCandleHeart">
@@ -1924,7 +1930,7 @@
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyHeart" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">🕯️✨ 昇華キャンドル</span>
+                    <span class="pf-currency-label">🕯️✨ 星のキャンドル</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyExtra">
                 </div>
                 <div class="pf-currency-row">
@@ -1939,6 +1945,7 @@
                     <span class="pf-currency-label">🎫 イベント通貨</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyEvent" @change="saveCurrencyExtra">
                 </div>
+                </template>
             </div>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
         </div>
@@ -4059,6 +4066,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const showHeartPlanDetail = ref(false); // 🚀 最短交換シミュレーションの優先順位チャートも初期は折りたたみ
             const showMultiSpiritLog = ref(false); // 📋 4体分の日別プランも初期は折りたたみ
             const showMultiSpiritPlan = ref(false); // 🧭 効率的な進め方のおすすめカードも初期は折りたたみ
+            const pfCurrencyOpen = ref(true); // 💰 所持通貨セクションはデフォルトで開いた状態
 
             // 🗂️ 記録（データ）管理用の状態変数。
             // 「現状の記録」「予測用の記録」のように、丸ごと別のセーブ枠を複数持てるようにする。
@@ -5206,7 +5214,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 showSidebar, showSharedTools, sharedNotes,
                 showOptimizer, optSelectedId, optimizerDaily, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
-                showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan,
+                showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan, pfCurrencyOpen,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles, activeExcludedCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
