@@ -1937,6 +1937,10 @@
                     <span class="pf-currency-label">🕯️🍂 シーズンキャンドル</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="ownedCandles">
                 </div>
+                <div class="pf-currency-row">
+                    <span class="pf-currency-label">🎟️ ギフトパス</span>
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyGiftPass" @change="saveCurrencyExtra">
+                </div>
                 </template>
             </div>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
@@ -5116,6 +5120,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const currencyCandle = ref(0);
             const currencyHeart = ref(0);
             const currencyAscended = ref(0);
+            const currencyGiftPass = ref(0);
             const pfCurrencyNsKey = (rawKey) => activeRecordId.value === 'default' ? rawKey : (rawKey + '__p_' + activeRecordId.value);
             const loadCurrencyFields = () => {
                 let wish;
@@ -5125,6 +5130,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 currencyCandle.value = wish.candle || 0;
                 currencyHeart.value = wish.heart || 0;
                 currencyAscended.value = extra.ascendedCandle || 0;
+                currencyGiftPass.value = extra.giftPass || 0;
             };
             const saveCurrencyCandleHeart = () => {
                 const key = pfCurrencyNsKey('wishOwnCurrency');
@@ -5137,7 +5143,8 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
             const saveCurrencyExtra = () => {
                 const key = pfCurrencyNsKey('skyCurrencyExtra_v1');
                 const extra = {
-                    ascendedCandle: Math.max(0, Number(currencyAscended.value) || 0)
+                    ascendedCandle: Math.max(0, Number(currencyAscended.value) || 0),
+                    giftPass: Math.max(0, Number(currencyGiftPass.value) || 0)
                 };
                 localStorage.setItem(key, JSON.stringify(extra));
             };
@@ -5213,7 +5220,7 @@ seasonal3_vase: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAACoCAYAAAB0S
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
-                currencyCandle, currencyHeart, currencyAscended,
+                currencyCandle, currencyHeart, currencyAscended, currencyGiftPass,
                 saveCurrencyCandleHeart, saveCurrencyExtra
             };
         }
