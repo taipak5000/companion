@@ -1935,7 +1935,7 @@
                 </div>
                 <div class="pf-currency-row">
                     <span class="pf-currency-label">🕯️✨ 星のキャンドル</span>
-                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyExtra">
+                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
                     <span class="pf-currency-label">🕯️🍂 シーズンキャンドル</span>
@@ -5133,9 +5133,16 @@
                 try { wish = JSON.parse(localStorage.getItem(pfCurrencyNsKey('wishOwnCurrency'))) || {}; } catch (e) { wish = {}; }
                 let extra;
                 try { extra = JSON.parse(localStorage.getItem(pfCurrencyNsKey('skyCurrencyExtra_v1'))) || {}; } catch (e) { extra = {}; }
+                // 星のキャンドルは以前 skyCurrencyExtra_v1.ascendedCandle で別管理していたが、
+                // ウィッシュリストの所持星キャンドル（wishOwnCurrency.starCandle）と二重管理に
+                // なっていたため統一する。既存データがあれば一度だけ引き継ぐ。
+                if (wish.starCandle === undefined && extra.ascendedCandle) {
+                    wish.starCandle = extra.ascendedCandle;
+                    localStorage.setItem(pfCurrencyNsKey('wishOwnCurrency'), JSON.stringify(wish));
+                }
                 currencyCandle.value = wish.candle || 0;
                 currencyHeart.value = wish.heart || 0;
-                currencyAscended.value = extra.ascendedCandle || 0;
+                currencyAscended.value = wish.starCandle || 0;
                 currencyGiftPass.value = extra.giftPass || 0;
             };
             const saveCurrencyCandleHeart = () => {
@@ -5144,12 +5151,12 @@
                 try { wish = JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { wish = {}; }
                 wish.candle = Math.max(0, Number(currencyCandle.value) || 0);
                 wish.heart = Math.max(0, Number(currencyHeart.value) || 0);
+                wish.starCandle = Math.max(0, Number(currencyAscended.value) || 0);
                 localStorage.setItem(key, JSON.stringify(wish));
             };
             const saveCurrencyExtra = () => {
                 const key = pfCurrencyNsKey('skyCurrencyExtra_v1');
                 const extra = {
-                    ascendedCandle: Math.max(0, Number(currencyAscended.value) || 0),
                     giftPass: Math.max(0, Number(currencyGiftPass.value) || 0)
                 };
                 localStorage.setItem(key, JSON.stringify(extra));
