@@ -1380,10 +1380,26 @@
             padding: 10px 14px;
             font-size: 13px;
             color: var(--text-gray);
-            text-align: center;
-            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .pf-bar b { color: var(--accent-blue); font-weight: 700; }
+        .pf-bar-text { flex: 1; min-width: 0; cursor: pointer; }
+        .pf-dash-btn { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-gray);
+            border-radius: 6px; padding: 5px 10px; font-size: 14px; cursor: pointer; flex-shrink: 0; line-height: 1; }
+        .pf-dash-btn:hover { background: var(--border-color); }
+        .dash-section { margin-top: 16px; }
+        .dash-section:first-child { margin-top: 0; }
+        .dash-section-label { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px;
+            text-transform: uppercase; letter-spacing: 0.4px; }
+        .dash-row { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; background: var(--input-bg);
+            border-radius: 8px; margin-bottom: 6px; font-size: 13px; color: var(--text-color); line-height: 1.5; }
+        .dash-row:last-child { margin-bottom: 0; }
+        .dash-row-icon { flex-shrink: 0; }
+        .dash-row-text { flex: 1; min-width: 0; }
+        .dash-row b { color: var(--accent-blue); }
+        .dash-empty { font-size: 12.5px; color: var(--text-gray); padding: 2px 2px 4px; }
         .pf-modal-overlay {
             display: none;
             position: fixed;
@@ -1878,7 +1894,10 @@
     </header>
 
     <!-- ═══ プロフィール（記録）の切り替え ═══ -->
-    <div class="pf-bar" @click="pfOpenModal">🗂️ <b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</div>
+    <div class="pf-bar">
+        <span class="pf-bar-text" @click="pfOpenModal">🗂️ <b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</span>
+        <button type="button" class="pf-dash-btn" @click="pfDashOpen" :title="t('dash_btn_title')">🗓️</button>
+    </div>
 
     <div class="pf-modal-overlay" :class="{ 'is-visible': showProfileModal }" @click.self="pfCloseModal">
         <div class="pf-modal-card">
@@ -1948,6 +1967,35 @@
                 </template>
             </div>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
+        </div>
+    </div>
+
+    <!-- ═══ 🗓️ ダッシュボード（今日・今週・今月） ═══ -->
+    <div class="pf-modal-overlay" :class="{ 'is-visible': dashOpen }" @click.self="pfDashClose">
+        <div class="pf-modal-card">
+            <h3>{{ t('dash_title') }}</h3>
+            <div v-if="dashLoading"><p class="pf-hint">{{ t('dash_loading') }}</p></div>
+            <div v-else-if="dashError"><div class="dash-empty">{{ t('dash_load_error') }}</div></div>
+            <template v-else-if="dashData">
+                <div class="dash-section">
+                    <p class="dash-section-label">{{ t('dash_today_label') }}</p>
+                    <div class="dash-row" v-for="(ev, idx) in dashData.events" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev }}</b> {{ t('dash_event_suffix') }}</span></div>
+                    <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
+                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix', { n: dashRevisitStatus.daysLeft }) : t('dash_revisit_upcoming_suffix', { n: dashRevisitStatus.daysUntil }) }}</span>
+                    </div>
+                    <div class="dash-empty" v-if="dashData.events.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
+                </div>
+                <div class="dash-section">
+                    <p class="dash-section-label">{{ t('dash_week_label') }}</p>
+                    <div class="dash-row"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line', { text: dashEdenText }) }}<br><span style="font-size:11.5px; color:var(--text-gray);">{{ t('dash_eden_note') }}</span></span></div>
+                </div>
+                <div class="dash-section">
+                    <p class="dash-section-label">{{ t('dash_month_label') }}</p>
+                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ dashData.season.name }}</b>」{{ t('dash_season_end_suffix', { n: dashSeasonDaysLeft }) }}</span></div>
+                    <div class="dash-empty" v-else>{{ t('dash_season_error') }}</div>
+                </div>
+            </template>
+            <button type="button" class="pf-close-btn" @click="pfDashClose">{{ t('record_close') }}</button>
         </div>
     </div>
 
@@ -2990,6 +3038,44 @@
         return target;
     };
 
+    /* ================================================================
+       🗓️ ダッシュボード（今日・今週・今月）
+       全サイト共通のボタン。データの本家はitem（アイテム所持管理）のindex.html
+       （CURRENT_EVENTS・REVISIT_SPIRIT_SCHEDULE・CURRENT_SEASON）。二重管理を
+       避けるため、常にitem/index.htmlをfetchして読む（他サイトと同じ考え方）。
+       日付計算のロジックは他サイトの実装と完全に同一（データはfetch経由のため再実装）。
+       ================================================================ */
+    // HTMLに埋め込まれた `const 変数名 = [...]`（または `{...}`）を安全に取り出す
+    const pfExtractArray = (html, varName) => {
+        const m = html.match(new RegExp('const ' + varName + '\\s*=\\s*([\\[{][\\s\\S]*?\\n[\\]}]);'));
+        if (!m) return null;
+        try { return new Function('return ' + m[1] + ';')(); } catch (e) { console.error(varName, e); return null; }
+    };
+    const pfDashPacificNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const pfDashNextEdenResetDays = () => {
+        const now = pfDashPacificNow();
+        const todayMidnight = new Date(now);
+        todayMidnight.setHours(0, 0, 0, 0);
+        let addDays = (7 - todayMidnight.getDay()) % 7;
+        if (addDays === 0 && now.getTime() > todayMidnight.getTime()) addDays = 7;
+        const target = new Date(todayMidnight);
+        target.setDate(target.getDate() + addDays);
+        return Math.max(0, Math.ceil((target - now) / 86400000));
+    };
+    const pfDashRevisitStatus = (schedule) => {
+        if (!schedule || !schedule.anchorStart || !schedule.anchorEnd) return null;
+        const start0 = new Date(schedule.anchorStart);
+        const end0 = new Date(schedule.anchorEnd);
+        const intervalMs = schedule.intervalDays * 86400000;
+        const now = new Date();
+        const k = Math.floor((now - start0) / intervalMs);
+        const start = new Date(start0.getTime() + k * intervalMs);
+        const end = new Date(start.getTime() + (end0 - start0));
+        if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000) };
+        const nextStart = now < start ? start : new Date(start.getTime() + intervalMs);
+        return { active: false, daysUntil: Math.ceil((nextStart - now) / 86400000) };
+    };
+
     // 🌐 多言語対応（日本語 / English）
     // 精霊名（Sky公式の英語名から "The " を省略。Fandom Wiki「Dear Van Gogh」ページで確認済み）
     const SPIRIT_NAME_EN = {
@@ -3106,6 +3192,25 @@
             record_delete_confirm: '「{name}」を削除しますか？この記録の保存データも削除されます。',
             record_name_placeholder: '記録名',
             record_close: '閉じる',
+
+            dash_title: '🗓️ 今日・今週・今月',
+            dash_btn_title: '今日・今週・今月ダッシュボード',
+            dash_loading: '読み込み中…',
+            dash_load_error: '読み込みに失敗しました',
+            dash_today_label: '今日',
+            dash_week_label: '今週',
+            dash_month_label: '今月',
+            dash_event_suffix: 'が開催中',
+            dash_no_events: '現在開催中の季節・イベントはありません',
+            dash_revisit_label: '旅の精霊',
+            dash_revisit_active_suffix: 'が来訪中（あと{n}日）',
+            dash_revisit_upcoming_suffix: 'の次回来訪まであと{n}日',
+            dash_eden_line: '原罪：羽ばたく光の週間上限が{text}',
+            dash_eden_today: '本日リセット',
+            dash_eden_days: 'あと{n}日でリセット',
+            dash_eden_note: '毎週日曜0時・太平洋時間',
+            dash_season_end_suffix: '終了まであと{n}日',
+            dash_season_error: 'シーズン情報が取得できませんでした',
 
             fc_title: '🔮 精霊ツリー（4体横並び比較）',
             fc_close: '閉じる ▲',
@@ -4078,6 +4183,24 @@
             const pfEditingName = ref(''); // 名前変更中のテキストボックスの内容
             const pfDeletingId = ref(null); // 削除確認中の記録id（null=確認していない）
             const activeRecordName = computed(() => (records.value.find(r => r.id === activeRecordId.value) || {}).name || '');
+
+            // 🗓️ ダッシュボード（今日・今週・今月）の状態。データの本家はitemのindex.html
+            // （CURRENT_EVENTS・REVISIT_SPIRIT_SCHEDULE・CURRENT_SEASON）で、開いたときに
+            // fetchして読み込む（他サイトと同じ考え方）。一度読み込んだらキャッシュする。
+            const dashOpen = ref(false);
+            const dashLoading = ref(false);
+            const dashError = ref(false);
+            const dashData = ref(null); // { events, revisit, season } | null
+            const dashRevisitStatus = computed(() => dashData.value ? pfDashRevisitStatus(dashData.value.revisit) : null);
+            const dashEdenText = computed(() => {
+                const days = pfDashNextEdenResetDays();
+                return days === 0 ? t('dash_eden_today') : t('dash_eden_days', { n: days });
+            });
+            const dashSeasonDaysLeft = computed(() => {
+                if (!dashData.value || !dashData.value.season || !dashData.value.season.endDate) return 0;
+                const end = new Date(dashData.value.season.endDate);
+                return Math.max(0, Math.ceil((end - new Date()) / 86400000));
+            });
 
             const spirits = ref(createDefaultSpiritsData());
 
@@ -5179,6 +5302,31 @@
                 pfDeletingId.value = null;
                 showProfileModal.value = false;
             };
+            // 🗓️ ダッシュボードを開く。データはキャッシュがあれば再利用し、なければitemの
+            // index.htmlをfetchして読み込む（横断検索・item画像取得と同じ考え方）。
+            const pfDashOpen = async () => {
+                dashOpen.value = true;
+                if (dashData.value) return;
+                dashLoading.value = true;
+                dashError.value = false;
+                try {
+                    const res = await fetch(`${location.origin}/tai-item/index.html`);
+                    const html = await res.text();
+                    dashData.value = {
+                        events: pfExtractArray(html, 'CURRENT_EVENTS') || [],
+                        revisit: pfExtractArray(html, 'REVISIT_SPIRIT_SCHEDULE') || null,
+                        season: pfExtractArray(html, 'CURRENT_SEASON') || null,
+                    };
+                } catch (e) {
+                    console.error('pfDashOpen', e);
+                    dashError.value = true;
+                } finally {
+                    dashLoading.value = false;
+                }
+            };
+            const pfDashClose = () => {
+                dashOpen.value = false;
+            };
             const pfStartRename = (record) => {
                 pfDeletingId.value = null;
                 pfEditingId.value = record.id;
@@ -5242,6 +5390,8 @@
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
+                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashEdenText, dashSeasonDaysLeft,
+                pfDashOpen, pfDashClose,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
                 currencyCandle, currencyHeart, currencyAscended, currencyGiftPass,
