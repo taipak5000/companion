@@ -1984,6 +1984,12 @@
                         <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix', { n: dashRevisitStatus.daysLeft }) : t('dash_revisit_upcoming_suffix', { n: dashRevisitStatus.daysUntil }) }}</span>
                     </div>
                     <div class="dash-empty" v-if="dashData.events.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
+                    <div class="dash-row" v-if="dashShard && dashShard.hasShard">
+                        <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix', { times: dashShardTimesText }) }}</span>
+                    </div>
+                    <div class="dash-row" v-if="dashShard && !dashShard.hasShard">
+                        <span class="dash-row-icon">🌑</span><span class="dash-row-text">{{ t('dash_shard_none') }}</span>
+                    </div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
@@ -3062,6 +3068,42 @@
         target.setDate(target.getDate() + addDays);
         return Math.max(0, Math.ceil((target - now) / 86400000));
     };
+    // 闇の破片（赤闇・黒闇）の出現予測。コミュニティ製の予測ツール
+    // https://github.com/PlutoyDev/sky-shards （src/data/shard.ts）のアルゴリズムを
+    // 忠実に移植したもの。月の日付・曜日だけから決定論的に計算できるため手動更新データは不要。
+    const SHARD_REALM_JA = { prairie: '草原', forest: '雨林', valley: '峡谷', wasteland: '荒野', vault: '書庫' };
+    const SHARD_REALMS = ['prairie', 'forest', 'valley', 'wasteland', 'vault'];
+    const SHARD_GROUPS = [
+        { noShardWkDay: [6, 0], intervalH: 8, offsetH: 1, offsetM: 50 },
+        { noShardWkDay: [0, 1], intervalH: 8, offsetH: 2, offsetM: 10 },
+        { noShardWkDay: [1, 2], intervalH: 6, offsetH: 7, offsetM: 40 },
+        { noShardWkDay: [2, 3], intervalH: 6, offsetH: 2, offsetM: 20 },
+        { noShardWkDay: [3, 4], intervalH: 6, offsetH: 3, offsetM: 30 },
+    ];
+    const pfDashShardInfo = () => {
+        const pacNow = pfDashPacificNow();
+        const today = new Date(pacNow);
+        today.setHours(0, 0, 0, 0);
+        const dayOfMth = today.getDate();
+        const dayOfWk = today.getDay();
+        const isRed = dayOfMth % 2 === 1;
+        const realmIdx = (dayOfMth - 1) % 5;
+        const groupIdx = isRed ? (Math.floor((dayOfMth - 1) / 2) % 3) + 2 : Math.floor(dayOfMth / 2) % 2;
+        const group = SHARD_GROUPS[groupIdx];
+        const hasShard = !group.noShardWkDay.includes(dayOfWk);
+        const realm = SHARD_REALMS[realmIdx];
+        const realOffsetMs = Date.now() - pacNow.getTime();
+        const firstStartFake = new Date(today);
+        firstStartFake.setHours(group.offsetH, group.offsetM, 0, 0);
+        const intervalMs = group.intervalH * 3600000;
+        const occurrences = [0, 1, 2].map(i => new Date(firstStartFake.getTime() + intervalMs * i + realOffsetMs));
+        return { isRed, hasShard, realm, occurrences };
+    };
+    const pfDashFormatShardTime = (d) => {
+        const mm = d.getMonth() + 1, dd = d.getDate();
+        const hh = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
+        return `${mm}/${dd} ${hh}:${mi}`;
+    };
     const pfDashRevisitStatus = (schedule) => {
         if (!schedule || !schedule.anchorStart || !schedule.anchorEnd) return null;
         const start0 = new Date(schedule.anchorStart);
@@ -3205,6 +3247,10 @@
             dash_revisit_label: '旅の精霊',
             dash_revisit_active_suffix: 'が来訪中（あと{n}日）',
             dash_revisit_upcoming_suffix: 'の次回来訪まであと{n}日',
+            dash_shard_red: '赤闇',
+            dash_shard_black: '黒闇',
+            dash_shard_erupts_suffix: 'が出現：{times}',
+            dash_shard_none: '本日は闇の破片の出現はありません',
             dash_eden_line: '原罪：羽ばたく光の週間上限が{text}',
             dash_eden_today: '本日リセット',
             dash_eden_days: 'あと{n}日でリセット',
@@ -4192,6 +4238,11 @@
             const dashError = ref(false);
             const dashData = ref(null); // { events, revisit, season } | null
             const dashRevisitStatus = computed(() => dashData.value ? pfDashRevisitStatus(dashData.value.revisit) : null);
+            // 闇の破片（赤闇・黒闇）は開催中のイベント等と違いfetchデータに依存しないため、
+            // dashDataの読込状況に関わらず常に計算できる（モーダルを開いた時点の値で固定表示）。
+            const dashShard = computed(() => dashOpen.value ? pfDashShardInfo() : null);
+            const dashShardTimesText = computed(() => dashShard.value ? dashShard.value.occurrences.map(pfDashFormatShardTime).join(' / ') : '');
+            const dashShardRealmLabel = computed(() => dashShard.value ? SHARD_REALM_JA[dashShard.value.realm] : '');
             const dashEdenText = computed(() => {
                 const days = pfDashNextEdenResetDays();
                 return days === 0 ? t('dash_eden_today') : t('dash_eden_days', { n: days });
@@ -5390,7 +5441,7 @@
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
-                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashEdenText, dashSeasonDaysLeft,
+                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashShard, dashShardTimesText, dashShardRealmLabel, dashEdenText, dashSeasonDaysLeft,
                 pfDashOpen, pfDashClose,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
