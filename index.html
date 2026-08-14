@@ -1399,6 +1399,8 @@
         .dash-row-icon { flex-shrink: 0; }
         .dash-row-text { flex: 1; min-width: 0; }
         .dash-row b { color: var(--accent-blue); }
+        .dash-countdown { display: block; margin-top: 3px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-blue); }
+        .dash-note { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 400; color: var(--text-gray); }
         .dash-empty { font-size: 12.5px; color: var(--text-gray); padding: 2px 2px 4px; }
         .pf-modal-overlay {
             display: none;
@@ -1981,35 +1983,35 @@
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashData.events" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev }}</b> {{ t('dash_event_suffix') }}</span></div>
                     <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }}（<b>{{ dashRevisitCountdown }}</b>）</span>
+                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }}<span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
                     </div>
                     <div class="dash-empty" v-if="dashData.events.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
                     <div class="dash-row" v-if="dashShard && dashShard.hasShard">
-                        <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix', { times: dashShardTimesText }) }}<br>{{ t('dash_next_in_prefix') }}：<b>{{ dashShardCountdown }}</b></span>
+                        <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix', { times: dashShardTimesText }) }}<span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashShard && !dashShard.hasShard">
                         <span class="dash-row-icon">🌑</span><span class="dash-row-text">{{ t('dash_shard_none') }}</span>
                     </div>
                     <div class="dash-row" v-if="dashCandleRealmLabel">
-                        <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b>（{{ t('dash_candle_change_prefix') }} <b>{{ dashCandleCountdown }}</b>）</span>
+                        <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b><span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashUniCountdown">
-                        <span class="dash-row-icon">🌋</span><span class="dash-row-text">{{ t('dash_uni_label') }}：{{ t('dash_next_in_prefix') }} <b>{{ dashUniCountdown }}</b></span>
+                        <span class="dash-row-icon">🌋</span><span class="dash-row-text">{{ t('dash_uni_label') }}<span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashUniCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashPanCountdown">
-                        <span class="dash-row-icon">🍞</span><span class="dash-row-text">{{ t('dash_pan_label') }}：{{ t('dash_next_in_prefix') }} <b>{{ dashPanCountdown }}</b></span>
+                        <span class="dash-row-icon">🍞</span><span class="dash-row-text">{{ t('dash_pan_label') }}<span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashPanCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashKameCountdown">
-                        <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }}：{{ t('dash_next_in_prefix') }} <b>{{ dashKameCountdown }}</b></span>
+                        <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }}<span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashKameCountdown }}</span></span>
                     </div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
-                    <div class="dash-row"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }} <b>{{ dashEdenCountdown }}</b><br><span style="font-size:11.5px; color:var(--text-gray);">{{ t('dash_eden_note') }}</span></span></div>
+                    <div class="dash-row"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }}<span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
-                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ dashData.season.name }}</b>」{{ t('dash_season_end_suffix') }} <b>{{ dashSeasonCountdown }}</b></span></div>
+                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ dashData.season.name }}</b>」{{ t('dash_season_end_suffix') }}<span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
                     <div class="dash-empty" v-else>{{ t('dash_season_error') }}</div>
                 </div>
             </template>
