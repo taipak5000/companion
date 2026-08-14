@@ -1990,6 +1990,9 @@
                     <div class="dash-row" v-if="dashShard && !dashShard.hasShard">
                         <span class="dash-row-icon">🌑</span><span class="dash-row-text">{{ t('dash_shard_none') }}</span>
                     </div>
+                    <div class="dash-row" v-if="dashCandleRealmLabel">
+                        <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b></span>
+                    </div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
@@ -3104,6 +3107,22 @@
         const hh = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
         return `${mm}/${dd} ${hh}:${mi}`;
     };
+    // 日替わり大キャンドル（キャンドルのかたまり）の出現エリア予測。
+    // 太平洋時間0時に、草原→雨林→峡谷→荒野→書庫の順で毎日切り替わる固定ローテーション
+    // （Sky公式Xアカウント@thatskygameJPが「太平洋標準時の0時に更新」と明言済み）。
+    // 2026-08-13（太平洋時間の日付）が荒野だったことを起点に計算する。
+    const GRAND_CANDLE_ANCHOR_DATE = new Date(2026, 7, 13);
+    const GRAND_CANDLE_ANCHOR_REALM_IDX = 3;
+    const pfDashGrandCandleRealm = () => {
+        const pacNow = pfDashPacificNow();
+        const today = new Date(pacNow);
+        today.setHours(0, 0, 0, 0);
+        const anchor = new Date(GRAND_CANDLE_ANCHOR_DATE);
+        anchor.setHours(0, 0, 0, 0);
+        const daysSince = Math.round((today - anchor) / 86400000);
+        const idx = (((GRAND_CANDLE_ANCHOR_REALM_IDX + daysSince) % 5) + 5) % 5;
+        return SHARD_REALMS[idx];
+    };
     const pfDashRevisitStatus = (schedule) => {
         if (!schedule || !schedule.anchorStart || !schedule.anchorEnd) return null;
         const start0 = new Date(schedule.anchorStart);
@@ -3251,6 +3270,7 @@
             dash_shard_black: '黒闇',
             dash_shard_erupts_suffix: 'が出現：{times}',
             dash_shard_none: '本日は闇の破片の出現はありません',
+            dash_candle_label: '大キャンドル',
             dash_eden_line: '原罪：羽ばたく光の週間上限が{text}',
             dash_eden_today: '本日リセット',
             dash_eden_days: 'あと{n}日でリセット',
@@ -4243,6 +4263,7 @@
             const dashShard = computed(() => dashOpen.value ? pfDashShardInfo() : null);
             const dashShardTimesText = computed(() => dashShard.value ? dashShard.value.occurrences.map(pfDashFormatShardTime).join(' / ') : '');
             const dashShardRealmLabel = computed(() => dashShard.value ? SHARD_REALM_JA[dashShard.value.realm] : '');
+            const dashCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm()] : '');
             const dashEdenText = computed(() => {
                 const days = pfDashNextEdenResetDays();
                 return days === 0 ? t('dash_eden_today') : t('dash_eden_days', { n: days });
@@ -5441,7 +5462,7 @@
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
-                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashShard, dashShardTimesText, dashShardRealmLabel, dashEdenText, dashSeasonDaysLeft,
+                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashShard, dashShardTimesText, dashShardRealmLabel, dashCandleRealmLabel, dashEdenText, dashSeasonDaysLeft,
                 pfDashOpen, pfDashClose,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
