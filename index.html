@@ -1984,12 +1984,6 @@
             <template v-else-if="dashData">
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
-                    <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ dashData.season.name }}</b> {{ t('dash_event_suffix') }}</span></div>
-                    <div class="dash-row" v-for="(ev, idx) in dashActiveScheduledEvents" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev.name }}</b> {{ t('dash_event_suffix') }}<span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
-                    <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }}<span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
-                    </div>
-                    <div class="dash-empty" v-if="!dashSeasonActive && dashActiveScheduledEvents.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
                     <div class="dash-row" v-if="dashShard && dashShard.hasShard">
                         <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix') }}<span class="dash-shard-times"><span v-for="(o, idx) in dashShardOccurrences" :key="idx"><span class="dash-shard-time" :class="{ past: o.past }">{{ o.text }}</span><span v-if="idx < dashShardOccurrences.length - 1"> / </span></span></span><span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
                     </div>
@@ -2008,6 +2002,12 @@
                     <div class="dash-row" v-if="dashKameCountdown">
                         <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }}<span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashKameCountdown }}</span></span>
                     </div>
+                    <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ dashData.season.name }}</b> {{ t('dash_event_suffix') }}</span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashActiveScheduledEvents" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev.name }}</b> {{ t('dash_event_suffix') }}<span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
+                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }}<span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
+                    </div>
+                    <div class="dash-empty" v-if="!dashSeasonActive && dashActiveScheduledEvents.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
