@@ -1983,7 +1983,7 @@
             <div v-else-if="dashError"><div class="dash-empty">{{ t('dash_load_error') }}</div></div>
             <template v-else-if="dashData">
                 <div class="dash-section">
-                    <p class="dash-section-label">{{ t('dash_today_label') }}</p>
+                    <p class="dash-section-label">{{ t('dash_daily_label') }}</p>
                     <div class="dash-row" v-if="dashShard && dashShard.hasShard">
                         <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix') }}<span class="dash-shard-times"><span v-for="(o, idx) in dashShardOccurrences" :key="idx"><span class="dash-shard-time" :class="{ past: o.past }">{{ o.text }}</span><span v-if="idx < dashShardOccurrences.length - 1"> / </span></span></span><span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
                     </div>
@@ -2002,6 +2002,9 @@
                     <div class="dash-row" v-if="dashKameCountdown">
                         <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }}<span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashKameCountdown }}</span></span>
                     </div>
+                </div>
+                <div class="dash-section">
+                    <p class="dash-section-label">{{ t('dash_today_label') }}</p>
                     <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ dashData.season.name }}</b> {{ t('dash_event_suffix') }}</span></div>
                     <div class="dash-row" v-for="(ev, idx) in dashActiveScheduledEvents" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev.name }}</b> {{ t('dash_event_suffix') }}<span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
@@ -3350,6 +3353,7 @@
             dash_btn_title: '今日・今週・今月ダッシュボード',
             dash_loading: '読み込み中…',
             dash_load_error: '読み込みに失敗しました',
+            dash_daily_label: 'デイリー',
             dash_today_label: '今日',
             dash_week_label: '今週',
             dash_month_label: '今月',
