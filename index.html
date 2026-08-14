@@ -1981,35 +1981,35 @@
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashData.events" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev }}</b> {{ t('dash_event_suffix') }}</span></div>
                     <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix', { n: dashRevisitStatus.daysLeft }) : t('dash_revisit_upcoming_suffix', { n: dashRevisitStatus.daysUntil }) }}</span>
+                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }}（<b>{{ dashRevisitCountdown }}</b>）</span>
                     </div>
                     <div class="dash-empty" v-if="dashData.events.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
                     <div class="dash-row" v-if="dashShard && dashShard.hasShard">
-                        <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix', { times: dashShardTimesText }) }}</span>
+                        <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix', { times: dashShardTimesText }) }}<br>{{ t('dash_next_in_prefix') }}：<b>{{ dashShardCountdown }}</b></span>
                     </div>
                     <div class="dash-row" v-if="dashShard && !dashShard.hasShard">
                         <span class="dash-row-icon">🌑</span><span class="dash-row-text">{{ t('dash_shard_none') }}</span>
                     </div>
                     <div class="dash-row" v-if="dashCandleRealmLabel">
-                        <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b></span>
+                        <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b>（{{ t('dash_candle_change_prefix') }} <b>{{ dashCandleCountdown }}</b>）</span>
                     </div>
-                    <div class="dash-row" v-if="dashUniText">
-                        <span class="dash-row-icon">🌋</span><span class="dash-row-text">{{ t('dash_uni_label') }}：{{ t('dash_next_prefix') }} {{ dashUniText }}</span>
+                    <div class="dash-row" v-if="dashUniCountdown">
+                        <span class="dash-row-icon">🌋</span><span class="dash-row-text">{{ t('dash_uni_label') }}：{{ t('dash_next_in_prefix') }} <b>{{ dashUniCountdown }}</b></span>
                     </div>
-                    <div class="dash-row" v-if="dashPanText">
-                        <span class="dash-row-icon">🍞</span><span class="dash-row-text">{{ t('dash_pan_label') }}：{{ t('dash_next_prefix') }} {{ dashPanText }}</span>
+                    <div class="dash-row" v-if="dashPanCountdown">
+                        <span class="dash-row-icon">🍞</span><span class="dash-row-text">{{ t('dash_pan_label') }}：{{ t('dash_next_in_prefix') }} <b>{{ dashPanCountdown }}</b></span>
                     </div>
-                    <div class="dash-row" v-if="dashKameText">
-                        <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }}：{{ t('dash_next_prefix') }} {{ dashKameText }}</span>
+                    <div class="dash-row" v-if="dashKameCountdown">
+                        <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }}：{{ t('dash_next_in_prefix') }} <b>{{ dashKameCountdown }}</b></span>
                     </div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
-                    <div class="dash-row"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line', { text: dashEdenText }) }}<br><span style="font-size:11.5px; color:var(--text-gray);">{{ t('dash_eden_note') }}</span></span></div>
+                    <div class="dash-row"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }} <b>{{ dashEdenCountdown }}</b><br><span style="font-size:11.5px; color:var(--text-gray);">{{ t('dash_eden_note') }}</span></span></div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
-                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ dashData.season.name }}</b>」{{ t('dash_season_end_suffix', { n: dashSeasonDaysLeft }) }}</span></div>
+                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ dashData.season.name }}</b>」{{ t('dash_season_end_suffix') }} <b>{{ dashSeasonCountdown }}</b></span></div>
                     <div class="dash-empty" v-else>{{ t('dash_season_error') }}</div>
                 </div>
             </template>
@@ -3070,15 +3070,16 @@
         try { return new Function('return ' + m[1] + ';')(); } catch (e) { console.error(varName, e); return null; }
     };
     const pfDashPacificNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-    const pfDashNextEdenResetDays = () => {
+    const pfDashNextEdenResetTarget = () => {
         const now = pfDashPacificNow();
+        const realOffsetMs = Date.now() - now.getTime();
         const todayMidnight = new Date(now);
         todayMidnight.setHours(0, 0, 0, 0);
         let addDays = (7 - todayMidnight.getDay()) % 7;
         if (addDays === 0 && now.getTime() > todayMidnight.getTime()) addDays = 7;
         const target = new Date(todayMidnight);
         target.setDate(target.getDate() + addDays);
-        return Math.max(0, Math.ceil((target - now) / 86400000));
+        return new Date(target.getTime() + realOffsetMs);
     };
     // 闇の破片（赤闇・黒闇）の出現予測。コミュニティ製の予測ツール
     // https://github.com/PlutoyDev/sky-shards （src/data/shard.ts）のアルゴリズムを
@@ -3155,9 +3156,35 @@
         const k = Math.floor((now - start0) / intervalMs);
         const start = new Date(start0.getTime() + k * intervalMs);
         const end = new Date(start.getTime() + (end0 - start0));
-        if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000) };
+        if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000), target: end };
         const nextStart = now < start ? start : new Date(start.getTime() + intervalMs);
-        return { active: false, daysUntil: Math.ceil((nextStart - now) / 86400000) };
+        return { active: false, daysUntil: Math.ceil((nextStart - now) / 86400000), target: nextStart };
+    };
+    // 次に太平洋時間0時（＝日替わり大キャンドルの切り替わりのタイミング）を迎える実時刻
+    const pfDashNextPacificMidnight = () => {
+        const pacNow = pfDashPacificNow();
+        const realOffsetMs = Date.now() - pacNow.getTime();
+        const target = new Date(pacNow);
+        target.setHours(24, 0, 0, 0);
+        return new Date(target.getTime() + realOffsetMs);
+    };
+    // 指定の未来時刻までの残り時間を「D日 HH:MM:SS」（1日未満なら「HH:MM:SS」）で表示する、
+    // リアルタイムカウントダウン用のフォーマッタ
+    const pfDashCountdown = (target) => {
+        const ms = target - new Date();
+        if (ms <= 0) return '00:00:00';
+        const totalSec = Math.floor(ms / 1000);
+        const days = Math.floor(totalSec / 86400);
+        const hh = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, '0');
+        const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+        const ss = String(totalSec % 60).padStart(2, '0');
+        return days > 0 ? `${days}日 ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+    };
+    // 複数の未来時刻候補から一番近いものを選ぶ（全て過去なら null）
+    const pfDashSoonestFuture = (dates) => {
+        const now = new Date();
+        const future = dates.filter(d => d > now).sort((a, b) => a - b);
+        return future.length ? future[0] : null;
     };
 
     // 🌐 多言語対応（日本語 / English）
@@ -3286,23 +3313,22 @@
             dash_month_label: '今月',
             dash_event_suffix: 'が開催中',
             dash_no_events: '現在開催中の季節・イベントはありません',
-            dash_revisit_label: '旅の精霊',
-            dash_revisit_active_suffix: 'が来訪中（あと{n}日）',
-            dash_revisit_upcoming_suffix: 'の次回来訪まであと{n}日',
+            dash_revisit_label: '再訪精霊',
+            dash_revisit_active_suffix: 'が来訪中',
+            dash_revisit_upcoming_suffix: 'の次回来訪まで',
             dash_shard_red: '赤闇',
             dash_shard_black: '黒闇',
             dash_shard_erupts_suffix: 'が出現：{times}',
             dash_shard_none: '本日は闇の破片の出現はありません',
             dash_candle_label: '大キャンドル',
+            dash_candle_change_prefix: '次の変更まで',
             dash_uni_label: 'ウニ焼き',
             dash_pan_label: 'パン焼き',
             dash_kame_label: '亀闇',
-            dash_next_prefix: '次回',
-            dash_eden_line: '原罪：羽ばたく光の週間上限が{text}',
-            dash_eden_today: '本日リセット',
-            dash_eden_days: 'あと{n}日でリセット',
+            dash_next_in_prefix: '次回まで',
+            dash_eden_line: '原罪：羽ばたく光の週間上限のリセットまで',
             dash_eden_note: '毎週日曜0時・太平洋時間',
-            dash_season_end_suffix: '終了まであと{n}日',
+            dash_season_end_suffix: '終了まで',
             dash_season_error: 'シーズン情報が取得できませんでした',
 
             fc_title: '🔮 精霊ツリー（4体横並び比較）',
@@ -4284,24 +4310,32 @@
             const dashLoading = ref(false);
             const dashError = ref(false);
             const dashData = ref(null); // { events, revisit, season } | null
-            const dashRevisitStatus = computed(() => dashData.value ? pfDashRevisitStatus(dashData.value.revisit) : null);
+            // モーダルを開いている間1秒おきに更新するトリガー。各カウントダウン系computedが
+            // これを読むことで、Vueの依存追跡により1秒おきに再計算される。
+            const dashNow = ref(Date.now());
+            const dashRevisitStatus = computed(() => { dashNow.value; return dashData.value ? pfDashRevisitStatus(dashData.value.revisit) : null; });
+            const dashRevisitCountdown = computed(() => { dashNow.value; return dashRevisitStatus.value ? pfDashCountdown(dashRevisitStatus.value.target) : ''; });
             // 闇の破片（赤闇・黒闇）は開催中のイベント等と違いfetchデータに依存しないため、
             // dashDataの読込状況に関わらず常に計算できる（モーダルを開いた時点の値で固定表示）。
-            const dashShard = computed(() => dashOpen.value ? pfDashShardInfo() : null);
+            const dashShard = computed(() => { dashNow.value; return dashOpen.value ? pfDashShardInfo() : null; });
             const dashShardTimesText = computed(() => dashShard.value ? dashShard.value.occurrences.map(pfDashFormatShardTime).join(' / ') : '');
             const dashShardRealmLabel = computed(() => dashShard.value ? SHARD_REALM_JA[dashShard.value.realm] : '');
-            const dashCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm()] : '');
-            const dashUniText = computed(() => dashOpen.value ? pfDashFormatShardTime(pfDashNextEvenHourEvent(5)) : '');
-            const dashPanText = computed(() => dashOpen.value ? pfDashFormatShardTime(pfDashNextEvenHourEvent(35)) : '');
-            const dashKameText = computed(() => dashOpen.value ? pfDashFormatShardTime(pfDashNextEvenHourEvent(50)) : '');
-            const dashEdenText = computed(() => {
-                const days = pfDashNextEdenResetDays();
-                return days === 0 ? t('dash_eden_today') : t('dash_eden_days', { n: days });
+            const dashShardCountdown = computed(() => {
+                dashNow.value;
+                if (!dashShard.value || !dashShard.value.hasShard) return '';
+                const soon = pfDashSoonestFuture(dashShard.value.occurrences);
+                return soon ? pfDashCountdown(soon) : '';
             });
-            const dashSeasonDaysLeft = computed(() => {
-                if (!dashData.value || !dashData.value.season || !dashData.value.season.endDate) return 0;
-                const end = new Date(dashData.value.season.endDate);
-                return Math.max(0, Math.ceil((end - new Date()) / 86400000));
+            const dashCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm()] : '');
+            const dashCandleCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextPacificMidnight()) : ''; });
+            const dashUniCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(5)) : ''; });
+            const dashPanCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(35)) : ''; });
+            const dashKameCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(50)) : ''; });
+            const dashEdenCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEdenResetTarget()) : ''; });
+            const dashSeasonCountdown = computed(() => {
+                dashNow.value;
+                if (!dashData.value || !dashData.value.season || !dashData.value.season.endDate) return '';
+                return pfDashCountdown(new Date(dashData.value.season.endDate));
             });
 
             const spirits = ref(createDefaultSpiritsData());
@@ -5406,8 +5440,17 @@
             };
             // 🗓️ ダッシュボードを開く。データはキャッシュがあれば再利用し、なければitemの
             // index.htmlをfetchして読み込む（横断検索・item画像取得と同じ考え方）。
+            let pfDashTimer = null;
+            const pfDashStartTimer = () => {
+                if (pfDashTimer) clearInterval(pfDashTimer);
+                pfDashTimer = setInterval(() => { dashNow.value = Date.now(); }, 1000);
+            };
+            const pfDashStopTimer = () => {
+                if (pfDashTimer) { clearInterval(pfDashTimer); pfDashTimer = null; }
+            };
             const pfDashOpen = async () => {
                 dashOpen.value = true;
+                pfDashStartTimer();
                 if (dashData.value) return;
                 dashLoading.value = true;
                 dashError.value = false;
@@ -5428,6 +5471,7 @@
             };
             const pfDashClose = () => {
                 dashOpen.value = false;
+                pfDashStopTimer();
             };
             const pfStartRename = (record) => {
                 pfDeletingId.value = null;
@@ -5492,7 +5536,12 @@
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
-                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashShard, dashShardTimesText, dashShardRealmLabel, dashCandleRealmLabel, dashUniText, dashPanText, dashKameText, dashEdenText, dashSeasonDaysLeft,
+                dashOpen, dashLoading, dashError, dashData,
+                dashRevisitStatus, dashRevisitCountdown,
+                dashShard, dashShardTimesText, dashShardRealmLabel, dashShardCountdown,
+                dashCandleRealmLabel, dashCandleCountdown,
+                dashUniCountdown, dashPanCountdown, dashKameCountdown,
+                dashEdenCountdown, dashSeasonCountdown,
                 pfDashOpen, pfDashClose,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
