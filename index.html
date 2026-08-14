@@ -1993,6 +1993,9 @@
                     <div class="dash-row" v-if="dashCandleRealmLabel">
                         <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b><span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
                     </div>
+                    <div class="dash-row" v-if="dashQuestCandleRealmLabel">
+                        <span class="dash-row-icon">📜</span><span class="dash-row-text">{{ t('dash_quest_candle_label') }}：<b>{{ dashQuestCandleRealmLabel }}</b><span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
+                    </div>
                     <div class="dash-row" v-if="dashUniCountdown">
                         <span class="dash-row-icon">🌋</span><span class="dash-row-text">{{ t('dash_uni_label') }}<span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashUniCountdown }}</span></span>
                     </div>
@@ -3168,10 +3171,11 @@
     // 2026-08-13（太平洋時間の日付）が荒野だったことを起点に計算する。
     const GRAND_CANDLE_ANCHOR_DATE = new Date(2026, 7, 13);
     const GRAND_CANDLE_ANCHOR_REALM_IDX = 3;
-    const pfDashGrandCandleRealm = () => {
+    const pfDashGrandCandleRealm = (dayOffset = 0) => {
         const pacNow = pfDashPacificNow();
         const today = new Date(pacNow);
         today.setHours(0, 0, 0, 0);
+        today.setDate(today.getDate() + dayOffset);
         const anchor = new Date(GRAND_CANDLE_ANCHOR_DATE);
         anchor.setHours(0, 0, 0, 0);
         const daysSince = Math.round((today - anchor) / 86400000);
@@ -3368,6 +3372,7 @@
             dash_shard_erupts_suffix: 'が出現：',
             dash_shard_none: '本日は闇の破片の出現はありません',
             dash_candle_label: '大キャンドル',
+            dash_quest_candle_label: 'クエスト・シーズンキャンドル',
             dash_candle_change_prefix: '次の変更まで',
             dash_uni_label: 'ウニ焼き',
             dash_pan_label: 'パン焼き',
@@ -4409,6 +4414,7 @@
             });
             const dashCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm()] : '');
             const dashCandleCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextPacificMidnight()) : ''; });
+            const dashQuestCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm(-1)] : '');
             const dashUniCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(5)) : ''; });
             const dashPanCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(35)) : ''; });
             const dashKameCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(50)) : ''; });
@@ -5621,7 +5627,7 @@
                 dashOpen, dashLoading, dashError, dashData,
                 dashRevisitStatus, dashRevisitCountdown,
                 dashShard, dashShardOccurrences, dashShardRealmLabel, dashShardCountdown, dashNextShardCountdown,
-                dashCandleRealmLabel, dashCandleCountdown,
+                dashCandleRealmLabel, dashCandleCountdown, dashQuestCandleRealmLabel,
                 dashUniCountdown, dashPanCountdown, dashKameCountdown,
                 dashEdenCountdown, dashSeasonCountdown,
                 dashSeasonActive, dashActiveScheduledEvents, dashNextUpdateCountdown,
