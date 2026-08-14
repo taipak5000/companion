@@ -1993,6 +1993,15 @@
                     <div class="dash-row" v-if="dashCandleRealmLabel">
                         <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b></span>
                     </div>
+                    <div class="dash-row" v-if="dashUniText">
+                        <span class="dash-row-icon">🌋</span><span class="dash-row-text">{{ t('dash_uni_label') }}：{{ t('dash_next_prefix') }} {{ dashUniText }}</span>
+                    </div>
+                    <div class="dash-row" v-if="dashPanText">
+                        <span class="dash-row-icon">🍞</span><span class="dash-row-text">{{ t('dash_pan_label') }}：{{ t('dash_next_prefix') }} {{ dashPanText }}</span>
+                    </div>
+                    <div class="dash-row" v-if="dashKameText">
+                        <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }}：{{ t('dash_next_prefix') }} {{ dashKameText }}</span>
+                    </div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
@@ -3123,6 +3132,20 @@
         const idx = (((GRAND_CANDLE_ANCHOR_REALM_IDX + daysSince) % 5) + 5) % 5;
         return SHARD_REALMS[idx];
     };
+    // ウニ焼き・パン焼き・亀闇：2時間おき（太平洋時間の偶数時）に発生する協力プレイイベント。
+    // サマータイム期間中は各偶数時（0,2,4,...,22時）の指定の分から開始する
+    // （ユーザーからの実測情報に基づく。標準時期間のオフセットは未確認）。
+    const pfDashNextEvenHourEvent = (minuteOffset) => {
+        const pacNow = pfDashPacificNow();
+        const realOffsetMs = Date.now() - pacNow.getTime();
+        const candidate = new Date(pacNow);
+        candidate.setSeconds(0, 0);
+        candidate.setMinutes(minuteOffset);
+        const curHour = candidate.getHours();
+        candidate.setHours(curHour % 2 === 0 ? curHour : curHour - 1);
+        if (candidate.getTime() <= pacNow.getTime()) candidate.setTime(candidate.getTime() + 2 * 3600000);
+        return new Date(candidate.getTime() + realOffsetMs);
+    };
     const pfDashRevisitStatus = (schedule) => {
         if (!schedule || !schedule.anchorStart || !schedule.anchorEnd) return null;
         const start0 = new Date(schedule.anchorStart);
@@ -3271,6 +3294,10 @@
             dash_shard_erupts_suffix: 'が出現：{times}',
             dash_shard_none: '本日は闇の破片の出現はありません',
             dash_candle_label: '大キャンドル',
+            dash_uni_label: 'ウニ焼き',
+            dash_pan_label: 'パン焼き',
+            dash_kame_label: '亀闇',
+            dash_next_prefix: '次回',
             dash_eden_line: '原罪：羽ばたく光の週間上限が{text}',
             dash_eden_today: '本日リセット',
             dash_eden_days: 'あと{n}日でリセット',
@@ -4264,6 +4291,9 @@
             const dashShardTimesText = computed(() => dashShard.value ? dashShard.value.occurrences.map(pfDashFormatShardTime).join(' / ') : '');
             const dashShardRealmLabel = computed(() => dashShard.value ? SHARD_REALM_JA[dashShard.value.realm] : '');
             const dashCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm()] : '');
+            const dashUniText = computed(() => dashOpen.value ? pfDashFormatShardTime(pfDashNextEvenHourEvent(5)) : '');
+            const dashPanText = computed(() => dashOpen.value ? pfDashFormatShardTime(pfDashNextEvenHourEvent(35)) : '');
+            const dashKameText = computed(() => dashOpen.value ? pfDashFormatShardTime(pfDashNextEvenHourEvent(50)) : '');
             const dashEdenText = computed(() => {
                 const days = pfDashNextEdenResetDays();
                 return days === 0 ? t('dash_eden_today') : t('dash_eden_days', { n: days });
@@ -5462,7 +5492,7 @@
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
-                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashShard, dashShardTimesText, dashShardRealmLabel, dashCandleRealmLabel, dashEdenText, dashSeasonDaysLeft,
+                dashOpen, dashLoading, dashError, dashData, dashRevisitStatus, dashShard, dashShardTimesText, dashShardRealmLabel, dashCandleRealmLabel, dashUniText, dashPanText, dashKameText, dashEdenText, dashSeasonDaysLeft,
                 pfDashOpen, pfDashClose,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
