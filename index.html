@@ -1984,11 +1984,12 @@
             <template v-else-if="dashData">
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
-                    <div class="dash-row" v-for="(ev, idx) in dashData.events" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev }}</b> {{ t('dash_event_suffix') }}</span></div>
+                    <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ dashData.season.name }}</b> {{ t('dash_event_suffix') }}</span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashActiveScheduledEvents" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev.name }}</b> {{ t('dash_event_suffix') }}<span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
                         <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }} 「<b>{{ dashData.revisit.name }}</b>」{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }}<span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
                     </div>
-                    <div class="dash-empty" v-if="dashData.events.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
+                    <div class="dash-empty" v-if="!dashSeasonActive && dashActiveScheduledEvents.length === 0 && !(dashRevisitStatus && dashData.revisit)">{{ t('dash_no_events') }}</div>
                     <div class="dash-row" v-if="dashShard && dashShard.hasShard">
                         <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix') }}<span class="dash-shard-times"><span v-for="(o, idx) in dashShardOccurrences" :key="idx"><span class="dash-shard-time" :class="{ past: o.past }">{{ o.text }}</span><span v-if="idx < dashShardOccurrences.length - 1"> / </span></span></span><span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
                     </div>
@@ -2011,6 +2012,7 @@
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
                     <div class="dash-row"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }}<span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
+                    <div class="dash-row" v-if="dashNextUpdateCountdown"><span class="dash-row-icon">🔧</span><span class="dash-row-text">{{ t('dash_next_update_label') }}<span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
@@ -3352,6 +3354,7 @@
             dash_week_label: '今週',
             dash_month_label: '今月',
             dash_event_suffix: 'が開催中',
+            dash_event_ends_prefix: '終了まで',
             dash_no_events: '現在開催中の季節・イベントはありません',
             dash_revisit_label: '再訪精霊',
             dash_revisit_active_suffix: 'が来訪中',
@@ -3368,6 +3371,7 @@
             dash_next_in_prefix: '次回まで',
             dash_eden_line: '原罪：週間リセットまで',
             dash_eden_note: '毎週日曜0時・太平洋時間',
+            dash_next_update_label: '次回アップデート予定',
             dash_season_end_suffix: '終了まで',
             dash_season_error: 'シーズン情報が取得できませんでした',
 
@@ -4349,12 +4353,34 @@
             const dashOpen = ref(false);
             const dashLoading = ref(false);
             const dashError = ref(false);
-            const dashData = ref(null); // { events, revisit, season } | null
+            const dashData = ref(null); // { revisit, season, eventSchedule, nextUpdate } | null
             // モーダルを開いている間1秒おきに更新するトリガー。各カウントダウン系computedが
             // これを読むことで、Vueの依存追跡により1秒おきに再計算される。
             const dashNow = ref(Date.now());
             const dashRevisitStatus = computed(() => { dashNow.value; return dashData.value ? pfDashRevisitStatus(dashData.value.revisit) : null; });
             const dashRevisitCountdown = computed(() => { dashNow.value; return dashRevisitStatus.value ? pfDashCountdown(dashRevisitStatus.value.target) : ''; });
+            // 開始・終了日時付きのイベント一覧（EVENT_SCHEDULE）から、現在開催期間中のものだけを返す。
+            // startを省略しているエントリは「常に開催中→endで終了」として扱う
+            const dashActiveScheduledEvents = computed(() => {
+                dashNow.value;
+                if (!dashData.value) return [];
+                const now = Date.now();
+                return (dashData.value.eventSchedule || []).filter(ev => {
+                    const end = new Date(ev.end).getTime();
+                    const start = ev.start ? new Date(ev.start).getTime() : null;
+                    return now <= end && (!start || now >= start);
+                }).map(ev => ({ name: ev.name, countdown: pfDashCountdown(new Date(ev.end)) }));
+            });
+            const dashSeasonActive = computed(() => {
+                dashNow.value;
+                return !!(dashData.value && dashData.value.season && dashData.value.season.endDate && Date.now() < new Date(dashData.value.season.endDate).getTime());
+            });
+            const dashNextUpdateCountdown = computed(() => {
+                dashNow.value;
+                if (!dashData.value || !dashData.value.nextUpdate || !dashData.value.nextUpdate.date) return '';
+                const target = new Date(dashData.value.nextUpdate.date);
+                return Date.now() < target.getTime() ? pfDashCountdown(target) : '';
+            });
             // 闇の破片（赤闇・黒闇）は開催中のイベント等と違いfetchデータに依存しないため、
             // dashDataの読込状況に関わらず常に計算できる（モーダルを開いた時点の値で固定表示）。
             const dashShard = computed(() => { dashNow.value; return dashOpen.value ? pfDashShardInfo() : null; });
@@ -5509,9 +5535,10 @@
                     const res = await fetch(`${location.origin}/tai-item/index.html`);
                     const html = await res.text();
                     dashData.value = {
-                        events: pfExtractArray(html, 'CURRENT_EVENTS') || [],
                         revisit: pfExtractArray(html, 'REVISIT_SPIRIT_SCHEDULE') || null,
                         season: pfExtractArray(html, 'CURRENT_SEASON') || null,
+                        eventSchedule: pfExtractArray(html, 'EVENT_SCHEDULE') || [],
+                        nextUpdate: pfExtractArray(html, 'NEXT_UPDATE') || null,
                     };
                 } catch (e) {
                     console.error('pfDashOpen', e);
@@ -5593,6 +5620,7 @@
                 dashCandleRealmLabel, dashCandleCountdown,
                 dashUniCountdown, dashPanCountdown, dashKameCountdown,
                 dashEdenCountdown, dashSeasonCountdown,
+                dashSeasonActive, dashActiveScheduledEvents, dashNextUpdateCountdown,
                 pfDashOpen, pfDashClose,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
