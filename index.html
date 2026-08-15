@@ -2031,6 +2031,53 @@
         </div>
     </div>
 
+    <!-- ═══ 📱 ホーム画面アイコンのカスタマイズ ═══ -->
+    <div class="pf-modal-overlay" :class="{ 'is-visible': showIconModal }" @click.self="pfIconCloseModal">
+        <div class="pf-modal-card">
+            <h3>🎨 ホーム画面アイコンをカスタマイズ</h3>
+
+            <p class="pf-hint" style="margin-top:0;">
+                スマホの「ホーム画面に追加」をしたときのアイコンを、好きな絵文字や画像に変更できます。<br>
+                <b>追加する前に</b>設定してください。追加した後に変更しても、既に追加済みのアイコンは自動更新されません（変更したい場合は一度削除して追加し直してください）。
+            </p>
+
+            <div style="display:flex; gap:8px; margin:14px 0;">
+                <button type="button" class="pf-icon-btn" style="flex:1; padding:8px;" :style="{ background: pfIconMode === 'emoji' ? 'var(--accent-orange)' : 'var(--input-bg)', color: pfIconMode === 'emoji' ? '#fff' : 'var(--text-gray)' }" @click="pfIconSetMode('emoji')">😀 絵文字</button>
+                <button type="button" class="pf-icon-btn" style="flex:1; padding:8px;" :style="{ background: pfIconMode === 'image' ? 'var(--accent-orange)' : 'var(--input-bg)', color: pfIconMode === 'image' ? '#fff' : 'var(--text-gray)' }" @click="pfIconSetMode('image')">🖼️ 画像</button>
+            </div>
+
+            <div v-show="pfIconMode === 'emoji'">
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">絵文字</p>
+                <input type="text" maxlength="8" v-model="pfIconEmoji" @input="pfIconUpdatePreview"
+                    style="font-size:28px; text-align:center; width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color); box-sizing:border-box;">
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:10px 0 6px;">背景色</p>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                    <button type="button" @click="pfIconPickSwatch('#FF9500')" style="width:32px; height:32px; border-radius:50%; background:#FF9500; border:2px solid transparent;"></button>
+                    <button type="button" @click="pfIconPickSwatch('#007AFF')" style="width:32px; height:32px; border-radius:50%; background:#007AFF; border:2px solid transparent;"></button>
+                    <button type="button" @click="pfIconPickSwatch('#34C759')" style="width:32px; height:32px; border-radius:50%; background:#34C759; border:2px solid transparent;"></button>
+                    <button type="button" @click="pfIconPickSwatch('#FF3B30')" style="width:32px; height:32px; border-radius:50%; background:#FF3B30; border:2px solid transparent;"></button>
+                    <button type="button" @click="pfIconPickSwatch('#AF52DE')" style="width:32px; height:32px; border-radius:50%; background:#AF52DE; border:2px solid transparent;"></button>
+                    <button type="button" @click="pfIconPickSwatch('#8E8E93')" style="width:32px; height:32px; border-radius:50%; background:#8E8E93; border:2px solid transparent;"></button>
+                </div>
+                <input type="color" v-model="pfIconBgColor" @input="pfIconUpdatePreview" style="width:100%; height:40px; border:none; border-radius:8px; background:none;">
+            </div>
+
+            <div v-show="pfIconMode === 'image'">
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">画像をアップロード</p>
+                <input type="file" accept="image/*" @change="pfIconHandleFile">
+            </div>
+
+            <div style="display:flex; flex-direction:column; align-items:center; margin:18px 0;">
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">プレビュー</p>
+                <canvas id="iconPreviewCanvas" width="96" height="96" style="border-radius:22px; box-shadow:0 2px 8px rgba(0,0,0,0.15);"></canvas>
+            </div>
+
+            <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box; padding:10px;" @click="pfIconSave">保存して適用</button>
+            <button type="button" class="pf-close-btn" @click="pfIconReset">デフォルトに戻す</button>
+            <p style="text-align:center; font-size:12px; color:var(--text-gray); margin-top:10px;">{{ pfIconSaveStatus }}</p>
+        </div>
+    </div>
+
     <!-- サイドバーオーバーレイ（モバイル） -->
     <div v-if="showSidebar" class="sidebar-overlay" @click="showSidebar = false"></div>
 
@@ -2073,6 +2120,10 @@
                     🔄 データ引継ぎ
                 </a>
             </nav>
+            <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
+                <div class="sidebar-section-label" style="margin-bottom:8px;">📱 ホーム画面アイコン</div>
+                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" @click="pfIconOpenModal(); showSidebar = false">🎨 アイコンをカスタマイズ</button>
+            </div>
         </aside>
 
         <!-- ═══ メインコンテンツ ═══ -->
@@ -4349,6 +4400,20 @@
             const showMultiSpiritPlan = ref(false); // 🧭 効率的な進め方のおすすめカードも初期は折りたたみ
             const pfCurrencyOpen = ref(true); // 💰 所持通貨セクションはデフォルトで開いた状態
 
+            // 📱 ホーム画面アイコンのカスタマイズ。「ホーム画面に追加」時に使われるアイコン
+            // （apple-touch-icon / manifest）を、ユーザーが選んだ絵文字＋背景色、または
+            // アップロード画像に差し替える。記録（プロフィール）に関わらずこの端末・ブラウザ
+            // 共通の設定のため、記録別のキーには保存しない。
+            const showIconModal = ref(false);
+            const pfIconMode = ref('emoji');
+            const pfIconEmoji = ref('✨');
+            const pfIconBgColor = ref('#FF9500');
+            const pfIconSaveStatus = ref('');
+            let pfIconUploadedImgEl = null;
+            const PF_ICON_STORAGE_KEY = 'pfCustomHomeIcon_v1';
+            const PF_ICON_ORIGINAL_APPLE_HREF = document.querySelector('link[rel="apple-touch-icon"]')?.href || '';
+            const PF_ICON_ORIGINAL_MANIFEST_HREF = document.querySelector('link[rel="manifest"]')?.href || '';
+
             // 🗂️ 記録（データ）管理用の状態変数。
             // 「現状の記録」「予測用の記録」のように、丸ごと別のセーブ枠を複数持てるようにする。
             const records = ref([{ id: 'default', name: 'データ1' }]); // [{id, name}] の一覧（load()内で復元・調整される）
@@ -5565,6 +5630,135 @@
                 dashOpen.value = false;
                 pfDashStopTimer();
             };
+
+            // 📱 ホーム画面アイコンのカスタマイズ
+            const pfIconOpenModal = () => {
+                showIconModal.value = true;
+                pfIconUpdatePreview();
+            };
+            const pfIconCloseModal = () => { showIconModal.value = false; };
+            const pfIconSetMode = (mode) => {
+                pfIconMode.value = mode;
+                pfIconUpdatePreview();
+            };
+            const pfIconPickSwatch = (hex) => {
+                pfIconBgColor.value = hex;
+                pfIconUpdatePreview();
+            };
+            const pfIconHandleFile = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => { pfIconUploadedImgEl = img; pfIconUpdatePreview(); };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            };
+            const pfIconRenderToCanvas = (canvas) => {
+                const size = canvas.width;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, size, size);
+                if (pfIconMode.value === 'emoji') {
+                    const emoji = pfIconEmoji.value || '✨';
+                    const bg = pfIconBgColor.value || '#FF9500';
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, size, size);
+                    ctx.font = `${Math.floor(size * 0.6)}px "Apple Color Emoji","Segoe UI Emoji",sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(emoji, size / 2, size / 2 + size * 0.05);
+                } else if (pfIconUploadedImgEl) {
+                    const img = pfIconUploadedImgEl;
+                    const scale = Math.max(size / img.width, size / img.height);
+                    const w = img.width * scale, h = img.height * scale;
+                    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+                } else {
+                    ctx.fillStyle = '#E5E5EA';
+                    ctx.fillRect(0, 0, size, size);
+                }
+            };
+            const pfIconUpdatePreview = () => {
+                const canvas = document.getElementById('iconPreviewCanvas');
+                if (canvas) pfIconRenderToCanvas(canvas);
+            };
+            const pfIconGenerateDataUrl = (size) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size; canvas.height = size;
+                pfIconRenderToCanvas(canvas);
+                return canvas.toDataURL('image/png');
+            };
+            const pfIconApply = async (dataUrl) => {
+                const appleLink = document.querySelector('link[rel="apple-touch-icon"]');
+                if (appleLink) appleLink.href = dataUrl;
+                const iconLink = document.querySelector('link[rel="icon"]');
+                if (iconLink) iconLink.href = dataUrl;
+                try {
+                    const res = await fetch(PF_ICON_ORIGINAL_MANIFEST_HREF);
+                    const manifest = await res.json();
+                    manifest.icons = [
+                        { src: dataUrl, sizes: '192x192', type: 'image/png' },
+                        { src: dataUrl, sizes: '512x512', type: 'image/png' },
+                    ];
+                    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const manifestLink = document.querySelector('link[rel="manifest"]');
+                    if (manifestLink) manifestLink.href = url;
+                } catch (e) { console.error('manifest update failed', e); }
+            };
+            const pfIconSave = () => {
+                if (pfIconMode.value === 'image' && !pfIconUploadedImgEl) {
+                    pfIconSaveStatus.value = '画像を選択してください';
+                    return;
+                }
+                const dataUrl = pfIconGenerateDataUrl(512);
+                const state = { mode: pfIconMode.value, dataUrl };
+                if (pfIconMode.value === 'emoji') {
+                    state.emoji = pfIconEmoji.value || '✨';
+                    state.bgColor = pfIconBgColor.value || '#FF9500';
+                }
+                try {
+                    localStorage.setItem(PF_ICON_STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {
+                    pfIconSaveStatus.value = '保存に失敗しました(容量オーバーの可能性があります)';
+                    return;
+                }
+                pfIconApply(dataUrl);
+                pfIconSaveStatus.value = '✅ 保存しました。これでホーム画面に追加すると反映されます';
+            };
+            const pfIconReset = () => {
+                localStorage.removeItem(PF_ICON_STORAGE_KEY);
+                const appleLink = document.querySelector('link[rel="apple-touch-icon"]');
+                if (appleLink) appleLink.href = PF_ICON_ORIGINAL_APPLE_HREF;
+                const manifestLink = document.querySelector('link[rel="manifest"]');
+                if (manifestLink) manifestLink.href = PF_ICON_ORIGINAL_MANIFEST_HREF;
+                pfIconUploadedImgEl = null;
+                pfIconEmoji.value = '✨';
+                pfIconBgColor.value = '#FF9500';
+                pfIconSetMode('emoji');
+                pfIconSaveStatus.value = 'デフォルトのアイコンに戻しました';
+            };
+            const pfIconApplyFromStorage = () => {
+                let raw;
+                try { raw = localStorage.getItem(PF_ICON_STORAGE_KEY); } catch (e) { return; }
+                if (!raw) return;
+                try {
+                    const state = JSON.parse(raw);
+                    if (state.dataUrl) pfIconApply(state.dataUrl);
+                    if (state.mode === 'image' && state.dataUrl) {
+                        pfIconMode.value = 'image';
+                        const img = new Image();
+                        img.onload = () => { pfIconUploadedImgEl = img; pfIconUpdatePreview(); };
+                        img.src = state.dataUrl;
+                    } else if (state.mode === 'emoji') {
+                        pfIconMode.value = 'emoji';
+                        pfIconEmoji.value = state.emoji || '✨';
+                        pfIconBgColor.value = state.bgColor || '#FF9500';
+                    }
+                } catch (e) { console.error('failed to restore custom icon', e); }
+            };
+            pfIconApplyFromStorage();
             const pfStartRename = (record) => {
                 pfDeletingId.value = null;
                 pfEditingId.value = record.id;
@@ -5636,6 +5830,8 @@
                 dashEdenCountdown, dashSeasonCountdown,
                 dashSeasonActive, dashActiveScheduledEvents, dashNextUpdateCountdown,
                 pfDashOpen, pfDashClose,
+                showIconModal, pfIconMode, pfIconEmoji, pfIconBgColor, pfIconSaveStatus,
+                pfIconOpenModal, pfIconCloseModal, pfIconSetMode, pfIconPickSwatch, pfIconHandleFile, pfIconSave, pfIconReset,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
                 currencyCandle, currencyHeart, currencyAscended, currencyGiftPass,
