@@ -1512,7 +1512,7 @@
         }
         .pf-row-confirm-text { flex: 1; font-size: 12.5px; color: var(--text-color); line-height: 1.4; }
         .pf-row-btn-ok { background: var(--accent-blue); color: #fff; border: none; }
-        .pf-row-btn-danger { background: var(--accent-red); color: #fff; border: none; }
+        .pf-row-btn-danger { background: var(--danger-text); color: #fff; border: none; }
         .pf-currency-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color); }
         .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px;
           display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
@@ -1574,7 +1574,7 @@
         .opt-name { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .opt-when { font-size: 11px; }
         .opt-when.ok { color: var(--accent-green); }
-        .opt-when.late { color: var(--accent-red); }
+        .opt-when.late { color: var(--danger-text); }
         .opt-when.now { color: var(--accent-orange); font-weight: bold; }
         .opt-cost { font-size: 12.5px; font-weight: bold; color: var(--accent-orange); flex-shrink: 0; text-align: right; line-height: 1.35; }
         .opt-cost small { font-weight: 500; font-size: 10px; color: var(--text-gray); }
@@ -1585,7 +1585,7 @@
             font-size: 11.5px; font-family: inherit; cursor: pointer; line-height: 1;
         }
         .opt-mini-btn:disabled { opacity: 0.3; cursor: default; }
-        .opt-mini-btn.danger { color: var(--accent-red); }
+        .opt-mini-btn.danger { color: var(--danger-text); }
         .opt-summary {
             background: rgba(0,122,255,0.06); border: 1px solid rgba(0,122,255,0.18);
             border-radius: 10px; padding: 10px 13px; margin-top: 12px;
@@ -1972,7 +1972,34 @@
                 </div>
                 </template>
             </div>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="dmOpenModal">💾 データのバックアップ・復元・削除</button>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
+        </div>
+    </div>
+
+    <!-- ═══ 💾 データのバックアップ・復元・削除 ═══ -->
+    <div class="pf-modal-overlay" :class="{ 'is-visible': showDmModal }" @click.self="dmCloseModal">
+        <div class="pf-modal-card">
+            <h3>💾 データのバックアップ・復元・削除</h3>
+            <p class="pf-hint" style="margin-top:0;">このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。</p>
+            <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" @click="dmExport">⬇️ データをエクスポート（ファイルに保存）</button>
+            <input type="file" accept="application/json" style="display:none" ref="dmImportFileEl" @change="dmImportFileSelected">
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-bottom:8px; padding:8px;" @click="$refs.dmImportFileEl.click()">⬆️ ファイルからインポート</button>
+            <div v-if="dmPendingImportCount !== null" class="pf-row" style="flex-wrap: wrap;">
+                <span class="pf-row-confirm-text">{{ dmPendingImportCount }}件のキーをインポートします。現在保存されているデータは上書きされます（インポートするファイルに無いキーはそのまま残ります）。よろしいですか？</span>
+                <button type="button" class="pf-icon-btn pf-row-btn-ok" @click="dmConfirmImport">インポート実行</button>
+                <button type="button" class="pf-icon-btn" @click="dmCancelImport">取消</button>
+            </div>
+            <div v-if="!dmWipeConfirming">
+                <button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" @click="dmWipeConfirming = true">🗑️ 全データを削除</button>
+            </div>
+            <div v-else class="pf-row" style="flex-wrap: wrap;">
+                <span class="pf-row-confirm-text">すべてのプロフィール・所持アイテム・お気に入り・精霊ツリーの進捗など、このブラウザに保存されている全データを削除します。この操作は取り消せません。先にエクスポートしておくことをおすすめします。本当に削除しますか？</span>
+                <button type="button" class="pf-icon-btn pf-row-btn-danger" @click="dmConfirmWipe">完全に削除する</button>
+                <button type="button" class="pf-icon-btn" @click="dmWipeConfirming = false">取消</button>
+            </div>
+            <p class="pf-hint">{{ dmStatus }}</p>
+            <button type="button" class="pf-close-btn" @click="dmCloseModal">閉じる</button>
         </div>
     </div>
 
@@ -5601,6 +5628,86 @@
                 pfDeletingId.value = null;
                 showProfileModal.value = false;
             };
+
+            // 💾 データのエクスポート/インポート/全削除
+            // localStorage は taipak5000.github.io 配下の全ツールで共有されているため、
+            // ここで書き出す/読み込む/消す内容はこのサイトだけでなく item・wings・
+            // companion・spirit-catalog 等すべてのデータが対象になる。
+            const showDmModal = ref(false);
+            const dmStatus = ref('');
+            const dmPendingImportCount = ref(null);
+            const dmWipeConfirming = ref(false);
+            let dmPendingImportData = null;
+
+            const dmOpenModal = () => {
+                dmStatus.value = '';
+                dmPendingImportCount.value = null;
+                dmWipeConfirming.value = false;
+                showDmModal.value = true;
+            };
+            const dmCloseModal = () => { showDmModal.value = false; };
+
+            const dmExport = () => {
+                const dump = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    dump[key] = localStorage.getItem(key);
+                }
+                const payload = { exportedFrom: 'taipak5000.github.io', exportedAt: new Date().toISOString(), data: dump };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const dateStr = new Date().toISOString().slice(0, 10);
+                a.href = url;
+                a.download = `sky-tools-backup_${dateStr}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                dmStatus.value = `書き出しました（${Object.keys(dump).length}件のキー）。`;
+            };
+
+            const dmImportFileSelected = (event) => {
+                const file = event.target.files && event.target.files[0];
+                event.target.value = '';
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    let parsed;
+                    try { parsed = JSON.parse(reader.result); } catch (e) {
+                        dmStatus.value = 'ファイルの読み込みに失敗しました（JSON形式ではありません）。';
+                        return;
+                    }
+                    const data = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : null;
+                    if (!data) {
+                        dmStatus.value = 'このツールで書き出したファイルではないようです。';
+                        return;
+                    }
+                    dmPendingImportData = data;
+                    dmPendingImportCount.value = Object.keys(data).length;
+                };
+                reader.readAsText(file);
+            };
+            const dmCancelImport = () => {
+                dmPendingImportData = null;
+                dmPendingImportCount.value = null;
+            };
+            const dmConfirmImport = () => {
+                if (!dmPendingImportData) return;
+                Object.keys(dmPendingImportData).forEach((key) => {
+                    localStorage.setItem(key, dmPendingImportData[key]);
+                });
+                dmPendingImportData = null;
+                dmPendingImportCount.value = null;
+                dmStatus.value = 'インポートしました。ページを再読み込みします…';
+                setTimeout(() => location.reload(), 800);
+            };
+            const dmConfirmWipe = () => {
+                localStorage.clear();
+                dmStatus.value = '削除しました。ページを再読み込みします…';
+                setTimeout(() => location.reload(), 800);
+            };
+
             // 🗓️ ダッシュボードを開く。データはキャッシュがあれば再利用し、なければitemの
             // index.htmlをfetchして読み込む（横断検索・item画像取得と同じ考え方）。
             let pfDashTimer = null;
@@ -5829,6 +5936,8 @@
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
+                showDmModal, dmStatus, dmPendingImportCount, dmWipeConfirming,
+                dmOpenModal, dmCloseModal, dmExport, dmImportFileSelected, dmCancelImport, dmConfirmImport, dmConfirmWipe,
                 dashOpen, dashLoading, dashError, dashData,
                 dashRevisitStatus, dashRevisitCountdown,
                 dashShard, dashShardOccurrences, dashShardRealmLabel, dashShardCountdown, dashNextShardCountdown,
