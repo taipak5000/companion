@@ -1930,9 +1930,9 @@
                         <button type="button" class="pf-icon-btn" @click="pfCancelRowState">{{ t('record_cancel') }}</button>
                     </template>
                     <template v-else>
-                        <input type="color" class="pf-color-input" :value="rec.color || '#FF9500'" title="アカウントカラー" @change="setRecordColor(rec, $event.target.value)">
+                        <input type="color" class="pf-color-input" :value="rec.color || '#FF9500'" :title="t('record_color_title')" @change="setRecordColor(rec, $event.target.value)">
                         <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false">{{ rec.id === activeRecordId ? '✅ ' : '' }}{{ rec.name }}</span>
-                        <button v-if="rec.color" type="button" class="pf-icon-btn pf-color-clear-btn" title="カラーを初期値に戻す" @click="clearRecordColor(rec)">↺</button>
+                        <button v-if="rec.color" type="button" class="pf-icon-btn pf-color-clear-btn" :title="t('record_color_reset_title')" @click="clearRecordColor(rec)">↺</button>
                         <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false">⧉</button>
                         <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfStartRename(rec)">✏️</button>
                         <button v-if="records.length > 1" type="button" class="pf-icon-btn" :title="t('record_delete')" @click="pfStartDelete(rec)">🗑️</button>
@@ -1946,33 +1946,33 @@
             <p class="pf-hint">{{ t('record_hint') }}</p>
             <div class="pf-currency-section">
                 <div class="pf-currency-title" @click="pfCurrencyOpen = !pfCurrencyOpen">
-                    <span>💰 所持通貨</span>
-                    <span class="pf-currency-toggle-label">{{ pfCurrencyOpen ? '閉じる ▲' : '開く ▼' }}</span>
+                    <span>{{ t('pfcur_label') }}</span>
+                    <span class="pf-currency-toggle-label">{{ pfCurrencyOpen ? t('pfcur_toggle_close') : t('pfcur_toggle_open') }}</span>
                 </div>
                 <template v-if="pfCurrencyOpen">
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">🕯️ キャンドル</span>
+                    <span class="pf-currency-label">{{ t('pfcur_candle') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyCandle" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">💗 ハート</span>
+                    <span class="pf-currency-label">{{ t('pfcur_heart') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyHeart" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">🕯️✨ 星のキャンドル</span>
+                    <span class="pf-currency-label">{{ t('pfcur_ascended') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">🕯️🍂 シーズンキャンドル</span>
+                    <span class="pf-currency-label">{{ t('pfcur_season') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="ownedCandles">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">🎟️ ギフトパス</span>
+                    <span class="pf-currency-label">{{ t('pfcur_gift_pass') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyGiftPass" @change="saveCurrencyExtra">
                 </div>
                 </template>
             </div>
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="dmOpenModal">💾 データのバックアップ・復元・削除</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="dmOpenModal">{{ t('dm_open_btn') }}</button>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
@@ -1980,26 +1980,26 @@
     <!-- ═══ 💾 データのバックアップ・復元・削除 ═══ -->
     <div class="pf-modal-overlay" :class="{ 'is-visible': showDmModal }" @click.self="dmCloseModal">
         <div class="pf-modal-card">
-            <h3>💾 データのバックアップ・復元・削除</h3>
-            <p class="pf-hint" style="margin-top:0;">このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。</p>
-            <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" @click="dmExport">⬇️ データをエクスポート（ファイルに保存）</button>
+            <h3>{{ t('dm_title') }}</h3>
+            <p class="pf-hint" style="margin-top:0;">{{ t('dm_hint') }}</p>
+            <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" @click="dmExport">{{ t('dm_export_btn') }}</button>
             <input type="file" accept="application/json" style="display:none" ref="dmImportFileEl" @change="dmImportFileSelected">
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-bottom:8px; padding:8px;" @click="$refs.dmImportFileEl.click()">⬆️ ファイルからインポート</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-bottom:8px; padding:8px;" @click="$refs.dmImportFileEl.click()">{{ t('dm_import_btn') }}</button>
             <div v-if="dmPendingImportCount !== null" class="pf-row" style="flex-wrap: wrap;">
-                <span class="pf-row-confirm-text">{{ dmPendingImportCount }}件のキーをインポートします。現在保存されているデータは上書きされます（インポートするファイルに無いキーはそのまま残ります）。よろしいですか？</span>
-                <button type="button" class="pf-icon-btn pf-row-btn-ok" @click="dmConfirmImport">インポート実行</button>
-                <button type="button" class="pf-icon-btn" @click="dmCancelImport">取消</button>
+                <span class="pf-row-confirm-text">{{ t('dm_import_confirm', { n: dmPendingImportCount }) }}</span>
+                <button type="button" class="pf-icon-btn pf-row-btn-ok" @click="dmConfirmImport">{{ t('dm_import_confirm_btn') }}</button>
+                <button type="button" class="pf-icon-btn" @click="dmCancelImport">{{ t('record_cancel') }}</button>
             </div>
             <div v-if="!dmWipeConfirming">
-                <button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" @click="dmWipeConfirming = true">🗑️ 全データを削除</button>
+                <button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" @click="dmWipeConfirming = true">{{ t('dm_wipe_btn') }}</button>
             </div>
             <div v-else class="pf-row" style="flex-wrap: wrap;">
-                <span class="pf-row-confirm-text">すべてのプロフィール・所持アイテム・お気に入り・精霊ツリーの進捗など、このブラウザに保存されている全データを削除します。この操作は取り消せません。先にエクスポートしておくことをおすすめします。本当に削除しますか？</span>
-                <button type="button" class="pf-icon-btn pf-row-btn-danger" @click="dmConfirmWipe">完全に削除する</button>
-                <button type="button" class="pf-icon-btn" @click="dmWipeConfirming = false">取消</button>
+                <span class="pf-row-confirm-text">{{ t('dm_wipe_confirm') }}</span>
+                <button type="button" class="pf-icon-btn pf-row-btn-danger" @click="dmConfirmWipe">{{ t('dm_wipe_confirm_btn') }}</button>
+                <button type="button" class="pf-icon-btn" @click="dmWipeConfirming = false">{{ t('record_cancel') }}</button>
             </div>
             <p class="pf-hint">{{ dmStatus }}</p>
-            <button type="button" class="pf-close-btn" @click="dmCloseModal">閉じる</button>
+            <button type="button" class="pf-close-btn" @click="dmCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
 
@@ -2061,23 +2061,23 @@
     <!-- ═══ 📱 ホーム画面アイコンのカスタマイズ ═══ -->
     <div class="pf-modal-overlay" :class="{ 'is-visible': showIconModal }" @click.self="pfIconCloseModal">
         <div class="pf-modal-card">
-            <h3>🎨 ホーム画面アイコンをカスタマイズ</h3>
+            <h3>{{ t('pficon_title') }}</h3>
 
             <p class="pf-hint" style="margin-top:0;">
-                スマホの「ホーム画面に追加」をしたときのアイコンを、好きな絵文字や画像に変更できます。<br>
-                <b>追加する前に</b>設定してください。追加した後に変更しても、既に追加済みのアイコンは自動更新されません（変更したい場合は一度削除して追加し直してください）。
+                {{ t('pficon_hint1') }}<br>
+                <b>{{ t('pficon_hint2_strong') }}</b>{{ t('pficon_hint2') }}
             </p>
 
             <div style="display:flex; gap:8px; margin:14px 0;">
-                <button type="button" class="pf-icon-btn" style="flex:1; padding:8px;" :style="{ background: pfIconMode === 'emoji' ? 'var(--accent-orange)' : 'var(--input-bg)', color: pfIconMode === 'emoji' ? '#fff' : 'var(--text-gray)' }" @click="pfIconSetMode('emoji')">😀 絵文字</button>
-                <button type="button" class="pf-icon-btn" style="flex:1; padding:8px;" :style="{ background: pfIconMode === 'image' ? 'var(--accent-orange)' : 'var(--input-bg)', color: pfIconMode === 'image' ? '#fff' : 'var(--text-gray)' }" @click="pfIconSetMode('image')">🖼️ 画像</button>
+                <button type="button" class="pf-icon-btn" style="flex:1; padding:8px;" :style="{ background: pfIconMode === 'emoji' ? 'var(--accent-orange)' : 'var(--input-bg)', color: pfIconMode === 'emoji' ? '#fff' : 'var(--text-gray)' }" @click="pfIconSetMode('emoji')">{{ t('pficon_mode_emoji') }}</button>
+                <button type="button" class="pf-icon-btn" style="flex:1; padding:8px;" :style="{ background: pfIconMode === 'image' ? 'var(--accent-orange)' : 'var(--input-bg)', color: pfIconMode === 'image' ? '#fff' : 'var(--text-gray)' }" @click="pfIconSetMode('image')">{{ t('pficon_mode_image') }}</button>
             </div>
 
             <div v-show="pfIconMode === 'emoji'">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">絵文字</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">{{ t('pficon_section_emoji') }}</p>
                 <input type="text" maxlength="8" v-model="pfIconEmoji" @input="pfIconUpdatePreview"
                     style="font-size:28px; text-align:center; width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color); box-sizing:border-box;">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:10px 0 6px;">背景色</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:10px 0 6px;">{{ t('pficon_section_bgcolor') }}</p>
                 <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                     <button type="button" @click="pfIconPickSwatch('#FF9500')" style="width:32px; height:32px; border-radius:50%; background:#FF9500; border:2px solid transparent;"></button>
                     <button type="button" @click="pfIconPickSwatch('#007AFF')" style="width:32px; height:32px; border-radius:50%; background:#007AFF; border:2px solid transparent;"></button>
@@ -2092,22 +2092,22 @@
                     <button type="button" @click="pfIconPickSwatch('#32ADE6')" style="width:32px; height:32px; border-radius:50%; background:#32ADE6; border:2px solid transparent;"></button>
                     <button type="button" @click="pfIconPickSwatch('#48484A')" style="width:32px; height:32px; border-radius:50%; background:#48484A; border:2px solid transparent;"></button>
                 </div>
-                <p style="font-size:11.5px; color:var(--text-gray); margin:0 0 6px;">🎨 タップして好きな色を自由に選ぶこともできます</p>
+                <p style="font-size:11.5px; color:var(--text-gray); margin:0 0 6px;">{{ t('pficon_bgcolor_note') }}</p>
                 <input type="color" v-model="pfIconBgColor" @input="pfIconUpdatePreview" style="width:100%; height:40px; border:none; border-radius:8px; background:none;">
             </div>
 
             <div v-show="pfIconMode === 'image'">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">画像をアップロード</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">{{ t('pficon_section_upload') }}</p>
                 <input type="file" accept="image/*" @change="pfIconHandleFile">
             </div>
 
             <div style="display:flex; flex-direction:column; align-items:center; margin:18px 0;">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">プレビュー</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">{{ t('pficon_section_preview') }}</p>
                 <canvas id="iconPreviewCanvas" width="96" height="96" style="border-radius:22px; box-shadow:0 2px 8px rgba(0,0,0,0.15);"></canvas>
             </div>
 
-            <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box; padding:10px;" @click="pfIconSave">保存して適用</button>
-            <button type="button" class="pf-close-btn" @click="pfIconReset">デフォルトに戻す</button>
+            <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box; padding:10px;" @click="pfIconSave">{{ t('pficon_save') }}</button>
+            <button type="button" class="pf-close-btn" @click="pfIconReset">{{ t('pficon_reset') }}</button>
             <p style="text-align:center; font-size:12px; color:var(--text-gray); margin-top:10px;">{{ pfIconSaveStatus }}</p>
         </div>
     </div>
@@ -2126,20 +2126,20 @@
             <nav>
                 <!--
                 <a href="https://taipak5000.github.io/tai-nomacan-pro/" class="sidebar-nav-link">
-                    🕯️ ノマキャン計算機プロ
+                    {{ t('side_nomacan_pro_tool') }}
                 </a>
                 -->
                 <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
-                    📁 アイテム所持管理
+                    {{ t('side_item_tool') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-emote/" class="sidebar-nav-link">
-                    🎭 エモート所持率管理
+                    {{ t('side_emote_tool') }}
                 </a>
                 <a href="https://taipak5000.github.io/share/" class="sidebar-nav-link">
                     {{ t('side_share_tool') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-nomacan/" class="sidebar-nav-link">
-                    🕯️ ノマキャン計算機
+                    {{ t('side_nomacan_tool') }}
                 </a>
                 <a href="https://taipak5000.github.io/star-candle/" class="sidebar-nav-link">
                     {{ t('side_star_candle_tool') }}
@@ -2151,12 +2151,12 @@
                     {{ t('side_wings_tool') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link">
-                    🔄 データ引継ぎ
+                    {{ t('side_transfer_tool') }}
                 </a>
             </nav>
             <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
-                <div class="sidebar-section-label" style="margin-bottom:8px;">📱 ホーム画面アイコン</div>
-                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" @click="pfIconOpenModal(); showSidebar = false">🎨 アイコンを<br>カスタマイズ</button>
+                <div class="sidebar-section-label" style="margin-bottom:8px;">{{ t('side_icon_section_label') }}</div>
+                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" @click="pfIconOpenModal(); showSidebar = false">{{ t('side_icon_customize_btn') }}</button>
             </div>
         </aside>
 
@@ -2891,7 +2891,7 @@
             <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer">季節精霊 (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer">親愛なるファン・ゴッホへ (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/wiki/Dear_Van_Gogh" target="_blank" rel="noopener noreferrer">Dear Van Gogh (Sky Wiki 英語)</a>
         </span>
         <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
-            <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a>
+            <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer">{{ t('footer_settings_link') }}</a>
         </span>
     </footer>
 
@@ -3426,6 +3426,13 @@
             side_star_candle_tool: '🕯️ 星のキャンドル計算機',
             side_wings_tool: '🪽 羽トラッカー',
             side_share_tool: '📍 創作物管理ツール',
+            side_item_tool: '📁 アイテム所持管理',
+            side_emote_tool: '🎭 エモート所持率管理',
+            side_nomacan_tool: '🕯️ ノマキャン計算機',
+            side_nomacan_pro_tool: '🕯️ ノマキャン計算機プロ',
+            side_transfer_tool: '🔄 データ引継ぎ',
+            side_icon_section_label: '📱 ホーム画面アイコン',
+            side_icon_customize_btn: '🎨 アイコンをカスタマイズ',
 
             record_title: '🗂️ 記録の切り替え',
             record_bar_suffix: 'に切替中（タップで切替）',
@@ -3441,6 +3448,33 @@
             record_delete_confirm: '「{name}」を削除しますか？この記録の保存データも削除されます。',
             record_name_placeholder: '記録名',
             record_close: '閉じる',
+            record_color_title: 'アカウントカラー',
+            record_color_reset_title: 'カラーを初期値に戻す',
+
+            pfcur_label: '💰 所持通貨',
+            pfcur_toggle_open: '開く ▼',
+            pfcur_toggle_close: '閉じる ▲',
+            pfcur_candle: '🕯️ キャンドル',
+            pfcur_heart: '💗 ハート',
+            pfcur_ascended: '🕯️✨ 星のキャンドル',
+            pfcur_season: '🕯️🍂 シーズンキャンドル',
+            pfcur_gift_pass: '🎟️ ギフトパス',
+
+            dm_open_btn: '💾 データのバックアップ・復元・削除',
+            dm_title: '💾 データのバックアップ・復元・削除',
+            dm_hint: 'このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。',
+            dm_export_btn: '⬇️ データをエクスポート（ファイルに保存）',
+            dm_import_btn: '⬆️ ファイルからインポート',
+            dm_import_confirm: '{n}件のキーをインポートします。現在保存されているデータは上書きされます（インポートするファイルに無いキーはそのまま残ります）。よろしいですか？',
+            dm_import_confirm_btn: 'インポート実行',
+            dm_wipe_btn: '🗑️ 全データを削除',
+            dm_wipe_confirm: 'すべてのプロフィール・所持アイテム・お気に入り・精霊ツリーの進捗など、このブラウザに保存されている全データを削除します。この操作は取り消せません。先にエクスポートしておくことをおすすめします。本当に削除しますか？',
+            dm_wipe_confirm_btn: '完全に削除する',
+            dm_status_exported: '書き出しました（{n}件のキー）。',
+            dm_status_invalid_json: 'ファイルの読み込みに失敗しました（JSON形式ではありません）。',
+            dm_status_wrong_file: 'このツールで書き出したファイルではないようです。',
+            dm_status_imported: 'インポートしました。ページを再読み込みします…',
+            dm_status_wiped: '削除しました。ページを再読み込みします…',
 
             dash_title: '🗓️ 今日・今週・今月',
             dash_btn_title: '今日・今週・今月ダッシュボード',
@@ -3472,6 +3506,24 @@
             dash_next_update_label: '次回アップデート予定',
             dash_season_end_suffix: '終了まで',
             dash_season_error: 'シーズン情報が取得できませんでした',
+
+            pficon_title: '🎨 ホーム画面アイコンをカスタマイズ',
+            pficon_hint1: 'スマホの「ホーム画面に追加」をしたときのアイコンを、好きな絵文字や画像に変更できます。',
+            pficon_hint2_strong: '追加する前に',
+            pficon_hint2: '設定してください。追加した後に変更しても、既に追加済みのアイコンは自動更新されません（変更したい場合は一度削除して追加し直してください）。',
+            pficon_mode_emoji: '😀 絵文字',
+            pficon_mode_image: '🖼️ 画像',
+            pficon_section_emoji: '絵文字',
+            pficon_section_bgcolor: '背景色',
+            pficon_bgcolor_note: '🎨 タップして好きな色を自由に選ぶこともできます',
+            pficon_section_upload: '画像をアップロード',
+            pficon_section_preview: 'プレビュー',
+            pficon_save: '保存して適用',
+            pficon_reset: 'デフォルトに戻す',
+            pficon_status_select_image: '画像を選択してください',
+            pficon_status_save_failed: '保存に失敗しました(容量オーバーの可能性があります)',
+            pficon_status_saved: '✅ 保存しました。これでホーム画面に追加すると反映されます',
+            pficon_status_reset: 'デフォルトのアイコンに戻しました',
 
             fc_title: '🔮 精霊ツリー（4体横並び比較）',
             fc_close: '閉じる ▲',
@@ -3675,7 +3727,8 @@
 
             footer_disclaimer: 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。',
             footer_credit_pre: '作成・ご意見:',
-            footer_sources: '参考データ・画像引用元:'
+            footer_sources: '参考データ・画像引用元:',
+            footer_settings_link: '⚙️ 設定・更新情報・クレジット・プライバシーポリシー'
         },
         en: {
             app_title: '✨ Sky Spirit Companion Tracker',
@@ -3693,6 +3746,13 @@
             side_star_candle_tool: '🕯️ Star Candle Calculator',
             side_wings_tool: '🪽 Wing Tracker',
             side_share_tool: '📍 Creation Manager',
+            side_item_tool: '📁 Item Collection',
+            side_emote_tool: '🎭 Emote Collection',
+            side_nomacan_tool: '🕯️ Nomacan Calculator',
+            side_nomacan_pro_tool: '🕯️ Nomacan Calculator Pro',
+            side_transfer_tool: '🔄 Data Transfer',
+            side_icon_section_label: '📱 Home Screen Icon',
+            side_icon_customize_btn: '🎨 Customize Icon',
 
             record_title: '🗂️ Switch Records',
             record_bar_suffix: 'active (tap to switch)',
@@ -3708,6 +3768,51 @@
             record_delete_confirm: 'Delete "{name}"? This record\'s saved data will also be removed.',
             record_name_placeholder: 'Record name',
             record_close: 'Close',
+            record_color_title: 'Account Color',
+            record_color_reset_title: 'Reset color to default',
+
+            pfcur_label: '💰 Currency Owned',
+            pfcur_toggle_open: 'Open ▼',
+            pfcur_toggle_close: 'Close ▲',
+            pfcur_candle: '🕯️ Candles',
+            pfcur_heart: '💗 Hearts',
+            pfcur_ascended: '🕯️✨ Star Candles',
+            pfcur_season: '🕯️🍂 Season Candles',
+            pfcur_gift_pass: '🎟️ Gift Pass',
+
+            dm_open_btn: '💾 Data Backup / Restore / Delete',
+            dm_title: '💾 Data Backup / Restore / Delete',
+            dm_hint: 'Export, import, or delete data saved in this browser for the taipak5000.github.io family of tools (item, wings, companion, spirit-catalog, etc.) all at once. This applies to all profiles together.',
+            dm_export_btn: '⬇️ Export Data (save to file)',
+            dm_import_btn: '⬆️ Import from File',
+            dm_import_confirm: 'This will import {n} item(s). Currently saved data will be overwritten (items not in the imported file will be left as-is). Continue?',
+            dm_import_confirm_btn: 'Import',
+            dm_wipe_btn: '🗑️ Delete All Data',
+            dm_wipe_confirm: 'This will delete all data saved in this browser, including all profiles, owned items, favorites, and spirit tree progress. This action cannot be undone. We recommend exporting your data first. Are you sure you want to delete everything?',
+            dm_wipe_confirm_btn: 'Delete Permanently',
+            dm_status_exported: 'Exported ({n} keys).',
+            dm_status_invalid_json: 'Failed to read the file (not valid JSON).',
+            dm_status_wrong_file: 'This doesn\'t look like a file exported from this tool.',
+            dm_status_imported: 'Imported. Reloading the page…',
+            dm_status_wiped: 'Deleted. Reloading the page…',
+
+            pficon_title: '🎨 Customize Home Screen Icon',
+            pficon_hint1: 'Change the icon used when you "Add to Home Screen" on your phone to any emoji or image you like.',
+            pficon_hint2_strong: 'Before adding',
+            pficon_hint2: ', please set this up. Changing it after adding won\'t automatically update an icon that\'s already been added (if you want to change it, remove it once and add it again).',
+            pficon_mode_emoji: '😀 Emoji',
+            pficon_mode_image: '🖼️ Image',
+            pficon_section_emoji: 'Emoji',
+            pficon_section_bgcolor: 'Background Color',
+            pficon_bgcolor_note: '🎨 You can also tap to freely choose any color',
+            pficon_section_upload: 'Upload Image',
+            pficon_section_preview: 'Preview',
+            pficon_save: 'Save & Apply',
+            pficon_reset: 'Reset to Default',
+            pficon_status_select_image: 'Please select an image',
+            pficon_status_save_failed: 'Save failed (storage may be full)',
+            pficon_status_saved: '✅ Saved. This will apply the next time you add to your home screen',
+            pficon_status_reset: 'Reset to the default icon',
 
             fc_title: '🔮 Spirit Trees (4-way comparison)',
             fc_close: 'Close ▲',
@@ -3911,7 +4016,8 @@
 
             footer_disclaimer: 'This site is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
             footer_credit_pre: 'Made by / feedback:',
-            footer_sources: 'Reference data & image sources:'
+            footer_sources: 'Reference data & image sources:',
+            footer_settings_link: '⚙️ Settings / Update Notes / Credits / Privacy Policy'
         },
         'zh-TW': {
             app_title: '✨ Sky 精靈同行點數計算機',
@@ -3929,6 +4035,13 @@
             side_star_candle_tool: '🕯️ 星之蠟燭計算機',
             side_wings_tool: '🪽 羽翼追蹤器',
             side_share_tool: '📍 創作物管理工具',
+            side_item_tool: '📁 道具持有管理',
+            side_emote_tool: '🎭 動作持有率管理',
+            side_nomacan_tool: '🕯️ 一般蠟燭計算機',
+            side_nomacan_pro_tool: '🕯️ 一般蠟燭計算機 Pro',
+            side_transfer_tool: '🔄 資料轉移',
+            side_icon_section_label: '📱 主畫面圖示',
+            side_icon_customize_btn: '🎨 自訂圖示',
 
             record_title: '🗂️ 切換記錄',
             record_bar_suffix: '使用中（點按切換）',
@@ -3944,6 +4057,51 @@
             record_delete_confirm: '確定要刪除「{name}」嗎？此記錄的已儲存資料也會一併刪除。',
             record_name_placeholder: '記錄名稱',
             record_close: '關閉',
+            record_color_title: '帳號顏色',
+            record_color_reset_title: '將顏色重設為預設值',
+
+            pfcur_label: '💰 持有貨幣',
+            pfcur_toggle_open: '開啟 ▼',
+            pfcur_toggle_close: '關閉 ▲',
+            pfcur_candle: '🕯️ 蠟燭',
+            pfcur_heart: '💗 心',
+            pfcur_ascended: '🕯️✨ 星之蠟燭',
+            pfcur_season: '🕯️🍂 季節蠟燭',
+            pfcur_gift_pass: '🎟️ 禮物通行證',
+
+            dm_open_btn: '💾 資料備份・還原・刪除',
+            dm_title: '💾 資料備份・還原・刪除',
+            dm_hint: '可以將這個瀏覽器中儲存的 taipak5000.github.io 系列工具（item・wings・companion・spirit-catalog 等）的資料一次匯出・匯入・刪除。所有記錄都會一併處理。',
+            dm_export_btn: '⬇️ 匯出資料（儲存為檔案）',
+            dm_import_btn: '⬆️ 從檔案匯入',
+            dm_import_confirm: '將匯入 {n} 筆資料項目。目前已儲存的資料將被覆蓋（匯入檔案中沒有的項目會保留原樣）。確定要繼續嗎？',
+            dm_import_confirm_btn: '執行匯入',
+            dm_wipe_btn: '🗑️ 刪除所有資料',
+            dm_wipe_confirm: '將刪除這個瀏覽器中儲存的所有資料，包括所有記錄・持有物品・我的最愛・精靈樹進度等。此操作無法復原。建議先進行匯出。真的要刪除嗎？',
+            dm_wipe_confirm_btn: '永久刪除',
+            dm_status_exported: '已匯出（{n} 筆資料）。',
+            dm_status_invalid_json: '檔案讀取失敗（不是 JSON 格式）。',
+            dm_status_wrong_file: '這似乎不是由本工具匯出的檔案。',
+            dm_status_imported: '匯入完成。即將重新載入頁面…',
+            dm_status_wiped: '刪除完成。即將重新載入頁面…',
+
+            pficon_title: '🎨 自訂主畫面圖示',
+            pficon_hint1: '可以將手機「加入主畫面」時使用的圖示，改成自己喜歡的表情符號或圖片。',
+            pficon_hint2_strong: '加入之前',
+            pficon_hint2: '請先進行設定。加入之後才變更的話，已加入的圖示不會自動更新（如果想變更，請先刪除後再重新加入）。',
+            pficon_mode_emoji: '😀 表情符號',
+            pficon_mode_image: '🖼️ 圖片',
+            pficon_section_emoji: '表情符號',
+            pficon_section_bgcolor: '背景顏色',
+            pficon_bgcolor_note: '🎨 也可以點按自由選擇喜歡的顏色',
+            pficon_section_upload: '上傳圖片',
+            pficon_section_preview: '預覽',
+            pficon_save: '儲存並套用',
+            pficon_reset: '重設為預設值',
+            pficon_status_select_image: '請選擇圖片',
+            pficon_status_save_failed: '儲存失敗（可能是容量已滿）',
+            pficon_status_saved: '✅ 已儲存。加入主畫面時將會套用此設定',
+            pficon_status_reset: '已重設為預設圖示',
 
             fc_title: '🔮 精靈樹（4隻並排比較）',
             fc_close: '關閉 ▲',
@@ -4147,7 +4305,8 @@
 
             footer_disclaimer: '本網站為《Sky：光・遇》的非官方粉絲網站，thatgamecompany 概不參與。',
             footer_credit_pre: '製作・意見回饋:',
-            footer_sources: '參考資料・圖片引用來源:'
+            footer_sources: '參考資料・圖片引用來源:',
+            footer_settings_link: '⚙️ 設定・更新資訊・製作名單・隱私權政策'
         },
         ko: {
             app_title: '✨ Sky 정령 동행 포인트 계산기',
@@ -4165,6 +4324,13 @@
             side_star_candle_tool: '🕯️ 별의 초 계산기',
             side_wings_tool: '🪽 날개 트래커',
             side_share_tool: '📍 창작물 관리 도구',
+            side_item_tool: '📁 아이템 보유 관리',
+            side_emote_tool: '🎭 감정표현 보유율 관리',
+            side_nomacan_tool: '🕯️ 일반 초 계산기',
+            side_nomacan_pro_tool: '🕯️ 일반 초 계산기 Pro',
+            side_transfer_tool: '🔄 데이터 이전',
+            side_icon_section_label: '📱 홈 화면 아이콘',
+            side_icon_customize_btn: '🎨 아이콘 커스터마이즈',
 
             record_title: '🗂️ 기록 전환',
             record_bar_suffix: '전환 중 (탭하여 전환)',
@@ -4180,6 +4346,51 @@
             record_delete_confirm: '「{name}」을(를) 삭제하시겠습니까? 이 기록의 저장된 데이터도 삭제됩니다.',
             record_name_placeholder: '기록 이름',
             record_close: '닫기',
+            record_color_title: '계정 색상',
+            record_color_reset_title: '색상을 기본값으로 되돌리기',
+
+            pfcur_label: '💰 보유 재화',
+            pfcur_toggle_open: '열기 ▼',
+            pfcur_toggle_close: '닫기 ▲',
+            pfcur_candle: '🕯️ 초',
+            pfcur_heart: '💗 하트',
+            pfcur_ascended: '🕯️✨ 별의 초',
+            pfcur_season: '🕯️🍂 시즌 초',
+            pfcur_gift_pass: '🎟️ 기프트 패스',
+
+            dm_open_btn: '💾 데이터 백업・복원・삭제',
+            dm_title: '💾 데이터 백업・복원・삭제',
+            dm_hint: '이 브라우저에 저장된 taipak5000.github.io 계열 도구(item・wings・companion・spirit-catalog 등)의 데이터를 한꺼번에 내보내기・가져오기・삭제할 수 있습니다. 모든 기록이 함께 적용됩니다.',
+            dm_export_btn: '⬇️ 데이터 내보내기(파일로 저장)',
+            dm_import_btn: '⬆️ 파일에서 가져오기',
+            dm_import_confirm: '{n}개의 항목을 가져옵니다. 현재 저장된 데이터는 덮어쓰기됩니다(가져올 파일에 없는 항목은 그대로 유지됩니다). 계속하시겠습니까?',
+            dm_import_confirm_btn: '가져오기 실행',
+            dm_wipe_btn: '🗑️ 모든 데이터 삭제',
+            dm_wipe_confirm: '모든 프로필・보유 아이템・즐겨찾기・정령 트리 진행 상황 등 이 브라우저에 저장된 모든 데이터를 삭제합니다. 이 작업은 되돌릴 수 없습니다. 먼저 내보내기를 해두는 것을 권장합니다. 정말로 삭제하시겠습니까?',
+            dm_wipe_confirm_btn: '완전히 삭제',
+            dm_status_exported: '내보냈습니다({n}개 항목).',
+            dm_status_invalid_json: '파일을 읽는 데 실패했습니다(JSON 형식이 아닙니다).',
+            dm_status_wrong_file: '이 도구에서 내보낸 파일이 아닌 것 같습니다.',
+            dm_status_imported: '가져왔습니다. 페이지를 새로고침합니다…',
+            dm_status_wiped: '삭제했습니다. 페이지를 새로고침합니다…',
+
+            pficon_title: '🎨 홈 화면 아이콘 커스터마이즈',
+            pficon_hint1: '스마트폰의 "홈 화면에 추가"를 했을 때의 아이콘을, 원하는 이모지나 이미지로 변경할 수 있습니다.',
+            pficon_hint2_strong: '추가하기 전에',
+            pficon_hint2: ' 설정해 주세요. 추가한 후에 변경해도 이미 추가된 아이콘은 자동으로 업데이트되지 않습니다(변경하고 싶다면 한 번 삭제한 후 다시 추가해 주세요).',
+            pficon_mode_emoji: '😀 이모지',
+            pficon_mode_image: '🖼️ 이미지',
+            pficon_section_emoji: '이모지',
+            pficon_section_bgcolor: '배경색',
+            pficon_bgcolor_note: '🎨 탭하여 원하는 색상을 자유롭게 선택할 수도 있습니다',
+            pficon_section_upload: '이미지 업로드',
+            pficon_section_preview: '미리보기',
+            pficon_save: '저장하고 적용',
+            pficon_reset: '기본값으로 되돌리기',
+            pficon_status_select_image: '이미지를 선택해 주세요',
+            pficon_status_save_failed: '저장에 실패했습니다(용량 초과일 수 있습니다)',
+            pficon_status_saved: '✅ 저장했습니다. 이제 홈 화면에 추가하면 반영됩니다',
+            pficon_status_reset: '기본 아이콘으로 되돌렸습니다',
 
             fc_title: '🔮 정령 트리 (4마리 비교)',
             fc_close: '닫기 ▲',
@@ -4383,7 +4594,8 @@
 
             footer_disclaimer: '이 사이트는 Sky: Children of the Light의 비공식 팬 사이트입니다. thatgamecompany는 전혀 관여하지 않습니다.',
             footer_credit_pre: '제작・의견:',
-            footer_sources: '참고 데이터・이미지 출처:'
+            footer_sources: '참고 데이터・이미지 출처:',
+            footer_settings_link: '⚙️ 설정・업데이트 정보・크레딧・개인정보처리방침'
         }
     };
 
@@ -5664,7 +5876,7 @@
                 a.click();
                 a.remove();
                 URL.revokeObjectURL(url);
-                dmStatus.value = `書き出しました（${Object.keys(dump).length}件のキー）。`;
+                dmStatus.value = t('dm_status_exported', { n: Object.keys(dump).length });
             };
 
             const dmImportFileSelected = (event) => {
@@ -5675,12 +5887,12 @@
                 reader.onload = () => {
                     let parsed;
                     try { parsed = JSON.parse(reader.result); } catch (e) {
-                        dmStatus.value = 'ファイルの読み込みに失敗しました（JSON形式ではありません）。';
+                        dmStatus.value = t('dm_status_invalid_json');
                         return;
                     }
                     const data = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : null;
                     if (!data) {
-                        dmStatus.value = 'このツールで書き出したファイルではないようです。';
+                        dmStatus.value = t('dm_status_wrong_file');
                         return;
                     }
                     dmPendingImportData = data;
@@ -5699,12 +5911,12 @@
                 });
                 dmPendingImportData = null;
                 dmPendingImportCount.value = null;
-                dmStatus.value = 'インポートしました。ページを再読み込みします…';
+                dmStatus.value = t('dm_status_imported');
                 setTimeout(() => location.reload(), 800);
             };
             const dmConfirmWipe = () => {
                 localStorage.clear();
-                dmStatus.value = '削除しました。ページを再読み込みします…';
+                dmStatus.value = t('dm_status_wiped');
                 setTimeout(() => location.reload(), 800);
             };
 
@@ -5823,7 +6035,7 @@
             };
             const pfIconSave = () => {
                 if (pfIconMode.value === 'image' && !pfIconUploadedImgEl) {
-                    pfIconSaveStatus.value = '画像を選択してください';
+                    pfIconSaveStatus.value = t('pficon_status_select_image');
                     return;
                 }
                 const dataUrl = pfIconGenerateDataUrl(512);
@@ -5835,11 +6047,11 @@
                 try {
                     localStorage.setItem(PF_ICON_STORAGE_KEY, JSON.stringify(state));
                 } catch (e) {
-                    pfIconSaveStatus.value = '保存に失敗しました(容量オーバーの可能性があります)';
+                    pfIconSaveStatus.value = t('pficon_status_save_failed');
                     return;
                 }
                 pfIconApply(dataUrl);
-                pfIconSaveStatus.value = '✅ 保存しました。これでホーム画面に追加すると反映されます';
+                pfIconSaveStatus.value = t('pficon_status_saved');
             };
             const pfIconReset = () => {
                 localStorage.removeItem(PF_ICON_STORAGE_KEY);
@@ -5851,7 +6063,7 @@
                 pfIconEmoji.value = '✨';
                 pfIconBgColor.value = '#FF9500';
                 pfIconSetMode('emoji');
-                pfIconSaveStatus.value = 'デフォルトのアイコンに戻しました';
+                pfIconSaveStatus.value = t('pficon_status_reset');
             };
             const pfIconApplyFromStorage = () => {
                 let raw;
