@@ -1499,6 +1499,20 @@
             font-size: 14px;
             cursor: pointer;
         }
+        /* ⌨️ 表示設定モーダル内のキーボードショートカット一覧に使うキー表示バッジ */
+        .settings-key {
+            flex-shrink: 0;
+            min-width: 30px;
+            text-align: center;
+            font-weight: 700;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 2px 6px;
+            color: var(--text-color);
+        }
         .pf-row-input {
             flex: 1;
             background: var(--input-bg);
@@ -1876,6 +1890,7 @@
                     <span v-if="isDarkMode">{{ t('theme_dark') }}</span>
                     <span v-else>{{ t('theme_light') }}</span>
                 </button>
+                <button class="theme-toggle-btn" @click="settingsOpenModal" :title="t('settings_title')" :aria-label="t('settings_title')">⚙️</button>
             </div>
         </div>
         <div class="subtitle">{{ t('app_subtitle') }}</div>
@@ -2109,6 +2124,48 @@
             <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box; padding:10px;" @click="pfIconSave">{{ t('pficon_save') }}</button>
             <button type="button" class="pf-close-btn" @click="pfIconReset">{{ t('pficon_reset') }}</button>
             <p style="text-align:center; font-size:12px; color:var(--text-gray); margin-top:10px;">{{ pfIconSaveStatus }}</p>
+        </div>
+    </div>
+
+    <!-- ═══ ⚙️ 表示設定（ダークモード・キーボードショートカット） ═══ -->
+    <div class="pf-modal-overlay" :class="{ 'is-visible': showSettingsModal }" @click.self="settingsCloseModal">
+        <div class="pf-modal-card">
+            <h3>{{ t('settings_title') }}</h3>
+
+            <div class="dash-section">
+                <p class="dash-section-label">{{ t('settings_display_label') }}</p>
+                <div class="dash-row" style="align-items:center;">
+                    <span class="dash-row-icon">🌙</span>
+                    <span class="dash-row-text">{{ t('settings_dark_mode_label') }}</span>
+                    <button type="button" class="theme-toggle-btn" @click="toggleTheme">
+                        <span v-if="isDarkMode">{{ t('theme_dark') }}</span>
+                        <span v-else>{{ t('theme_light') }}</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="dash-section">
+                <p class="dash-section-label">{{ t('settings_shortcuts_label') }}</p>
+                <div class="dash-row" style="align-items:center;">
+                    <span class="dash-row-icon">⌨️</span>
+                    <span class="dash-row-text">{{ t('settings_shortcuts_enable_label') }}</span>
+                    <input type="checkbox" v-model="shortcutsEnabled" @change="settingsSaveShortcutsPref" style="width:19px; height:19px; flex-shrink:0; cursor:pointer;">
+                </div>
+                <div class="dash-row">
+                    <span class="settings-key">?</span>
+                    <span class="dash-row-text">{{ t('settings_shortcut_open') }}</span>
+                </div>
+                <div class="dash-row">
+                    <span class="settings-key">D</span>
+                    <span class="dash-row-text">{{ t('settings_shortcut_theme') }}</span>
+                </div>
+                <div class="dash-row">
+                    <span class="settings-key">Esc</span>
+                    <span class="dash-row-text">{{ t('settings_shortcut_escape') }}</span>
+                </div>
+            </div>
+
+            <button type="button" class="pf-close-btn" @click="settingsCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
 
@@ -3434,6 +3491,15 @@
             side_icon_section_label: '📱 ホーム画面アイコン',
             side_icon_customize_btn: '🎨 アイコンをカスタマイズ',
 
+            settings_title: '⚙️ 表示設定',
+            settings_display_label: '🌙 表示',
+            settings_dark_mode_label: 'ダークモード',
+            settings_shortcuts_label: '⌨️ キーボードショートカット',
+            settings_shortcuts_enable_label: 'ショートカットを有効にする',
+            settings_shortcut_open: 'この設定を開く',
+            settings_shortcut_theme: 'ダークモード切替',
+            settings_shortcut_escape: '開いているウィンドウを閉じる',
+
             record_title: '🗂️ 記録の切り替え',
             record_bar_suffix: 'に切替中（タップで切替）',
             record_hint: '予測用・実績用の記録や、複数アカウントの使い分けに便利です',
@@ -3753,6 +3819,15 @@
             side_transfer_tool: '🔄 Data Transfer',
             side_icon_section_label: '📱 Home Screen Icon',
             side_icon_customize_btn: '🎨 Customize Icon',
+
+            settings_title: '⚙️ Display Settings',
+            settings_display_label: '🌙 Display',
+            settings_dark_mode_label: 'Dark Mode',
+            settings_shortcuts_label: '⌨️ Keyboard Shortcuts',
+            settings_shortcuts_enable_label: 'Enable keyboard shortcuts',
+            settings_shortcut_open: 'Open this settings panel',
+            settings_shortcut_theme: 'Toggle dark mode',
+            settings_shortcut_escape: 'Close the open window',
 
             record_title: '🗂️ Switch Records',
             record_bar_suffix: 'active (tap to switch)',
@@ -4074,6 +4149,15 @@
             side_icon_section_label: '📱 主畫面圖示',
             side_icon_customize_btn: '🎨 自訂圖示',
 
+            settings_title: '⚙️ 顯示設定',
+            settings_display_label: '🌙 顯示',
+            settings_dark_mode_label: '深色模式',
+            settings_shortcuts_label: '⌨️ 鍵盤快速鍵',
+            settings_shortcuts_enable_label: '啟用鍵盤快速鍵',
+            settings_shortcut_open: '開啟此設定面板',
+            settings_shortcut_theme: '切換深色模式',
+            settings_shortcut_escape: '關閉目前開啟的視窗',
+
             record_title: '🗂️ 切換記錄',
             record_bar_suffix: '使用中（點按切換）',
             record_hint: '適合用來區分預測用與實際用的記錄，或管理多個帳號',
@@ -4394,6 +4478,15 @@
             side_icon_section_label: '📱 홈 화면 아이콘',
             side_icon_customize_btn: '🎨 아이콘 커스터마이즈',
 
+            settings_title: '⚙️ 화면 설정',
+            settings_display_label: '🌙 화면',
+            settings_dark_mode_label: '다크 모드',
+            settings_shortcuts_label: '⌨️ 키보드 단축키',
+            settings_shortcuts_enable_label: '키보드 단축키 사용',
+            settings_shortcut_open: '이 설정 패널 열기',
+            settings_shortcut_theme: '다크 모드 전환',
+            settings_shortcut_escape: '열려 있는 창 닫기',
+
             record_title: '🗂️ 기록 전환',
             record_bar_suffix: '전환 중 (탭하여 전환)',
             record_hint: '예측용・실적용 기록 구분이나 여러 계정 관리에 편리합니다',
@@ -4700,6 +4793,12 @@
             const showSidebar = ref(false);
             const showSharedTools = ref(false); // 📌 メモ・計算欄はデフォルトで折りたたみ
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
+
+            // ⚙️ 表示設定モーダル（ダークモードの第二の切替口・キーボードショートカットの有効/無効とヘルプ）。
+            // taipak5000.github.io 配下の全ツール共通のキー（sky_shortcuts_enabled）で保存するため、
+            // 記録別のキーには保存しない。未設定時は有効（true）扱い。
+            const showSettingsModal = ref(false);
+            const shortcutsEnabled = ref(true);
 
             // ⏳ ヘッダーに表示するシーズン残り時間（1秒ごとに更新）
             const nowForCountdown = ref(new Date());
@@ -5437,6 +5536,26 @@
                 } catch (e) { /* プライベートブラウジング等でlocalStorageが使えない場合も表示は継続する */ }
             };
 
+            // ⚙️ 表示設定モーダルの開閉
+            const settingsOpenModal = () => { showSettingsModal.value = true; };
+            const settingsCloseModal = () => { showSettingsModal.value = false; };
+
+            // ⌨️ キーボードショートカット（?・d・Esc）が有効かどうかを、その都度localStorageから
+            // 直接判定するヘルパー。他タブ・他サイトでの変更もすぐ反映されるよう、reactiveなrefの
+            // 値をキャッシュせずに毎回読み直す。未設定（null）の場合は有効（true）扱い。
+            const skyShortcutsEnabled = () => {
+                try {
+                    const v = localStorage.getItem('sky_shortcuts_enabled');
+                    return v === null ? true : v === '1';
+                } catch (e) { return true; }
+            };
+            // ⌨️ 表示設定モーダル内のチェックボックス変更時に、選択結果をlocalStorageへ保存する
+            const settingsSaveShortcutsPref = () => {
+                try {
+                    localStorage.setItem('sky_shortcuts_enabled', shortcutsEnabled.value ? '1' : '0');
+                } catch (e) { /* プライベートブラウジング等でlocalStorageが使えない場合も表示は継続する */ }
+            };
+
             // 🌐 UI文言の翻訳ヘルパー。{n}や{date}のようなプレースホルダーは第2引数で置換できる
             const t = (key, vars) => {
                 let str = (UI_TEXT[currentLang.value] && UI_TEXT[currentLang.value][key] !== undefined)
@@ -5788,6 +5907,9 @@
                     if (SUPPORTED_LANGS.includes(savedLang)) currentLang.value = savedLang;
                 } catch (e) { /* 未設定・利用不可の場合は既定の 'ja' のまま */ }
                 applyLangToDOM();
+
+                // ⌨️ キーボードショートカットの有効/無効（表示設定モーダルのチェックボックス用）を復元
+                shortcutsEnabled.value = skyShortcutsEnabled();
 
                 // 🗂️ 記録（データ）一覧を復元してから、アクティブな記録のデータを読み込む
                 loadRecordsMeta();
@@ -6203,6 +6325,49 @@
                 deleteRecord(record.id);
             };
 
+            // ⌨️ Escキーで「今開いている一番手前のモーダル」を閉じる。開いているモーダルを優先度順に
+            // チェックする。プロフィールモーダル内で記録の名前変更・削除確認中（pfEditingId／
+            // pfDeletingIdがセット済み）の場合は、モーダルごと閉じてしまうと入力中のテキストが
+            // 予期せず失われるため、まずその行編集状態だけをキャンセルする（pfCancelRowStateと同じ
+            // 挙動）。この判定のおかげで、既存の入力欄側 @keyup.esc="pfCancelRowState" と二重に
+            // 発火しても副作用はない（後から発火するkeyupは既にnullな値へ再代入するだけ）。
+            const closeTopmostOpenModal = () => {
+                if (showSettingsModal.value) { settingsCloseModal(); return; }
+                if (showIconModal.value) { pfIconCloseModal(); return; }
+                if (dashOpen.value) { pfDashClose(); return; }
+                if (showDmModal.value) { dmCloseModal(); return; }
+                if (showProfileModal.value) {
+                    if (pfEditingId.value !== null || pfDeletingId.value !== null) {
+                        pfCancelRowState();
+                    } else {
+                        pfCloseModal();
+                    }
+                    return;
+                }
+            };
+
+            // ⌨️ 全ツール共通のキーボードショートカット（?＝表示設定を開く／d,D＝ダークモード切替／
+            // Esc＝開いているモーダルを閉じる）。Escはテキスト入力中でも常に有効（ダイアログを閉じる
+            // のはユーザーの期待に沿うため）。?とdは、テキスト入力中は通常の文字入力として使えるよう
+            // ガードする。
+            const handleGlobalKeydown = (e) => {
+                if (e.repeat) return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                const tgt = e.target;
+                const isTyping = tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable);
+
+                if (e.key === 'Escape') {
+                    closeTopmostOpenModal();
+                    return;
+                }
+
+                if (isTyping) return;
+                if (!skyShortcutsEnabled()) return;
+
+                if (e.key === '?') { e.preventDefault(); settingsOpenModal(); return; }
+                if (e.key === 'd' || e.key === 'D') { e.preventDefault(); toggleTheme(); return; }
+            };
+
             const onStorageChange = (e) => {
                 if (e.key === PROFILES_KEY) {
                     const rec = records.value.find(r => r.id === activeRecordId.value);
@@ -6213,10 +6378,12 @@
                 load();
                 seasonCountdownTimer = setInterval(() => { nowForCountdown.value = new Date(); }, 1000);
                 window.addEventListener('storage', onStorageChange);
+                document.addEventListener('keydown', handleGlobalKeydown);
             });
             onUnmounted(() => {
                 if (seasonCountdownTimer) clearInterval(seasonCountdownTimer);
                 window.removeEventListener('storage', onStorageChange);
+                document.removeEventListener('keydown', handleGlobalKeydown);
             });
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
@@ -6256,7 +6423,8 @@
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
                 currencyCandle, currencyHeart, currencyAscended, currencyGiftPass,
-                saveCurrencyCandleHeart, saveCurrencyExtra
+                saveCurrencyCandleHeart, saveCurrencyExtra,
+                showSettingsModal, settingsOpenModal, settingsCloseModal, shortcutsEnabled, settingsSaveShortcutsPref
             };
         }
     }).mount('#app');
