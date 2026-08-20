@@ -2204,6 +2204,13 @@
                 </div>
             </div>
 
+            <div class="dash-section">
+                <p class="dash-section-label">{{ t('side_icon_section_label') }}</p>
+                <button type="button" class="dash-row" style="width:100%; box-sizing:border-box; border:none; cursor:pointer; text-align:left; font:inherit; color:inherit; align-items:center;" @click="settingsCloseModal(); pfIconOpenModal();">
+                    <span class="dash-row-text">{{ t('side_icon_customize_btn') }}</span>
+                </button>
+            </div>
+
             <button type="button" class="pf-close-btn" @click="settingsCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
@@ -2997,9 +3004,9 @@
             <span class="site-dock-icon">🗂️</span>
             <span class="site-dock-label">{{ t('dock_profile') }}</span>
         </button>
-        <button type="button" @click="pfIconOpenModal">
-            <span class="site-dock-icon">🎨</span>
-            <span class="site-dock-label">{{ t('dock_customize') }}</span>
+        <button type="button" @click="pfDashOpen">
+            <span class="site-dock-icon">🗓️</span>
+            <span class="site-dock-label">{{ t('dock_dashboard') }}</span>
         </button>
         <button type="button" @click="showSidebar = true">
             <span class="site-dock-icon">☰</span>
@@ -3551,7 +3558,7 @@
             side_icon_customize_btn: '🎨 アイコンをカスタマイズ',
 
             dock_profile: 'プロフィール',
-            dock_customize: 'カスタマイズ',
+            dock_dashboard: 'ダッシュボード',
             dock_tools: '他のツール',
             dock_settings: '表示設定',
 
@@ -3885,7 +3892,7 @@
             side_icon_customize_btn: '🎨 Customize Icon',
 
             dock_profile: 'Profile',
-            dock_customize: 'Customize',
+            dock_dashboard: 'Dashboard',
             dock_tools: 'More Tools',
             dock_settings: 'Settings',
 
@@ -4219,7 +4226,7 @@
             side_icon_customize_btn: '🎨 自訂圖示',
 
             dock_profile: '個人檔案',
-            dock_customize: '自訂圖示',
+            dock_dashboard: '儀表板',
             dock_tools: '其他工具',
             dock_settings: '顯示設定',
 
@@ -4553,7 +4560,7 @@
             side_icon_customize_btn: '🎨 아이콘 커스터마이즈',
 
             dock_profile: '프로필',
-            dock_customize: '커스터마이즈',
+            dock_dashboard: '대시보드',
             dock_tools: '다른 도구',
             dock_settings: '화면 설정',
 
