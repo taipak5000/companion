@@ -1550,7 +1550,8 @@
         }
         .site-dock button:active { background: var(--input-bg); }
         .site-dock .site-dock-icon { font-size: 20px; line-height: 1; }
-        .site-dock .site-dock-label { font-size: 10px; font-weight: 700; color: var(--text-gray); }
+        .site-dock .site-dock-label { font-size: 10px; font-weight: 700; color: var(--text-gray);
+            max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .pf-row-input {
             flex: 1;
@@ -2170,6 +2171,16 @@
     <div class="pf-modal-overlay" :class="{ 'is-visible': showSettingsModal }" @click.self="settingsCloseModal">
         <div class="pf-modal-card">
             <h3>{{ t('settings_title') }}</h3>
+
+            <div class="dash-section">
+                <p class="dash-section-label">{{ t('settings_lang_label') }}</p>
+                <div class="preset-group">
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ja'}" @click="setLang('ja')">日本語</button>
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'en'}" @click="setLang('en')">English</button>
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'zh-TW'}" @click="setLang('zh-TW')">繁體中文</button>
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ko'}" @click="setLang('ko')">한국어</button>
+                </div>
+            </div>
 
             <div class="dash-section">
                 <p class="dash-section-label">{{ t('settings_display_label') }}</p>
@@ -3002,7 +3013,7 @@
     <nav class="site-dock" aria-label="クイックメニュー">
         <button type="button" @click="pfOpenModal">
             <span class="site-dock-icon">🗂️</span>
-            <span class="site-dock-label">{{ t('dock_profile') }}</span>
+            <span class="site-dock-label">{{ activeRecordName || t('dock_profile') }}</span>
         </button>
         <button type="button" @click="pfDashOpen">
             <span class="site-dock-icon">🗓️</span>
@@ -3563,6 +3574,7 @@
             dock_settings: '表示設定',
 
             settings_title: '⚙️ 表示設定',
+            settings_lang_label: '🌐 言語',
             settings_display_label: '🌙 表示',
             settings_dark_mode_label: 'ダークモード',
             settings_shortcuts_label: '⌨️ キーボードショートカット',
@@ -3897,6 +3909,7 @@
             dock_settings: 'Settings',
 
             settings_title: '⚙️ Display Settings',
+            settings_lang_label: '🌐 Language',
             settings_display_label: '🌙 Display',
             settings_dark_mode_label: 'Dark Mode',
             settings_shortcuts_label: '⌨️ Keyboard Shortcuts',
@@ -4231,6 +4244,7 @@
             dock_settings: '顯示設定',
 
             settings_title: '⚙️ 顯示設定',
+            settings_lang_label: '🌐 語言',
             settings_display_label: '🌙 顯示',
             settings_dark_mode_label: '深色模式',
             settings_shortcuts_label: '⌨️ 鍵盤快速鍵',
@@ -4565,6 +4579,7 @@
             dock_settings: '화면 설정',
 
             settings_title: '⚙️ 화면 설정',
+            settings_lang_label: '🌐 언어',
             settings_display_label: '🌙 화면',
             settings_dark_mode_label: '다크 모드',
             settings_shortcuts_label: '⌨️ 키보드 단축키',
