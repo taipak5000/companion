@@ -2173,16 +2173,6 @@
             <h3>{{ t('settings_title') }}</h3>
 
             <div class="dash-section">
-                <p class="dash-section-label">{{ t('settings_lang_label') }}</p>
-                <div class="preset-group">
-                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ja'}" @click="setLang('ja')">日本語</button>
-                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'en'}" @click="setLang('en')">English</button>
-                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'zh-TW'}" @click="setLang('zh-TW')">繁體中文</button>
-                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ko'}" @click="setLang('ko')">한국어</button>
-                </div>
-            </div>
-
-            <div class="dash-section">
                 <p class="dash-section-label">{{ t('settings_display_label') }}</p>
                 <div class="dash-row" style="align-items:center;">
                     <span class="dash-row-icon">🌙</span>
@@ -2220,6 +2210,16 @@
                 <button type="button" class="dash-row" style="width:100%; box-sizing:border-box; border:none; cursor:pointer; text-align:left; font:inherit; color:inherit; align-items:center;" @click="settingsCloseModal(); pfIconOpenModal();">
                     <span class="dash-row-text">{{ t('side_icon_customize_btn') }}</span>
                 </button>
+            </div>
+
+            <div class="dash-section">
+                <p class="dash-section-label">{{ t('settings_lang_label') }}</p>
+                <div class="preset-group">
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ja'}" @click="setLang('ja')">日本語</button>
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'en'}" @click="setLang('en')">English</button>
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'zh-TW'}" @click="setLang('zh-TW')">繁體中文</button>
+                    <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ko'}" @click="setLang('ko')">한국어</button>
+                </div>
             </div>
 
             <button type="button" class="pf-close-btn" @click="settingsCloseModal">{{ t('record_close') }}</button>
