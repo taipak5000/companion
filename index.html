@@ -2071,7 +2071,7 @@
                         <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix') }}<span class="dash-shard-times"><span v-for="(o, idx) in dashShardOccurrences" :key="idx"><span class="dash-shard-time" :class="{ past: o.past }">{{ o.text }}</span><span v-if="idx < dashShardOccurrences.length - 1"> / </span></span></span> <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashShard && !dashShard.hasShard">
-                        <span class="dash-row-icon">🌑</span><span class="dash-row-text">{{ t('dash_shard_none') }}<span class="dash-countdown" v-if="dashNextShardCountdown">{{ t('dash_next_in_prefix') }} {{ dashNextShardCountdown }}</span></span>
+                        <span class="dash-row-icon">🌑</span><span class="dash-row-text">{{ t('dash_shard_none') }} <span class="dash-countdown" v-if="dashNextShardCountdown">{{ t('dash_next_in_prefix') }} {{ dashNextShardCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashCandleRealmLabel">
                         <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b> <span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
@@ -2423,7 +2423,7 @@
                         {{ t('calc_advice_ok') }}
                     </template>
                     <template v-else>
-                        {{ t('calc_advice_pace_pre') }} <strong>{{ candlesPerDay }}{{ t('calc_unit') }}</strong> {{ t('calc_advice_pace_mid') }} <strong>{{ candleTargetDateText }}</strong> {{ t('calc_advice_pace_post') }}
+                        {{ t('calc_advice_pace_pre') }} <strong>{{ candlesPerDay }}{{ t('calc_unit') }}</strong> {{ t('calc_advice_pace_mid') }} <strong>{{ candleTargetDateText }}</strong>{{ t('calc_advice_pace_post') }}
                     </template>
                 </div>
 
@@ -3773,8 +3773,8 @@
             calc_day_unit: '日',
             calc_advice_ok: '🎉 今の所持数で、全精霊ツリーの残りコストをまかなえます！',
             calc_advice_pace_pre: '💡 1日',
-            calc_advice_pace_mid: '本 ペースなら、',
-            calc_advice_pace_post: '頃に必要数へ到達する見込みです。',
+            calc_advice_pace_mid: 'ペースなら、',
+            calc_advice_pace_post: ' 頃に必要数へ到達する見込みです。',
 
             comp_title: '🏁 魔法を除くコンプリート診断（4体分・シーズン終了 {date}まで）',
             comp_ok_zero: '🎉 今の所持数・連れ歩き日数で、魔法を除くコンプリート条件はすでに満たせています！',
@@ -3893,7 +3893,7 @@
             tree_remaining_mid: '本（配った:',
             tree_remaining_excluded: '・除外:',
             tree_remaining_unit: '本',
-            tree_remaining_post: '本）',
+            tree_remaining_post: '）',
             tree_edit_close: '編集を閉じる ▲',
             tree_edit_open: '🕯️ コストを編集 ▼',
             tree_pass_heart_label: 'ハートとの交換',
@@ -4450,7 +4450,7 @@
             calc_advice_ok: '🎉 以目前的持有數，已足夠支付所有精靈樹剩餘的花費！',
             calc_advice_pace_pre: '💡 若以每天',
             calc_advice_pace_mid: '根的節奏，預計在',
-            calc_advice_pace_post: '左右達到所需數量。',
+            calc_advice_pace_post: ' 左右達到所需數量。',
 
             comp_title: '🏁 除法術外的完成度診斷（4隻・至本季結束{date}為止）',
             comp_ok_zero: '🎉 以目前的持有數與同行天數，已經滿足除法術外的完成條件！',
@@ -4788,7 +4788,7 @@
             calc_advice_ok: '🎉 현재 보유 수량으로 모든 정령 트리의 남은 비용을 충당할 수 있습니다!',
             calc_advice_pace_pre: '💡 하루',
             calc_advice_pace_mid: '개 페이스라면',
-            calc_advice_pace_post: '경 필요한 수량에 도달할 예정입니다.',
+            calc_advice_pace_post: ' 경 필요한 수량에 도달할 예정입니다.',
 
             comp_title: '🏁 마법 제외 컴플리트 진단 (4마리・시즌 종료 {date}까지)',
             comp_ok_zero: '🎉 현재 보유 수량과 동행 일수로 마법을 제외한 컴플리트 조건을 이미 충족했습니다!',
@@ -5020,7 +5020,19 @@
             const pfIconBgColor = ref('#FF9500');
             const pfIconSaveStatus = ref('');
             let pfIconUploadedImgEl = null;
-            const PF_ICON_STORAGE_KEY = 'pfCustomHomeIcon_v1';
+            // 🔑 保存キーをサイトごとに名前空間化する（プロフィール単位のnsKey()とは別軸）。
+            // taipak5000.github.io系サイトは全サイトが同一オリジンでlocalStorageを共有するため、
+            // 固定文字列のままだと、あるサイトで設定したホーム画面アイコンが他サイト（item・emote・
+            // spirit-catalog・share・star-candle・tai-nomacanなど）の設定まで上書きしてしまう。
+            // location.pathnameの先頭セグメント（例: '/companion/' → 'companion'）は各サイトの
+            // 実際の公開URLパスと一致し、リポジトリ名の変更にも自動追従するため、これをサイト
+            // 識別子として使う（wings・tai-infoと同じ方式）。
+            const pfSiteId = () => {
+                const seg = location.pathname.split('/').filter(Boolean)[0];
+                return seg || 'root';
+            };
+            const PF_ICON_STORAGE_KEY = 'pfCustomHomeIcon_v1__site_' + pfSiteId();
+            const PF_ICON_STORAGE_KEY_LEGACY = 'pfCustomHomeIcon_v1'; // 🔁 名前空間化前の旧共有キー（移行用フォールバックとして参照）
             const PF_ICON_ORIGINAL_APPLE_HREF = document.querySelector('link[rel="apple-touch-icon"]')?.href || '';
             const PF_ICON_ORIGINAL_MANIFEST_HREF = document.querySelector('link[rel="manifest"]')?.href || '';
 
@@ -6165,6 +6177,12 @@
                 if (!target) return;
 
                 try { localStorage.removeItem(dataKeyForRecord(id)); } catch (e) { /* noop */ }
+                // 🧹 プロフィール別に名前空間化された所持通貨キーも一緒に削除する
+                // （'default'は全サイト共通の生キーを使い続けるため対象外）
+                if (id !== 'default') {
+                    try { localStorage.removeItem('wishOwnCurrency__p_' + id); } catch (e) { /* noop */ }
+                    try { localStorage.removeItem('skyCurrencyExtra_v1__p_' + id); } catch (e) { /* noop */ }
+                }
                 records.value = records.value.filter(r => r.id !== id);
 
                 if (activeRecordId.value === id) {
@@ -6463,6 +6481,14 @@
             const pfIconApplyFromStorage = () => {
                 let raw;
                 try { raw = localStorage.getItem(PF_ICON_STORAGE_KEY); } catch (e) { return; }
+                if (!raw) {
+                    // 🔁 移行: サイト専用キーにまだ値が無ければ、名前空間化前の旧共有キーの値を
+                    // 一度だけ引き継ぐ（旧キー自体は他サイトがまだ使っているため削除しない）
+                    try { raw = localStorage.getItem(PF_ICON_STORAGE_KEY_LEGACY); } catch (e) { raw = null; }
+                    if (raw) {
+                        try { localStorage.setItem(PF_ICON_STORAGE_KEY, raw); } catch (e) { /* noop */ }
+                    }
+                }
                 if (!raw) return;
                 try {
                     const state = JSON.parse(raw);
