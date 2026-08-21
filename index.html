@@ -2105,7 +2105,7 @@
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
-                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ translateEventName(dashData.season.name) }}</b>」{{ t('dash_season_end_suffix') }}<span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">{{ t('dash_season_quote_open') }}<b>{{ translateEventName(dashData.season.name) }}</b>{{ t('dash_season_quote_close') }}{{ t('dash_season_end_suffix') }} <span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
                     <div class="dash-empty" v-else>{{ t('dash_season_error') }}</div>
                 </div>
             </template>
@@ -3002,10 +3002,10 @@
         {{ t('footer_credit_pre') }} <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a>
         <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
             {{ t('footer_sources') }}
-            <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer">季節精霊 (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer">親愛なるファン・ゴッホへ (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/wiki/Dear_Van_Gogh" target="_blank" rel="noopener noreferrer">Dear Van Gogh (Sky Wiki 英語)</a>
+            <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">季節精霊 (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">親愛なるファン・ゴッホへ (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/wiki/Dear_Van_Gogh" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">Dear Van Gogh (Sky Wiki 英語)</a>
         </span>
         <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
-            <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer">{{ t('footer_settings_link') }}</a>
+            <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_settings_link') }}</a>
         </span>
     </footer>
 
@@ -3469,9 +3469,10 @@
         target.setHours(24, 0, 0, 0);
         return new Date(target.getTime() + realOffsetMs);
     };
-    // 指定の未来時刻までの残り時間を「D日 HH:MM:SS」（1日未満なら「HH:MM:SS」）で表示する、
-    // リアルタイムカウントダウン用のフォーマッタ
-    const pfDashCountdown = (target) => {
+    // 指定の未来時刻までの残り時間を「D<日単位> HH:MM:SS」（1日未満なら「HH:MM:SS」）で表示する、
+    // リアルタイムカウントダウン用のフォーマッタ。日数単位のサフィックスは呼び出し側が現在の言語で
+    // 翻訳して渡す（このヘルパー自体はsetup()の外にあり言語状態を持たないため）
+    const pfDashCountdown = (target, daySuffix = '日') => {
         const ms = target - new Date();
         if (ms <= 0) return '00:00:00';
         const totalSec = Math.floor(ms / 1000);
@@ -3479,7 +3480,7 @@
         const hh = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, '0');
         const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
         const ss = String(totalSec % 60).padStart(2, '0');
-        return days > 0 ? `${days}日 ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+        return days > 0 ? `${days}${daySuffix} ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
     };
     // 複数の未来時刻候補から一番近いものを選ぶ（全て過去なら null）
     const pfDashSoonestFuture = (dates) => {
@@ -3593,6 +3594,8 @@
 
     // 🌐 対応言語一覧（'ja' が既定・フォールバック先）
     const SUPPORTED_LANGS = ['ja', 'en', 'zh-TW', 'ko'];
+    // 🌐 Intl.DateTimeFormat に渡すBCP47ロケールタグ（日付表示を現在の言語に合わせるため）
+    const PF_DATE_LOCALE_I18N = { ja: 'ja-JP', en: 'en-US', 'zh-TW': 'zh-TW', ko: 'ko-KR' };
     // 🌐 「初回解放」サフィックスの多言語訳
     const FIRST_UNLOCK_SUFFIX_I18N = { en: ' (Initial Unlock)', 'zh-TW': ' (初次解鎖)', ko: ' (최초 해금)' };
     // 🌐 記録の既定名プレフィックス（末尾に連番が続くため、言語ごとの体裁差はここで吸収する）
@@ -3710,6 +3713,8 @@
             dash_eden_note: '毎週日曜0時・太平洋時間',
             dash_next_update_label: '次回アップデート予定',
             dash_season_end_suffix: '終了まで',
+            dash_season_quote_open: '「',
+            dash_season_quote_close: '」',
             dash_season_error: 'シーズン情報が取得できませんでした',
 
             pficon_title: '🎨 ホーム画面アイコンをカスタマイズ',
@@ -3764,6 +3769,7 @@
             calc_total_remaining: '全精霊の残り必要数',
             calc_days_to_go: '到達まで',
             calc_achieved: '達成✓',
+            calc_target_achieved: '達成済み',
             calc_day_unit: '日',
             calc_advice_ok: '🎉 今の所持数で、全精霊ツリーの残りコストをまかなえます！',
             calc_advice_pace_pre: '💡 1日',
@@ -4044,7 +4050,9 @@
             dash_eden_line: 'Eye of Eden: until weekly reset',
             dash_eden_note: 'Every Sunday at midnight, Pacific Time',
             dash_next_update_label: 'Next Update Scheduled',
-            dash_season_end_suffix: 'ends in',
+            dash_season_end_suffix: ' ends in',
+            dash_season_quote_open: '"',
+            dash_season_quote_close: '"',
             dash_season_error: 'Failed to retrieve season information',
 
             pficon_title: '🎨 Customize Home Screen Icon',
@@ -4080,7 +4088,7 @@
 
             mobile_owned: '🕯️ Owned',
             mobile_unit: '',
-            mobile_add_today: "(today's)",
+            mobile_add_today: " (today's)",
 
             goal_hearts: '🧡 Season Hearts Earned: {n} / 4',
             goal_complete_msg: '🎉 Congratulations! You\'ve earned every spirit\'s Season Heart!',
@@ -4099,6 +4107,7 @@
             calc_total_remaining: 'Total still needed (all spirits)',
             calc_days_to_go: 'Time to reach it',
             calc_achieved: 'Reached ✓',
+            calc_target_achieved: 'Already achieved',
             calc_day_unit: 'd',
             calc_advice_ok: '🎉 Your current candles cover the remaining cost of every spirit tree!',
             calc_advice_pace_pre: '💡 At a pace of',
@@ -4128,7 +4137,7 @@
             plan_buy_now_pre: '🕯️ Items you can trade for with your current candles (',
             plan_buy_now_post: '):',
             plan_buy_none: '🕯️ No items can be traded for right now (candidates are either locked or you don\'t have enough candles)',
-            plan_item_open: '(',
+            plan_item_open: ' (',
             plan_item_close: ')',
             plan_overall_title: '📆 Overall completion estimate (all 4)',
             plan_unreachable: 'Could not estimate a completion date at the current pace.',
@@ -4163,7 +4172,7 @@
             heart_plan_post: '.',
             heart_total_cost_pre: '🕯️ Total candles needed from here:',
             heart_total_cost_unit: '',
-            heart_total_cost_note_pre: '(includes 🕯️',
+            heart_total_cost_note_pre: ' (includes 🕯️',
             heart_total_cost_note_mid: ' for the Heart trade itself; your current',
             heart_total_cost_note_post: ' candles are separate)',
             heart_pass_needed: '⚠️ Trading for the Heart requires the Season Pass (currently: not owned).',
@@ -4380,6 +4389,8 @@
             dash_eden_note: '每週日0點・太平洋時間',
             dash_next_update_label: '下次更新預定',
             dash_season_end_suffix: '結束倒數',
+            dash_season_quote_open: '「',
+            dash_season_quote_close: '」',
             dash_season_error: '取得季節資訊失敗',
 
             pficon_title: '🎨 自訂主畫面圖示',
@@ -4434,6 +4445,7 @@
             calc_total_remaining: '全部精靈剩餘所需數量',
             calc_days_to_go: '到達所需天數',
             calc_achieved: '已達成✓',
+            calc_target_achieved: '已達成',
             calc_day_unit: '天',
             calc_advice_ok: '🎉 以目前的持有數，已足夠支付所有精靈樹剩餘的花費！',
             calc_advice_pace_pre: '💡 若以每天',
@@ -4714,7 +4726,9 @@
             dash_eden_line: '에덴의 눈: 주간 리셋까지',
             dash_eden_note: '매주 일요일 0시・태평양 시간',
             dash_next_update_label: '다음 업데이트 예정',
-            dash_season_end_suffix: '종료까지',
+            dash_season_end_suffix: ' 종료까지',
+            dash_season_quote_open: '"',
+            dash_season_quote_close: '"',
             dash_season_error: '시즌 정보를 가져오는 데 실패했습니다',
 
             pficon_title: '🎨 홈 화면 아이콘 커스터마이즈',
@@ -4750,7 +4764,7 @@
 
             mobile_owned: '🕯️ 보유',
             mobile_unit: '',
-            mobile_add_today: '(오늘 분)',
+            mobile_add_today: ' (오늘 분)',
 
             goal_hearts: '🧡 시즌 하트 획득: {n} / 4개',
             goal_complete_msg: '🎉 축하합니다! 모든 정령의 시즌 하트를 획득했습니다!',
@@ -4769,6 +4783,7 @@
             calc_total_remaining: '전체 정령의 남은 필요 수량',
             calc_days_to_go: '도달까지',
             calc_achieved: '달성✓',
+            calc_target_achieved: '이미 달성함',
             calc_day_unit: '일',
             calc_advice_ok: '🎉 현재 보유 수량으로 모든 정령 트리의 남은 비용을 충당할 수 있습니다!',
             calc_advice_pace_pre: '💡 하루',
@@ -4798,7 +4813,7 @@
             plan_buy_now_pre: '🕯️ 현재 보유 수량 (',
             plan_buy_now_post: '개)으로 교환 가능한 아이템:',
             plan_buy_none: '🕯️ 지금 바로 교환 가능한 아이템이 없습니다 (후보가 잠겨 있거나 초가 부족합니다)',
-            plan_item_open: '(',
+            plan_item_open: ' (',
             plan_item_close: ')',
             plan_overall_title: '📆 4마리 전체 완료 예상',
             plan_unreachable: '현재 페이스로는 완료 시기를 예측할 수 없었습니다.',
@@ -4833,7 +4848,7 @@
             heart_plan_post: '하트로 교환할 수 있을 것으로 예상됩니다.',
             heart_total_cost_pre: '🕯️ 지금부터 필요한 초 합계:',
             heart_total_cost_unit: '',
-            heart_total_cost_note_pre: '(하트 교환분 🕯️',
+            heart_total_cost_note_pre: ' (하트 교환분 🕯️',
             heart_total_cost_note_mid: ' 포함 / 현재 보유 수량',
             heart_total_cost_note_post: '개는 별도)',
             heart_pass_needed: '⚠️ 하트 교환에는 시즌 패스가 필요합니다 (현재: 미보유).',
@@ -5031,7 +5046,7 @@
             // これを読むことで、Vueの依存追跡により1秒おきに再計算される。
             const dashNow = ref(Date.now());
             const dashRevisitStatus = computed(() => { dashNow.value; return dashData.value ? pfDashRevisitStatus(dashData.value.revisit) : null; });
-            const dashRevisitCountdown = computed(() => { dashNow.value; return dashRevisitStatus.value ? pfDashCountdown(dashRevisitStatus.value.target) : ''; });
+            const dashRevisitCountdown = computed(() => { dashNow.value; return dashRevisitStatus.value ? pfDashCountdown(dashRevisitStatus.value.target, t('countdown_day_suffix')) : ''; });
             // 開始・終了日時付きのイベント一覧（EVENT_SCHEDULE）から、現在開催期間中のものだけを返す。
             // startを省略しているエントリは「常に開催中→endで終了」として扱う
             const dashActiveScheduledEvents = computed(() => {
@@ -5042,7 +5057,7 @@
                     const end = new Date(ev.end).getTime();
                     const start = ev.start ? new Date(ev.start).getTime() : null;
                     return now <= end && (!start || now >= start);
-                }).map(ev => ({ name: ev.name, countdown: pfDashCountdown(new Date(ev.end)) }));
+                }).map(ev => ({ name: ev.name, countdown: pfDashCountdown(new Date(ev.end), t('countdown_day_suffix')) }));
             });
             const dashSeasonActive = computed(() => {
                 dashNow.value;
@@ -5052,7 +5067,7 @@
                 dashNow.value;
                 if (!dashData.value || !dashData.value.nextUpdate || !dashData.value.nextUpdate.date) return '';
                 const target = new Date(dashData.value.nextUpdate.date);
-                return Date.now() < target.getTime() ? pfDashCountdown(target) : '';
+                return Date.now() < target.getTime() ? pfDashCountdown(target, t('countdown_day_suffix')) : '';
             });
             // 闇の破片（赤闇・黒闇）は開催中のイベント等と違いfetchデータに依存しないため、
             // dashDataの読込状況に関わらず常に計算できる（モーダルを開いた時点の値で固定表示）。
@@ -5068,25 +5083,25 @@
                 dashNow.value;
                 if (!dashShard.value || !dashShard.value.hasShard) return '';
                 const soon = pfDashSoonestFuture(dashShard.value.occurrences) || pfDashNextShardTime();
-                return soon ? pfDashCountdown(soon) : '';
+                return soon ? pfDashCountdown(soon, t('countdown_day_suffix')) : '';
             });
             const dashNextShardCountdown = computed(() => {
                 dashNow.value;
                 if (!dashShard.value || dashShard.value.hasShard) return '';
                 const next = pfDashNextShardTime();
-                return next ? pfDashCountdown(next) : '';
+                return next ? pfDashCountdown(next, t('countdown_day_suffix')) : '';
             });
             const dashCandleRealmLabel = computed(() => dashOpen.value ? dashRealmName(pfDashGrandCandleRealm()) : '');
-            const dashCandleCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextPacificMidnight()) : ''; });
+            const dashCandleCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextPacificMidnight(), t('countdown_day_suffix')) : ''; });
             const dashQuestCandleRealmLabel = computed(() => dashOpen.value ? dashRealmName(pfDashGrandCandleRealm(-1)) : '');
-            const dashUniCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(5)) : ''; });
-            const dashPanCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(35)) : ''; });
-            const dashKameCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(50)) : ''; });
-            const dashEdenCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEdenResetTarget()) : ''; });
+            const dashUniCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(5), t('countdown_day_suffix')) : ''; });
+            const dashPanCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(35), t('countdown_day_suffix')) : ''; });
+            const dashKameCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(50), t('countdown_day_suffix')) : ''; });
+            const dashEdenCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEdenResetTarget(), t('countdown_day_suffix')) : ''; });
             const dashSeasonCountdown = computed(() => {
                 dashNow.value;
                 if (!dashData.value || !dashData.value.season || !dashData.value.season.endDate) return '';
-                return pfDashCountdown(new Date(dashData.value.season.endDate));
+                return pfDashCountdown(new Date(dashData.value.season.endDate), t('countdown_day_suffix'));
             });
 
             const spirits = ref(createDefaultSpiritsData());
@@ -5247,11 +5262,13 @@
 
             const candleTargetDateText = computed(() => {
                 const days = candleDaysNeeded.value;
-                if (days <= 0) return '達成済み';
+                if (days <= 0) return t('calc_target_achieved');
                 // 🕓 単純な「今日+N日」ではなく、実際にN回目のリセットを迎える日付で算出する
                 // （例: 今日の16:00リセット前なら、1回目のリセット＝今日になる）
                 const target = getNthDailyResetDate(new Date(), days);
-                return `${target.getFullYear()}年${target.getMonth() + 1}月${target.getDate()}日`;
+                // 🌐 現在の言語に応じたロケールで日付を整形する（未対応言語はjaへフォールバック）
+                const locale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
+                return new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(target);
             });
 
             // 🏁 シーズン終了日までに「魔法を除く全アイテムコンプリート（4体分）」が間に合うか診断する
@@ -6507,6 +6524,7 @@
                     }
                     return;
                 }
+                if (showSidebar.value) { showSidebar.value = false; return; }
             };
 
             // ⌨️ 全ツール共通のキーボードショートカット（?＝表示設定を開く／d,D＝ダークモード切替／
