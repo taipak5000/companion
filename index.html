@@ -696,24 +696,6 @@
         .tree-subtotal-bar b { color: var(--accent-orange); font-size: 13px; }
         [data-theme="dark"] .tree-subtotal-bar b { color: #ffcc00; }
 
-        .candle-edit-toggle-btn {
-            font-size: 11px;
-            color: var(--accent-blue);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            padding: 4px 0;
-            white-space: nowrap;
-        }
-
-        .candle-edit-panel {
-            padding-top: 2px;
-            margin-bottom: 18px;
-            display: flex;
-            flex-direction: column;
-        }
-
         /* 🚀 優先順位チャート */
         .priority-chart {
             display: flex;
@@ -791,52 +773,6 @@
             min-width: 44px;
             flex-shrink: 0;
         }
-
-        .candle-edit-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 2px;
-            border-bottom: 1px dashed var(--border-color);
-        }
-        .candle-edit-row:last-child { border-bottom: none; }
-
-        .type-select {
-            flex: 0 0 auto;
-            max-width: 74px;
-            box-sizing: border-box;
-            padding: 6px 2px;
-            border: 1px solid var(--border-color);
-            border-radius: 7px;
-            font-size: 11.5px;
-            background: var(--input-bg);
-            color: var(--text-color);
-        }
-        .type-select:focus { border-color: var(--accent-orange); outline: none; background: var(--card-bg); }
-
-        .candle-edit-row .item-label {
-            flex: 1 1 auto;
-            min-width: 0;
-            font-size: 12.5px;
-            color: var(--text-color);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .candle-edit-input {
-            width: 52px;
-            box-sizing: border-box;
-            padding: 6px 4px;
-            border: 1px solid var(--border-color);
-            border-radius: 7px;
-            font-size: 13px;
-            text-align: right;
-            background: var(--input-bg);
-            color: var(--text-color);
-            flex-shrink: 0;
-        }
-        .candle-edit-input:focus { border-color: var(--accent-orange); outline: none; background: var(--card-bg); }
 
         /* --------------------------------------------------------------------------------- */
         /* 🗺️ 精霊ツリーエリア */
@@ -2772,28 +2708,11 @@
 
                 <div class="tree-subtotal-bar">
                     <span>{{ t('tree_remaining_pre') }} <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} {{ t('tree_remaining_mid') }} {{ activeDistributedCandles }} {{ t('tree_remaining_unit') }}<template v-if="activeExcludedCandles > 0">{{ t('tree_remaining_excluded') }} {{ activeExcludedCandles }} {{ t('tree_remaining_unit') }}</template>{{ t('tree_remaining_post') }}</span>
-                    <button class="candle-edit-toggle-btn" @click="showCandleEdit = !showCandleEdit">{{ showCandleEdit ? t('tree_edit_close') : t('tree_edit_open') }}</button>
                 </div>
                 <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : 'var(--danger-text)' }">
                     ♡ <b>{{ t('tree_pass_heart_label') }}</b>{{ t('tree_pass_frag1') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('tree_pass_frag2') }}<b>{{ t('tree_pass_adpass_label') }}</b>{{ t('tree_pass_frag3') }}<b>{{ t('tree_pass_holder_label') }}</b>{{ t('tree_pass_frag4') }}{{ hasSeasonPass ? t('tree_pass_note_have') : t('tree_pass_note_none') }}
                 </div>
 
-                <div v-if="showCandleEdit" class="candle-edit-panel">
-                    <div v-for="item in activeCandleItems" :key="item.id" class="candle-edit-row">
-                        <select v-model="item.type" class="type-select">
-                            <option value="walk">{{ t('tree_edit_type_walk') }}</option>
-                            <option value="magic">{{ t('tree_edit_type_magic') }}</option>
-                            <option value="seasonal">{{ t('tree_edit_type_seasonal') }}</option>
-                            <option value="dye">{{ t('tree_edit_type_dye') }}</option>
-                        </select>
-                        <span class="item-label">{{ getItemLabel(item) }}</span>
-                        <input type="number" min="0" v-model.number="item.candles" class="candle-edit-input">
-                    </div>
-                    <div style="font-size: 10px; color: var(--text-gray); padding: 6px 2px 0;">
-                        {{ t('tree_edit_note') }}
-                    </div>
-                </div>
-                
                 <div class="tree-container">
                     <div class="tree-tier" :class="{'tier-unlocked': activePoints >= 40}">
                         <div class="tier-header">
@@ -3110,20 +3029,16 @@
     };
 
     // 📊 次回イベント精霊ツリー（画像より）のキャンドルコスト一覧
-    // ツリー合計: オランダの思い出=89 / 素朴な思い出=89 / 芸術の思い出=91（黄色染料+10込み） / 喜びの思い出=111 （シーズンハートとの交換 🕯️3・要アドパス を含む）
+    // ツリー合計: オランダの思い出=89 / 素朴な思い出=89 / 芸術の思い出=103（黄色染料+10込み） / 喜びの思い出=111 （シーズンハートとの交換 🕯️3・要アドパス を含む）
     // ※ エモートLv1（初回解放）は0コスト、魔法①側にコストがかかる
     // ※ キー名（mag1/it1など）はツリー内の「位置」を表す識別子であり、実際の種別(type)は
     //   下のspirits初期化直後の個別上書きで変わる場合がある（例: 芸術の思い出のmag1は実際には季節アイテム）。
     const SPIRIT_TREE_COSTS = {
         s1: { em1: 0, mag1: 4,  it1: 18, mag2: 6, em2: 22, mag3: 10, it2: 26, extra: 0,  heart: 3 }, // 合計89（第3層は「白染料」。下のspirits初期化直後でtype/customLabelを上書き）
         s2: { em1: 0, mag1: 4,  it1: 18, mag2: 8, em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計89（第2層は「赤染料」、魔法④は枠が存在しないため削除）
-        s3: { em1: 0, mag1: 12, it1: 18, mag2: 6, em2: 22, mag3: 10, it2: 10, extra: 0,  heart: 3 }, // 合計91（第1層は季節アイテム①、第2層magは①へ繰上、第3層は季節アイテム③、第4層itは魔法②へ）
+        s3: { em1: 0, mag1: 12, it1: 18, mag2: 6, em2: 22, mag3: 22, it2: 10, extra: 0,  heart: 3 }, // 合計93（第1層は季節アイテム①、第2層magは①へ繰上、第3層は季節アイテム③、第4層itは魔法②へ）
         s4: { em1: 0, mag1: 12, it1: 0,  mag2: 6, em2: 22, mag3: 8,  it2: 26, extra: 12, heart: 3 }  // 合計93（第1層は季節アイテム①、第2層itは削除・magは①へ繰上、第3層magは②へ・季節アイテム②を追加、第4層extraは「黒染料」。キャンドルコストは変更なし、獲得ポイントのみ下記で27p/27p/27pに修正）
     };
-    // 🔖 上記コストの表を書き換えたら、この番号を+1すること。
-    // ブラウザに保存済みの古いキャンドルコスト（localStorage）を無効化し、
-    // 新しいデフォルト値が確実に反映されるようにするためのバージョン番号。
-    const TREE_COST_VERSION = 4;
 
     // 🎨 芸術の思い出（s3）の実機アイコン画像（本家スクショより）。
     // 特定精霊の特定アイテム専用の画像のため、全精霊共通のTYPE_IMAGESとは別に用意し、
@@ -3786,7 +3701,7 @@
             comp_candle_short: '🕯️ キャンドルが約 {n}本 不足する見込みです。',
             comp_walk_short: '👣 連れ歩き日数があと {n}日 分足りません（4体合計で判定）。',
             comp_note1: '※「コンプリート」は魔法アイテムを除く全アイテム（アドパスアイテム・ハートとの交換を含む）が対象です。アドパス関連アイテムの取得には別途アドパスの保有が必要です。',
-            comp_note2: '※ キャンドルは精霊間で共通の所持数として計算されます。各アイテムのコストはツリー内の「コストを編集」から精霊ごとに調整できます。',
+            comp_note2: '※ キャンドルは精霊間で共通の所持数として計算されます。',
 
             plan_title: '🧭 効率的な進め方のおすすめ（4体分・魔法除く）',
             plan_close: '閉じる ▲',
@@ -3894,8 +3809,6 @@
             tree_remaining_excluded: '・除外:',
             tree_remaining_unit: '本',
             tree_remaining_post: '）',
-            tree_edit_close: '編集を閉じる ▲',
-            tree_edit_open: '🕯️ コストを編集 ▼',
             tree_pass_heart_label: 'ハートとの交換',
             tree_pass_frag1: '（🕯️',
             tree_pass_frag2: '）と、各層右列の',
@@ -3905,11 +3818,6 @@
             tree_pass_frag4: '可能です',
             tree_pass_note_have: '（現在: 保有）',
             tree_pass_note_none: '（現在: 未保有 — 「シーズンキャンドル計算機」のアドパス切替で変更できます）',
-            tree_edit_type_walk: '💨 エモート',
-            tree_edit_type_magic: '🪄 魔法',
-            tree_edit_type_seasonal: '✨ 季節アイテム',
-            tree_edit_type_dye: '🎨 染料',
-            tree_edit_note: '※ 種別を変えるとアイコンと名前（①②③…）が自動で振り直されます。下の層から数えて同じ種別の何個目かで番号が決まります。',
             tree_pass_required: 'アドパスが必要です',
             tree_no_points: 'P外',
             tree_exclude_undo: '除外を解除',
@@ -3934,7 +3842,7 @@
             info_title: '📌 連れ歩きシステムの仕様メモ:',
             info_1: '・連れ歩きをしなくても、各層のアイテムをすべて取得すれば次の層へ進めます。',
             info_2: '・先にポイントを貯めて上の層を開放した後から、スルーしたアイテムを回収してもポイントは反映されます。',
-            info_3: '・🕯️ 各アイテムのキャンドルコストは目安です。実際の精霊に合わせて、ツリー内の「コストを編集」から精霊ごとに調整してください。',
+            info_3: '・🕯️ 各アイテムのキャンドルコストは目安です。',
 
             footer_disclaimer: 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。',
             footer_credit_pre: '作成・ご意見:',
@@ -4124,7 +4032,7 @@
             comp_candle_short: '🕯️ You may be short by about {n} candle(s).',
             comp_walk_short: '👣 You may be short by about {n} walk day(s) (measured across all 4 spirits).',
             comp_note1: '※ "Completion" covers every item except Spells (including Season Pass items and the Heart trade). Season Pass items also require owning the Season Pass separately.',
-            comp_note2: '※ Candles are calculated as a shared amount across spirits. You can adjust each item\'s cost per spirit from "Edit costs" inside its tree.',
+            comp_note2: '※ Candles are calculated as a shared amount across spirits.',
 
             plan_title: '🧭 Recommended efficient route (all 4 spirits, excluding Spells)',
             plan_close: 'Close ▲',
@@ -4232,8 +4140,6 @@
             tree_remaining_excluded: '· excluded:',
             tree_remaining_unit: '',
             tree_remaining_post: ')',
-            tree_edit_close: 'Close editing ▲',
-            tree_edit_open: '🕯️ Edit costs ▼',
             tree_pass_heart_label: 'Trading for the Heart',
             tree_pass_frag1: ' (🕯️',
             tree_pass_frag2: ') and each tier\'s right-column ',
@@ -4243,11 +4149,6 @@
             tree_pass_frag4: '',
             tree_pass_note_have: ' (currently: owned)',
             tree_pass_note_none: ' (currently: not owned — change this from the Season Pass toggle in the "Seasonal Candle Calculator")',
-            tree_edit_type_walk: '💨 Emote',
-            tree_edit_type_magic: '🪄 Spell',
-            tree_edit_type_seasonal: '✨ Seasonal Item',
-            tree_edit_type_dye: '🎨 Dye',
-            tree_edit_note: '※ Changing the type automatically reassigns the icon and number (①②③…). The number is based on how many items of that type come at or below this tier.',
             tree_pass_required: 'Requires the Season Pass',
             tree_no_points: 'No pts',
             tree_exclude_undo: 'Remove exclusion',
@@ -4272,7 +4173,7 @@
             info_title: '📌 Notes on how walking works:',
             info_1: '・You don\'t have to walk together to progress — collecting every item in a tier is enough to move on to the next.',
             info_2: '・Points still count even if you collect a skipped item later, after already unlocking a higher tier by earning points first.',
-            info_3: '・🕯️ Each item\'s candle cost is an estimate. Adjust it per spirit from "Edit costs" inside its tree to match the real thing.',
+            info_3: '・🕯️ Each item\'s candle cost is an estimate.',
 
             footer_disclaimer: 'This site is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
             footer_credit_pre: 'Made by / feedback:',
@@ -4462,7 +4363,7 @@
             comp_candle_short: '🕯️ 預計蠟燭將短少約 {n} 根。',
             comp_walk_short: '👣 同行天數預計還差 {n} 天（以4隻合計判定）。',
             comp_note1: '※「完成」是指除法術道具外的所有道具（含季節通行證道具、兌換心），取得季節通行證相關道具需另外持有季節通行證。',
-            comp_note2: '※ 蠟燭是以精靈間共用的持有數計算。各道具的花費可從樹狀圖內的「編輯花費」依精靈個別調整。',
+            comp_note2: '※ 蠟燭是以精靈間共用的持有數計算。',
 
             plan_title: '🧭 高效進行方式建議（4隻・不含法術）',
             plan_close: '關閉 ▲',
@@ -4570,8 +4471,6 @@
             tree_remaining_excluded: '・已排除:',
             tree_remaining_unit: '',
             tree_remaining_post: '根）',
-            tree_edit_close: '關閉編輯 ▲',
-            tree_edit_open: '🕯️ 編輯花費 ▼',
             tree_pass_heart_label: '兌換心',
             tree_pass_frag1: '（🕯️',
             tree_pass_frag2: '）與各層右側欄位的',
@@ -4581,11 +4480,6 @@
             tree_pass_frag4: '可兌換',
             tree_pass_note_have: '（目前: 持有）',
             tree_pass_note_none: '（目前: 未持有 — 可從「季節蠟燭計算機」的季節通行證切換更改）',
-            tree_edit_type_walk: '💨 動作',
-            tree_edit_type_magic: '🪄 法術',
-            tree_edit_type_seasonal: '✨ 季節道具',
-            tree_edit_type_dye: '🎨 染料',
-            tree_edit_note: '※ 變更種類後，圖示與名稱（①②③…）會自動重新編號。編號依據從最下層數來同種類的第幾個決定。',
             tree_pass_required: '需要季節通行證',
             tree_no_points: 'P外',
             tree_exclude_undo: '取消排除',
@@ -4610,7 +4504,7 @@
             info_title: '📌 同行系統的規則備忘:',
             info_1: '・即使不同行，只要取得該層的所有道具，就能進入下一層。',
             info_2: '・先靠累積點數解鎖上層後，之後再回收先前略過的道具，點數依然會生效。',
-            info_3: '・🕯️ 各道具的蠟燭花費僅供參考，請依實際精靈狀況，從樹狀圖內的「編輯花費」依精靈個別調整。',
+            info_3: '・🕯️ 各道具的蠟燭花費僅供參考。',
 
             footer_disclaimer: '本網站為《Sky：光・遇》的非官方粉絲網站，thatgamecompany 概不參與。',
             footer_credit_pre: '製作・意見回饋:',
@@ -4800,7 +4694,7 @@
             comp_candle_short: '🕯️ 초가 약 {n}개 부족할 것으로 예상됩니다.',
             comp_walk_short: '👣 동행 일수가 약 {n}일 부족합니다 (4마리 합산 기준).',
             comp_note1: '※ "컴플리트"는 마법 아이템을 제외한 모든 아이템(시즌 패스 아이템, 하트 교환 포함)이 대상입니다. 시즌 패스 관련 아이템을 얻으려면 별도로 시즌 패스를 보유해야 합니다.',
-            comp_note2: '※ 초는 정령 간 공통으로 보유한 수량으로 계산됩니다. 각 아이템의 비용은 트리 내 "비용 편집"에서 정령별로 조정할 수 있습니다.',
+            comp_note2: '※ 초는 정령 간 공통으로 보유한 수량으로 계산됩니다.',
 
             plan_title: '🧭 효율적인 진행 추천 (4마리・마법 제외)',
             plan_close: '닫기 ▲',
@@ -4908,8 +4802,6 @@
             tree_remaining_excluded: '・제외:',
             tree_remaining_unit: '',
             tree_remaining_post: '개)',
-            tree_edit_close: '편집 닫기 ▲',
-            tree_edit_open: '🕯️ 비용 편집 ▼',
             tree_pass_heart_label: '하트 교환',
             tree_pass_frag1: ' (🕯️',
             tree_pass_frag2: ') 및 각 티어 오른쪽 열의 ',
@@ -4919,11 +4811,6 @@
             tree_pass_frag4: '만 이용 가능합니다',
             tree_pass_note_have: ' (현재: 보유)',
             tree_pass_note_none: ' (현재: 미보유 — "시즌 초 계산기"의 시즌 패스 전환에서 변경 가능)',
-            tree_edit_type_walk: '💨 감정표현',
-            tree_edit_type_magic: '🪄 마법',
-            tree_edit_type_seasonal: '✨ 시즌 아이템',
-            tree_edit_type_dye: '🎨 염료',
-            tree_edit_note: '※ 종류를 변경하면 아이콘과 이름(①②③…)이 자동으로 재배정됩니다. 번호는 아래 티어부터 세어 같은 종류가 몇 번째인지로 결정됩니다.',
             tree_pass_required: '시즌 패스가 필요합니다',
             tree_no_points: '포인트 외',
             tree_exclude_undo: '제외 해제',
@@ -4948,7 +4835,7 @@
             info_title: '📌 동행 시스템 안내:',
             info_1: '・동행하지 않아도 각 티어의 아이템을 모두 획득하면 다음 티어로 진행할 수 있습니다.',
             info_2: '・먼저 포인트를 모아 상위 티어를 해금한 뒤, 건너뛴 아이템을 나중에 회수해도 포인트는 반영됩니다.',
-            info_3: '・🕯️ 각 아이템의 초 비용은 참고용입니다. 실제 정령에 맞춰 트리 내 "비용 편집"에서 정령별로 조정해 주세요.',
+            info_3: '・🕯️ 각 아이템의 초 비용은 참고용입니다.',
 
             footer_disclaimer: '이 사이트는 Sky: Children of the Light의 비공식 팬 사이트입니다. thatgamecompany는 전혀 관여하지 않습니다.',
             footer_credit_pre: '제작・의견:',
@@ -5003,7 +4890,6 @@
             // 🕯️ シーズンキャンドル計算機の状態管理変数
             const hasSeasonPass = ref(true);
             const ownedCandles = ref(0);
-            const showCandleEdit = ref(false);
             const showForecast = ref(false); // 🔮 4体比較の詳細は初期状態で折りたたみ（情報量を抑える）
             const showHeartPlanDetail = ref(false); // 🚀 最短交換シミュレーションの優先順位チャートも初期は折りたたみ
             const showMultiSpiritLog = ref(false); // 📋 4体分の日別プランも初期は折りたたみ
@@ -5899,8 +5785,7 @@
                     sharedCalcFormula: sharedCalcFormula.value,
                     hasSeasonPass: hasSeasonPass.value,
                     ownedCandles: ownedCandles.value,
-                    optimizerPlan: { ids: optimizerIds.value, daily: optimizerDaily.value },
-                    treeCostVersion: TREE_COST_VERSION
+                    optimizerPlan: { ids: optimizerIds.value, daily: optimizerDaily.value }
                 };
                 try {
                     localStorage.setItem(dataKeyForRecord(activeRecordId.value), JSON.stringify(data));
@@ -5956,11 +5841,6 @@
                     if (parsed.optimizerPlan.daily !== undefined) optimizerDaily.value = Number(parsed.optimizerPlan.daily) || 0;
                 }
 
-                // 🔖 保存時と現在でツリーのコスト表バージョンが違う場合、
-                // 古いキャンドルコスト/種別の上書きは復元しない（最新の値を優先する）。
-                // それ以外（チェック状態・連れ歩き日数など）は引き続き復元する。
-                const costDataIsCurrent = parsed.treeCostVersion === TREE_COST_VERSION;
-
                 if (parsed.spirits && Array.isArray(parsed.spirits)) {
                     parsed.spirits.forEach((savedSpirit, sIdx) => {
                         if (spirits.value[sIdx]) {
@@ -5974,16 +5854,10 @@
                                         // 🔁 保存済み配列と現在の構成でid対応が取れない場合（ツリー構造が変わった場合）は
                                         // このアイテムの復元自体をスキップする。
                                         if (!targetItem || (savedItem.id && targetItem.id !== savedItem.id)) return;
+                                        // 🕯️ キャンドルコスト・種別は常に現在の正規データ（SPIRIT_TREE_COSTS由来）を使用する。
+                                        // ユーザーによる個別上書きは保存・復元しない（チェック状態・除外指定のみ復元する）。
                                         targetItem.checked = savedItem.checked;
-                                        // 🚫 「取りたくない」指定はコスト表バージョンに関係のないユーザーの意思なので常に復元する
                                         if (savedItem.excluded !== undefined) targetItem.excluded = savedItem.excluded;
-                                        if (costDataIsCurrent) {
-                                            // 🕯️ 精霊ごとに調整したキャンドルコストがあれば復元（最新版のみ）
-                                            if (savedItem.candles !== undefined) targetItem.candles = savedItem.candles;
-                                            // 🔁 種別（魔法⇄季節アイテム⇄染料など）の変更を復元。
-                                            // 名前は type と層の位置から自動計算されるため保存不要。
-                                            if (savedItem.type !== undefined) targetItem.type = savedItem.type;
-                                        }
                                     });
                                 }
                             });
@@ -6148,8 +6022,7 @@
                         sharedNotes: sharedNotes.value,
                         sharedCalcFormula: sharedCalcFormula.value,
                         hasSeasonPass: hasSeasonPass.value,
-                        ownedCandles: ownedCandles.value,
-                        treeCostVersion: TREE_COST_VERSION
+                        ownedCandles: ownedCandles.value
                     };
                     try {
                         localStorage.setItem(dataKeyForRecord(newId), JSON.stringify(snapshot));
@@ -6603,7 +6476,7 @@
                 currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay, translateEventName,
                 showSidebar, showSharedTools, sharedNotes,
                 showOptimizer, optSelectedId, optimizerDaily, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
-                hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
+                hasSeasonPass, ownedCandles, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan, pfCurrencyOpen,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles, activeExcludedCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
