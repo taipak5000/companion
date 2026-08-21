@@ -2091,8 +2091,8 @@
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
-                    <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ dashData.season.name }}</b> {{ t('dash_event_suffix') }}</span></div>
-                    <div class="dash-row" v-for="(ev, idx) in dashActiveScheduledEvents" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ ev.name }}</b> {{ t('dash_event_suffix') }}<span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(dashData.season.name) }}</b> {{ t('dash_event_suffix') }}</span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashActiveScheduledEvents" :key="idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }}<span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit">
                         <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }}<span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
                     </div>
@@ -2105,7 +2105,7 @@
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
-                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ dashData.season.name }}</b>」{{ t('dash_season_end_suffix') }}<span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">「<b>{{ translateEventName(dashData.season.name) }}</b>」{{ t('dash_season_end_suffix') }}<span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
                     <div class="dash-empty" v-else>{{ t('dash_season_error') }}</div>
                 </div>
             </template>
@@ -3331,6 +3331,35 @@
         { prairie: '鳥の巣', forest: 'ツリーハウス', valley: '夢見の町', wasteland: '座礁船', vault: '海月の入り江' },
         { prairie: '楽園の島々', forest: '晴れ間', valley: '隠者の峠', wasteland: '忘れられた方舟', vault: '海月の入り江' },
     ];
+    // 🌐 レルム名の多言語訳（ダッシュボードの闇の破片・大キャンドル表示に使用。id基準で引く）
+    const SHARD_REALM_EN = { prairie: 'Daylight Prairie', forest: 'Hidden Forest', valley: 'Valley of Triumph', wasteland: 'Golden Wasteland', vault: 'Vault of Knowledge' };
+    const SHARD_REALM_ZH_TW = { prairie: '晨光草原', forest: '雨林秘境', valley: '凱旋峽谷', wasteland: '黃金遺跡', vault: '知識殿堂' };
+    const SHARD_REALM_KO = { prairie: '낮의 초원', forest: '우림', valley: '승리의 협곡', wasteland: '황금 황무지', vault: '지식의 전당' };
+    const SHARD_REALM_I18N = { en: SHARD_REALM_EN, 'zh-TW': SHARD_REALM_ZH_TW, ko: SHARD_REALM_KO };
+    // 🌐 闇の破片の具体的な出現エリア名の多言語訳。完全一致でこの表を引き、
+    // 未収録（表記ゆれ・将来のデータ変更）の場合は日本語のまま表示する
+    const SHARD_LOCATION_EN = {
+        '蝶々の住処': 'Butterfly Fields', '小川': 'Forest Brook', 'スケートリンク': 'Frozen Lake', '最初のエリア': 'First Area', '星月夜の砂漠': 'Starlit Desert',
+        '神殿エリア': 'Temple Area', '神殿前': 'Before the Temple', '戦場': 'Battlefield',
+        '洞窟': 'Cave', '神殿奥': 'Deep in the Temple', '夢見の町': 'Dream Village', '墓所': 'Graveyard', '海月の入り江': 'Jellyfish Cove',
+        '鳥の巣': 'Bird Nest', 'ツリーハウス': 'Treehouse', '座礁船': 'Shipwreck',
+        '楽園の島々': 'Paradise Islands', '晴れ間': 'Sunny Clearing', '隠者の峠': "Hermit's Pass", '忘れられた方舟': 'Forgotten Ark',
+    };
+    const SHARD_LOCATION_ZH_TW = {
+        '蝶々の住処': '蝴蝶棲息地', '小川': '小溪', 'スケートリンク': '溜冰場', '最初のエリア': '第一區域', '星月夜の砂漠': '星夜沙漠',
+        '神殿エリア': '神殿區域', '神殿前': '神殿前', '戦場': '戰場',
+        '洞窟': '洞窟', '神殿奥': '神殿深處', '夢見の町': '夢境小鎮', '墓所': '墓地', '海月の入り江': '水母灣',
+        '鳥の巣': '鳥巢', 'ツリーハウス': '樹屋', '座礁船': '擱淺船',
+        '楽園の島々': '樂園群島', '晴れ間': '放晴處', '隠者の峠': '隱士山口', '忘れられた方舟': '被遺忘的方舟',
+    };
+    const SHARD_LOCATION_KO = {
+        '蝶々の住処': '나비의 보금자리', '小川': '시냇물', 'スケートリンク': '스케이트장', '最初のエリア': '첫 번째 지역', '星月夜の砂漠': '별밤의 사막',
+        '神殿エリア': '신전 지역', '神殿前': '신전 앞', '戦場': '전장',
+        '洞窟': '동굴', '神殿奥': '신전 안쪽', '夢見の町': '꿈의 마을', '墓所': '묘지', '海月の入り江': '해파리 만',
+        '鳥の巣': '새 둥지', 'ツリーハウス': '트리하우스', '座礁船': '좌초선',
+        '楽園の島々': '낙원의 섬들', '晴れ間': '맑게 갠 하늘', '隠者の峠': '은둔자의 고개', '忘れられた方舟': '잊혀진 방주',
+    };
+    const SHARD_LOCATION_I18N = { en: SHARD_LOCATION_EN, 'zh-TW': SHARD_LOCATION_ZH_TW, ko: SHARD_LOCATION_KO };
     const SHARD_GROUPS = [
         { noShardWkDay: [6, 0], intervalH: 8, offsetH: 1, offsetM: 50 },
         { noShardWkDay: [0, 1], intervalH: 8, offsetH: 2, offsetM: 10 },
@@ -3534,6 +3563,33 @@
     const SEASON_NAME_ZH_TW = '親愛的梵谷';
     const SEASON_NAME_KO = '친애하는 반 고흐에게';
     const SEASON_NAME_I18N = { en: SEASON_NAME_EN, 'zh-TW': SEASON_NAME_ZH_TW, ko: SEASON_NAME_KO };
+
+    // 🌐 ダッシュボード（今日・今週・今月）用の季節名・期間限定イベント名の多言語訳。
+    // item側のCURRENT_SEASON/EVENT_SCHEDULEはJA表記のみのため、companion側でこの表を持ち、
+    // 日本語の完全一致で引く（item本体は対象外のため二重管理は避けられないが、件数は少ない）。
+    // 未収録（未追加の新シーズン・新イベント）の場合は日本語のまま表示してフォールバックする。
+    const EVENT_NAME_EN = {
+        [CURRENT_SEASON_NAME]: SEASON_NAME_EN,
+        '陽光の日々': 'Days of Sunlight',
+        '光に染まるイベント': 'Event of Radiant Light',
+        '来訪する精霊団': 'Traveling Spirit Troupe',
+        '夏のキャンプ': 'Summer Camp',
+    };
+    const EVENT_NAME_ZH_TW = {
+        [CURRENT_SEASON_NAME]: SEASON_NAME_ZH_TW,
+        '陽光の日々': '陽光之日',
+        '光に染まるイベント': '染光活動',
+        '来訪する精霊団': '來訪精靈團',
+        '夏のキャンプ': '夏令營',
+    };
+    const EVENT_NAME_KO = {
+        [CURRENT_SEASON_NAME]: SEASON_NAME_KO,
+        '陽光の日々': '햇살의 나날',
+        '光に染まるイベント': '빛으로 물드는 이벤트',
+        '来訪する精霊団': '방문 정령단',
+        '夏のキャンプ': '여름 캠프',
+    };
+    const EVENT_NAME_I18N = { en: EVENT_NAME_EN, 'zh-TW': EVENT_NAME_ZH_TW, ko: EVENT_NAME_KO };
 
     // 🌐 対応言語一覧（'ja' が既定・フォールバック先）
     const SUPPORTED_LANGS = ['ja', 'en', 'zh-TW', 'ko'];
@@ -3971,7 +4027,7 @@
             dash_event_suffix: 'is currently active',
             dash_event_ends_prefix: 'Ends in',
             dash_no_events: 'No season or events currently active',
-            dash_revisit_label: 'Traveling Spirit',
+            dash_revisit_label: 'Traveling Spirit ',
             dash_revisit_active_suffix: 'is here now',
             dash_revisit_upcoming_suffix: 'until next visit',
             dash_shard_red: 'Red Shard',
@@ -4051,11 +4107,11 @@
 
             comp_title: '🏁 Completion forecast excluding Spells (all 4 spirits, by season end {date})',
             comp_ok_zero: '🎉 With your current candles and walk days, you already meet the completion condition (excluding Spells)!',
-            comp_ok_pre: '🎉 Starting now, you should be able to complete it in about',
-            comp_ok_mid: 'more day(s) (',
-            comp_ok_post: 'day(s) left until the season ends).',
+            comp_ok_pre: '🎉 Starting now, you should be able to complete it in about ',
+            comp_ok_mid: ' more day(s) (',
+            comp_ok_post: ' day(s) left until the season ends).',
             comp_bad_pre: '⚠️ At this pace it may be tight (',
-            comp_bad_post: 'day(s) left).',
+            comp_bad_post: ' day(s) left).',
             comp_candle_short: '🕯️ You may be short by about {n} candle(s).',
             comp_walk_short: '👣 You may be short by about {n} walk day(s) (measured across all 4 spirits).',
             comp_note1: '※ "Completion" covers every item except Spells (including Season Pass items and the Heart trade). Season Pass items also require owning the Season Pass separately.',
@@ -4067,7 +4123,7 @@
             plan_all_done: '🎉 Every non-Spell item is already complete for all 4 spirits!',
             plan_today_reco: "☀️ Today's recommendation",
             plan_walk_pre: '👣 Walk with:',
-            plan_walk_post: '(prioritized as the lowest-point spirit of the 4)',
+            plan_walk_post: ' (prioritized as the lowest-point spirit of the 4)',
             plan_walk_none: '👣 Walk: every spirit has already reached 280p',
             plan_buy_now_pre: '🕯️ Items you can trade for with your current candles (',
             plan_buy_now_post: '):',
@@ -4076,8 +4132,8 @@
             plan_item_close: ')',
             plan_overall_title: '📆 Overall completion estimate (all 4)',
             plan_unreachable: 'Could not estimate a completion date at the current pace.',
-            plan_total_pre: 'At this pace, all 4 spirits should be complete in about',
-            plan_total_post: 'more day(s).',
+            plan_total_pre: 'At this pace, all 4 spirits should be complete in about ',
+            plan_total_post: ' more day(s).',
             plan_log_toggle: '📋 View day-by-day plan ({n} day(s))',
             plan_log_close: 'Close ▲',
             plan_log_open: 'Open ▼',
@@ -4108,8 +4164,8 @@
             heart_total_cost_pre: '🕯️ Total candles needed from here:',
             heart_total_cost_unit: '',
             heart_total_cost_note_pre: '(includes 🕯️',
-            heart_total_cost_note_mid: 'for the Heart trade itself; your current',
-            heart_total_cost_note_post: 'candles are separate)',
+            heart_total_cost_note_mid: ' for the Heart trade itself; your current',
+            heart_total_cost_note_post: ' candles are separate)',
             heart_pass_needed: '⚠️ Trading for the Heart requires the Season Pass (currently: not owned).',
             heart_order_toggle: '📋 Exchange priority order (only what\'s needed to reach the Heart)',
             heart_order_close: 'Close ▲',
@@ -4171,9 +4227,9 @@
             tree_edit_open: '🕯️ Edit costs ▼',
             tree_pass_heart_label: 'Trading for the Heart',
             tree_pass_frag1: ' (🕯️',
-            tree_pass_frag2: ') and each tier\'s right-column',
+            tree_pass_frag2: ') and each tier\'s right-column ',
             tree_pass_adpass_label: 'Season Pass item',
-            tree_pass_frag3: ' are only available to',
+            tree_pass_frag3: ' are only available to ',
             tree_pass_holder_label: 'Season Pass holders',
             tree_pass_frag4: '',
             tree_pass_note_have: ' (currently: owned)',
@@ -4641,7 +4697,7 @@
             dash_event_suffix: '진행 중',
             dash_event_ends_prefix: '종료까지',
             dash_no_events: '현재 진행 중인 시즌・이벤트가 없습니다',
-            dash_revisit_label: '여행영혼',
+            dash_revisit_label: '여행영혼 ',
             dash_revisit_active_suffix: '방문 중',
             dash_revisit_upcoming_suffix: '다음 방문까지',
             dash_shard_red: '빨간 파편',
@@ -4721,10 +4777,10 @@
 
             comp_title: '🏁 마법 제외 컴플리트 진단 (4마리・시즌 종료 {date}까지)',
             comp_ok_zero: '🎉 현재 보유 수량과 동행 일수로 마법을 제외한 컴플리트 조건을 이미 충족했습니다!',
-            comp_ok_pre: '🎉 지금부터라도 앞으로',
-            comp_ok_mid: '일 정도면 컴플리트 가능할 것으로 보입니다 (시즌 종료까지 남은 기간',
+            comp_ok_pre: '🎉 지금부터라도 앞으로 ',
+            comp_ok_mid: '일 정도면 컴플리트 가능할 것으로 보입니다 (시즌 종료까지 남은 기간 ',
             comp_ok_post: '일).',
-            comp_bad_pre: '⚠️ 이 페이스라면 다소 빠듯할 수 있습니다 (남은',
+            comp_bad_pre: '⚠️ 이 페이스라면 다소 빠듯할 수 있습니다 (남은 ',
             comp_bad_post: '일).',
             comp_candle_short: '🕯️ 초가 약 {n}개 부족할 것으로 예상됩니다.',
             comp_walk_short: '👣 동행 일수가 약 {n}일 부족합니다 (4마리 합산 기준).',
@@ -4737,7 +4793,7 @@
             plan_all_done: '🎉 마법을 제외한 아이템은 4마리 모두 완료했습니다!',
             plan_today_reco: '☀️ 오늘의 추천',
             plan_walk_pre: '👣 동행 상대:',
-            plan_walk_post: '(4마리 중 포인트가 가장 낮아 우선)',
+            plan_walk_post: ' (4마리 중 포인트가 가장 낮아 우선)',
             plan_walk_none: '👣 동행: 대상 정령 모두 280p에 도달했습니다',
             plan_buy_now_pre: '🕯️ 현재 보유 수량 (',
             plan_buy_now_post: '개)으로 교환 가능한 아이템:',
@@ -4746,7 +4802,7 @@
             plan_item_close: ')',
             plan_overall_title: '📆 4마리 전체 완료 예상',
             plan_unreachable: '현재 페이스로는 완료 시기를 예측할 수 없었습니다.',
-            plan_total_pre: '이 페이스라면 앞으로',
+            plan_total_pre: '이 페이스라면 앞으로 ',
             plan_total_post: '일이면 4마리 모두 완료될 것으로 예상됩니다.',
             plan_log_toggle: '📋 일별 계획 보기 ({n}일)',
             plan_log_close: '닫기 ▲',
@@ -4778,7 +4834,7 @@
             heart_total_cost_pre: '🕯️ 지금부터 필요한 초 합계:',
             heart_total_cost_unit: '',
             heart_total_cost_note_pre: '(하트 교환분 🕯️',
-            heart_total_cost_note_mid: '포함 / 현재 보유 수량',
+            heart_total_cost_note_mid: ' 포함 / 현재 보유 수량',
             heart_total_cost_note_post: '개는 별도)',
             heart_pass_needed: '⚠️ 하트 교환에는 시즌 패스가 필요합니다 (현재: 미보유).',
             heart_order_toggle: '📋 교환 우선순위 (하트 도달에 필요한 것만)',
@@ -4841,9 +4897,9 @@
             tree_edit_open: '🕯️ 비용 편집 ▼',
             tree_pass_heart_label: '하트 교환',
             tree_pass_frag1: ' (🕯️',
-            tree_pass_frag2: ') 및 각 티어 오른쪽 열의',
+            tree_pass_frag2: ') 및 각 티어 오른쪽 열의 ',
             tree_pass_adpass_label: '시즌 패스 아이템',
-            tree_pass_frag3: '은(는)',
+            tree_pass_frag3: '은(는) ',
             tree_pass_holder_label: '시즌 패스 보유자',
             tree_pass_frag4: '만 이용 가능합니다',
             tree_pass_note_have: ' (현재: 보유)',
@@ -5007,7 +5063,7 @@
                 const now = Date.now();
                 return dashShard.value.occurrences.map(occ => ({ text: pfDashFormatShardTime(occ), past: occ.getTime() <= now }));
             });
-            const dashShardRealmLabel = computed(() => dashShard.value ? `${SHARD_REALM_JA[dashShard.value.realm]}・${dashShard.value.location}` : '');
+            const dashShardRealmLabel = computed(() => dashShard.value ? `${dashRealmName(dashShard.value.realm)}・${dashLocationName(dashShard.value.location)}` : '');
             const dashShardCountdown = computed(() => {
                 dashNow.value;
                 if (!dashShard.value || !dashShard.value.hasShard) return '';
@@ -5020,9 +5076,9 @@
                 const next = pfDashNextShardTime();
                 return next ? pfDashCountdown(next) : '';
             });
-            const dashCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm()] : '');
+            const dashCandleRealmLabel = computed(() => dashOpen.value ? dashRealmName(pfDashGrandCandleRealm()) : '');
             const dashCandleCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextPacificMidnight()) : ''; });
-            const dashQuestCandleRealmLabel = computed(() => dashOpen.value ? SHARD_REALM_JA[pfDashGrandCandleRealm(-1)] : '');
+            const dashQuestCandleRealmLabel = computed(() => dashOpen.value ? dashRealmName(pfDashGrandCandleRealm(-1)) : '');
             const dashUniCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(5)) : ''; });
             const dashPanCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(35)) : ''; });
             const dashKameCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(50)) : ''; });
@@ -5672,6 +5728,11 @@
             const spiritName = (spirit) => currentLang.value === 'ja' ? spirit.name : ((SPIRIT_NAME_I18N[currentLang.value] || {})[spirit.name] || spirit.name);
             const translateItemName = (str) => currentLang.value === 'ja' ? str : ((NAME_I18N[currentLang.value] || {})[str] || str);
             const seasonNameDisplay = computed(() => currentLang.value === 'ja' ? CURRENT_SEASON_NAME : (SEASON_NAME_I18N[currentLang.value] || CURRENT_SEASON_NAME));
+            // 🌐 ダッシュボード用：レルムid／破片出現エリア名／季節・イベント名（item由来のJA原文含む）を
+            // 現在の言語で表示するヘルパー。表に無い場合は日本語原文へフォールバックする
+            const dashRealmName = (id) => currentLang.value === 'ja' ? SHARD_REALM_JA[id] : ((SHARD_REALM_I18N[currentLang.value] || {})[id] || SHARD_REALM_JA[id]);
+            const dashLocationName = (str) => currentLang.value === 'ja' ? str : ((SHARD_LOCATION_I18N[currentLang.value] || {})[str] || str);
+            const translateEventName = (str) => currentLang.value === 'ja' ? str : ((EVENT_NAME_I18N[currentLang.value] || {})[str] || str);
 
             const applyLangToDOM = () => {
                 document.documentElement.setAttribute('lang', currentLang.value);
@@ -6093,6 +6154,7 @@
                     const fallback = records.value[0];
                     activeRecordId.value = fallback.id;
                     loadRecordData(fallback.id);
+                    loadCurrencyFields(); // 🔧 プロフィールモーダルは開いたままの場合があるため、通貨表示を削除前の値のまま残さずフォールバック先の実データへ即座に更新する（そのまま編集→保存されるとフォールバック先の実データを上書きしてしまうため）
                 }
                 saveRecordsMeta();
             };
@@ -6494,7 +6556,7 @@
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
                 getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, toggleTheme,
-                currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay,
+                currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay, translateEventName,
                 showSidebar, showSharedTools, sharedNotes,
                 showOptimizer, optSelectedId, optimizerDaily, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
                 hasSeasonPass, ownedCandles, showCandleEdit, candlesPerDay,
