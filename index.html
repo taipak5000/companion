@@ -37,7 +37,12 @@
             --card-bg: #ffffff;
             --text-color: #000000;
             --text-gray: #8e8e93;
-            --accent-blue: #007aff;
+            /* ♿ WCAG AA(4.5:1)確保のため、リンク等に使う標準アクセントブルーは
+               ライトモード限定で少し濃くしたトーンを使う（背景が明るいライトモードでは
+               iOS標準の#007affだと約3.6:1でAA未達のため）。ダークモードは背景が暗く
+               #007affのままでも十分なコントラストが出るため、下のダークモード用
+               上書きブロックで明示的に元の値へ戻している。 */
+            --accent-blue: #0066cc;
             --accent-orange: #ff9500;
             --accent-purple: #af52de;
             --accent-green: #34c759;
@@ -63,6 +68,7 @@
             --tab-bg: rgba(255, 255, 255, 0.1);
             --tab-btn-active: rgba(255, 255, 255, 0.15);
             --stat-box-bg: rgba(255, 255, 255, 0.04);
+            --accent-blue: #007aff; /* ♿ ダークモードは背景が暗く元の値のままでAAを満たすため、ライトモード用の濃色へ変えず維持する */
             --magic-star-fill: #ffffff;
             --magic-star-accent: #c17b82;
             --success-text: #30d158;
@@ -1584,6 +1590,19 @@
         [data-theme="dark"] .opt-summary { background: rgba(0,122,255,0.12); }
         .opt-summary strong { color: var(--accent-orange); }
         .opt-empty { font-size: 12px; color: var(--text-gray); text-align: center; padding: 12px 0; }
+        .opt-copy-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .opt-copy-status { font-size: 11.5px; color: var(--accent-green); }
+
+        /* ── 🆚 プロフィール比較 ── */
+        .cmp-selects { display: flex; gap: 8px; margin: 14px 0; }
+        .cmp-select-col { flex: 1; min-width: 0; }
+        .cmp-select-label { display: block; font-size: 11px; color: var(--text-gray); font-weight: bold; margin-bottom: 4px; }
+        .cmp-table { margin-top: 6px; }
+        .cmp-row { display: flex; align-items: center; gap: 6px; padding: 8px 2px; border-bottom: 1px solid var(--border-color); font-size: 12.5px; }
+        .cmp-row:last-child { border-bottom: none; }
+        .cmp-row-head { font-weight: 700; font-size: 12px; padding-top: 2px; }
+        .cmp-label { flex: 1.15; min-width: 0; color: var(--text-gray); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cmp-val { flex: 1; min-width: 0; text-align: center; font-weight: 600; color: var(--text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .forecast-head { margin-bottom: 10px; }
         .forecast-title { font-size: 15px; font-weight: bold; }
@@ -1872,7 +1891,7 @@
         <div class="subtitle">{{ t('app_subtitle') }}</div>
         <div class="season-info-badge">
             🎨 <strong>{{ seasonNameDisplay }}</strong>
-            <span class="season-info-dates">{{ SEASON_START_TEXT }} 〜 {{ SEASON_END_TEXT }}</span>
+            <span class="season-info-dates">{{ seasonStartText }} 〜 {{ seasonEndText }}</span>
             <div class="season-day-badge">{{ t('season_day_label', { current: seasonDayInfo.current, total: seasonDayInfo.total }) }}</div>
             <div class="season-countdown" :class="{ 'is-ended': seasonCountdown.ended }">
                 <template v-if="!seasonCountdown.ended">
@@ -1897,7 +1916,7 @@
     </div>
 
     <div class="pf-modal-overlay" :class="{ 'is-visible': showProfileModal }" @click.self="pfCloseModal">
-        <div class="pf-modal-card">
+        <div class="pf-modal-card" ref="pfModalCardEl" tabindex="-1">
             <h3>{{ t('record_title') }}</h3>
             <div>
                 <div v-for="rec in records" :key="rec.id" class="pf-row" :class="{ active: rec.id === activeRecordId }" style="flex-wrap: wrap;">
@@ -1963,6 +1982,7 @@
                 </div>
                 </template>
             </div>
+            <button v-if="records.length > 1" type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="pfCloseModal(); pfCompareOpenModal();">{{ t('record_compare_btn') }}</button>
             <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="dmOpenModal">{{ t('dm_open_btn') }}</button>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
         </div>
@@ -1970,7 +1990,7 @@
 
     <!-- ═══ 💾 データのバックアップ・復元・削除 ═══ -->
     <div class="pf-modal-overlay" :class="{ 'is-visible': showDmModal }" @click.self="dmCloseModal">
-        <div class="pf-modal-card">
+        <div class="pf-modal-card" ref="dmModalCardEl" tabindex="-1">
             <h3>{{ t('dm_title') }}</h3>
             <p class="pf-hint" style="margin-top:0;">{{ t('dm_hint') }}</p>
             <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" @click="dmExport">{{ t('dm_export_btn') }}</button>
@@ -1996,8 +2016,13 @@
 
     <!-- ═══ 🗓️ ダッシュボード（今日・今週・今月） ═══ -->
     <div class="pf-modal-overlay" :class="{ 'is-visible': dashOpen }" @click.self="pfDashClose">
-        <div class="pf-modal-card">
-            <h3>{{ t('dash_title') }}</h3>
+        <div class="pf-modal-card" ref="dashModalCardEl" tabindex="-1">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px;">
+                <h3 style="margin:0;">{{ t('dash_title') }}</h3>
+                <button type="button" class="pf-icon-btn" :disabled="dashRefreshing || dashLoading" :title="t('dash_refresh_title')" @click="pfDashRefresh">{{ dashRefreshing ? '⏳' : '🔄' }} {{ t('dash_refresh_btn') }}</button>
+            </div>
+            <p v-if="dashLastUpdatedText" style="margin:-8px 0 10px; font-size:11px; color:var(--text-gray);">{{ t('dash_last_updated_prefix') }} {{ dashLastUpdatedText }}</p>
+            <p v-if="dashRefreshStatus" class="pf-hint" style="margin-top:0;">{{ dashRefreshStatus }}</p>
             <div v-if="dashLoading"><p class="pf-hint">{{ t('dash_loading') }}</p></div>
             <div v-else-if="dashError"><div class="dash-empty">{{ t('dash_load_error') }}</div></div>
             <template v-else-if="dashData">
@@ -2051,7 +2076,7 @@
 
     <!-- ═══ 📱 ホーム画面アイコンのカスタマイズ ═══ -->
     <div class="pf-modal-overlay" :class="{ 'is-visible': showIconModal }" @click.self="pfIconCloseModal">
-        <div class="pf-modal-card">
+        <div class="pf-modal-card" ref="iconModalCardEl" tabindex="-1">
             <h3>{{ t('pficon_title') }}</h3>
 
             <p class="pf-hint" style="margin-top:0;">
@@ -2105,7 +2130,7 @@
 
     <!-- ═══ ⚙️ 表示設定（ダークモード・キーボードショートカット） ═══ -->
     <div class="pf-modal-overlay" :class="{ 'is-visible': showSettingsModal }" @click.self="settingsCloseModal">
-        <div class="pf-modal-card">
+        <div class="pf-modal-card" ref="settingsModalCardEl" tabindex="-1">
             <h3>{{ t('settings_title') }}</h3>
 
             <div class="dash-section">
@@ -2159,6 +2184,61 @@
             </div>
 
             <button type="button" class="pf-close-btn" @click="settingsCloseModal">{{ t('record_close') }}</button>
+        </div>
+    </div>
+
+    <!-- ═══ 🆚 プロフィール比較 ═══ -->
+    <div class="pf-modal-overlay" :class="{ 'is-visible': showCompareModal }" @click.self="pfCompareCloseModal">
+        <div class="pf-modal-card" ref="compareModalCardEl" tabindex="-1" style="max-width:400px;">
+            <h3>{{ t('compare_title') }}</h3>
+            <p class="pf-hint" style="margin-top:0;">{{ t('compare_hint') }}</p>
+
+            <div class="cmp-selects">
+                <div class="cmp-select-col">
+                    <label class="cmp-select-label">{{ t('compare_select_a_label') }}</label>
+                    <select class="opt-select" v-model="compareIdA" style="width:100%; min-width:0;">
+                        <option v-for="rec in records" :key="rec.id" :value="rec.id">{{ rec.name }}</option>
+                    </select>
+                </div>
+                <div class="cmp-select-col">
+                    <label class="cmp-select-label">{{ t('compare_select_b_label') }}</label>
+                    <select class="opt-select" v-model="compareIdB" style="width:100%; min-width:0;">
+                        <option v-for="rec in records" :key="rec.id" :value="rec.id">{{ rec.name }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <template v-if="compareSummaryA && compareSummaryB">
+            <div class="cmp-table">
+                <div class="cmp-row cmp-row-head">
+                    <span class="cmp-label"></span>
+                    <span class="cmp-val" :style="compareSummaryA.color ? { color: compareSummaryA.color } : null">{{ compareSummaryA.name }}</span>
+                    <span class="cmp-val" :style="compareSummaryB.color ? { color: compareSummaryB.color } : null">{{ compareSummaryB.name }}</span>
+                </div>
+                <div class="cmp-row">
+                    <span class="cmp-label">{{ t('compare_hearts_label') }}</span>
+                    <span class="cmp-val">♡{{ compareSummaryA.totalHearts }} / 4</span>
+                    <span class="cmp-val">♡{{ compareSummaryB.totalHearts }} / 4</span>
+                </div>
+                <div class="cmp-row" v-for="row in compareSpiritRows" :key="row.id">
+                    <span class="cmp-label">{{ row.name }}</span>
+                    <span class="cmp-val">{{ row.aPoints }}/{{ row.aCap }}p<template v-if="row.aHeart"> ♡</template></span>
+                    <span class="cmp-val">{{ row.bPoints }}/{{ row.bCap }}p<template v-if="row.bHeart"> ♡</template></span>
+                </div>
+                <div class="cmp-row">
+                    <span class="cmp-label">{{ t('compare_candles_label') }}</span>
+                    <span class="cmp-val">🕯️{{ compareSummaryA.ownedCandles }}</span>
+                    <span class="cmp-val">🕯️{{ compareSummaryB.ownedCandles }}</span>
+                </div>
+                <div class="cmp-row">
+                    <span class="cmp-label">{{ t('compare_pass_label') }}</span>
+                    <span class="cmp-val">{{ compareSummaryA.hasSeasonPass ? t('compare_pass_yes') : t('compare_pass_no') }}</span>
+                    <span class="cmp-val">{{ compareSummaryB.hasSeasonPass ? t('compare_pass_yes') : t('compare_pass_no') }}</span>
+                </div>
+            </div>
+            </template>
+
+            <button type="button" class="pf-close-btn" @click="pfCompareCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
 
@@ -2364,7 +2444,7 @@
                 </div>
 
                 <div class="advice-box" style="margin-top: 10px;" :style="completionForecast.isPossible ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);' : 'background:rgba(255,59,48,0.06); color:var(--danger-text); border-color:rgba(255,59,48,0.25);'">
-                    <div style="font-weight: bold; margin-bottom: 4px;">{{ t('comp_title', {date: SEASON_END_TEXT}) }}</div>
+                    <div style="font-weight: bold; margin-bottom: 4px;">{{ t('comp_title', {date: seasonEndText}) }}</div>
                     <template v-if="completionForecast.isPossible">
                         <template v-if="completionForecast.daysNeeded <= 0">
                             {{ t('comp_ok_zero') }}
@@ -2500,7 +2580,11 @@
                 </div>
 
                 <div class="advice-box" style="margin-top: 10px; border-color: rgba(255,149,0,0.3); background: rgba(255,149,0,0.05); color: var(--text-color);">
-                    <div style="font-weight: bold; margin-bottom: 4px; color: var(--accent-orange);">{{ t('heart_title') }}</div>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: var(--accent-orange); display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <span>{{ t('heart_title') }}</span>
+                        <button type="button" class="pf-icon-btn" style="font-weight:normal; flex-shrink:0;" @click="heartCopyPlan">{{ t('copy_plan_btn') }}</button>
+                    </div>
+                    <div v-if="heartCopyStatus" class="opt-copy-status" style="margin-bottom:6px;">{{ heartCopyStatus }}</div>
                     <template v-if="activeFastestHeartPlan.alreadyDone">
                         {{ t('heart_done') }}
                     </template>
@@ -2620,6 +2704,10 @@
                             {{ t('opt_reachable_pre') }} <strong>{{ optimizerSummary.reachable }} / {{ optimizerSummary.total }}</strong>{{ t('opt_reachable_post') }}
                             <span v-if="optimizerSummary.reachable < optimizerSummary.total">　{{ t('opt_reorder_hint') }}</span>
                             <span v-else>　🎉</span>
+                        </div>
+                        <div class="opt-copy-row">
+                            <button type="button" class="pf-icon-btn" @click="optCopyPlan">{{ t('copy_plan_btn') }}</button>
+                            <span v-if="optCopyStatus" class="opt-copy-status">{{ optCopyStatus }}</span>
                         </div>
                         <div style="font-size: 10.5px; color: var(--text-gray); margin-top: 8px; line-height: 1.5;">{{ t('opt_note') }}</div>
                     </div>
@@ -2957,7 +3045,7 @@
     }
 </script>
 <script>
-    const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+    const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
 
     // 🕯️ costs は精霊ごとのキャンドルコスト表（次イベントのツリー画像より反映）
     // ツリーは下から第1層→第4層の順（画像の一番下が第1層、一番上のハートが最終報酬）。
@@ -3327,10 +3415,9 @@
         }
         return null;
     };
-    const pfDashFormatShardTime = (d) => {
-        const mm = d.getMonth() + 1, dd = d.getDate();
-        const hh = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
-        return `${mm}/${dd} ${hh}:${mi}`;
+    // 🌐 現在の言語ロケールに合わせてIntl.DateTimeFormatで整形する（時刻表記は言語に関わらず24時間表記で統一）
+    const pfDashFormatShardTime = (d, locale) => {
+        return new Intl.DateTimeFormat(locale, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
     };
     // 日替わり大キャンドル（キャンドルのかたまり）の出現エリア予測。
     // 太平洋時間0時に、草原→雨林→峡谷→荒野→書庫の順で毎日切り替わる固定ローテーション
@@ -3583,6 +3670,7 @@
             pfcur_season: '🕯️🍂 シーズンキャンドル',
             pfcur_gift_pass: '🎟️ ギフトパス',
 
+            record_compare_btn: '🆚 記録を比較',
             dm_open_btn: '💾 データのバックアップ・復元・削除',
             dm_title: '💾 データのバックアップ・復元・削除',
             dm_hint: 'このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。',
@@ -3598,11 +3686,25 @@
             dm_status_wrong_file: 'このツールで書き出したファイルではないようです。',
             dm_status_imported: 'インポートしました。ページを再読み込みします…',
             dm_status_wiped: '削除しました。ページを再読み込みします…',
+            compare_title: '🆚 記録の比較',
+            compare_hint: '2つの記録を選んで、進捗を横並びで比較できます。',
+            compare_select_a_label: '記録A',
+            compare_select_b_label: '記録B',
+            compare_hearts_label: '❤️ 獲得ハート数',
+            compare_candles_label: '🕯️ 所持キャンドル',
+            compare_pass_label: '🎫 アドパス',
+            compare_pass_yes: 'あり',
+            compare_pass_no: 'なし',
 
             dash_title: '🗓️ 今日・今週・今月',
             dash_btn_title: '今日・今週・今月ダッシュボード',
             dash_loading: '読み込み中…',
             dash_load_error: '読み込みに失敗しました',
+            dash_refresh_btn: '更新',
+            dash_refresh_title: '最新のデータに更新する',
+            dash_last_updated_prefix: '最終更新:',
+            dash_refresh_success: '✅ 最新のデータに更新しました',
+            dash_refresh_failed: '⚠️ 更新に失敗しました',
             dash_daily_label: 'デイリー',
             dash_today_label: '今日',
             dash_week_label: '今週',
@@ -3785,6 +3887,9 @@
             opt_reachable_post: '個',
             opt_reorder_hint: '→ 並び順を見直すと結果が変わります',
             opt_note: '※ 各層の解放に必要な累計ポイントは考慮していません。交換には該当する層の解放が必要です。',
+            copy_plan_btn: '📋 プランをコピー',
+            copy_success: '✅ コピーしました',
+            copy_failed: '⚠️ コピーに失敗しました',
             shared_title: '📌 全精霊共通のメモ・計算',
             shared_close: '閉じる ▲',
             shared_open: '開く ▼',
@@ -3914,6 +4019,7 @@
             pfcur_season: '🕯️🍂 Season Candles',
             pfcur_gift_pass: '🎟️ Gift Pass',
 
+            record_compare_btn: '🆚 Compare Records',
             dm_open_btn: '💾 Data Backup / Restore / Delete',
             dm_title: '💾 Data Backup / Restore / Delete',
             dm_hint: 'Export, import, or delete data saved in this browser for the taipak5000.github.io family of tools (item, wings, companion, spirit-catalog, etc.) all at once. This applies to all profiles together.',
@@ -3929,11 +4035,25 @@
             dm_status_wrong_file: 'This doesn\'t look like a file exported from this tool.',
             dm_status_imported: 'Imported. Reloading the page…',
             dm_status_wiped: 'Deleted. Reloading the page…',
+            compare_title: '🆚 Compare Records',
+            compare_hint: 'Pick two records to compare their progress side by side.',
+            compare_select_a_label: 'Record A',
+            compare_select_b_label: 'Record B',
+            compare_hearts_label: '❤️ Hearts earned',
+            compare_candles_label: '🕯️ Candles owned',
+            compare_pass_label: '🎫 Season Pass',
+            compare_pass_yes: 'Yes',
+            compare_pass_no: 'No',
 
             dash_title: '🗓️ Today / This Week / This Month',
             dash_btn_title: 'Today / This Week / This Month Dashboard',
             dash_loading: 'Loading…',
             dash_load_error: 'Failed to load',
+            dash_refresh_btn: 'Refresh',
+            dash_refresh_title: 'Refresh with the latest data',
+            dash_last_updated_prefix: 'Last updated:',
+            dash_refresh_success: '✅ Updated with the latest data',
+            dash_refresh_failed: '⚠️ Failed to refresh',
             dash_daily_label: 'Daily',
             dash_today_label: 'Today',
             dash_week_label: 'This Week',
@@ -4116,6 +4236,9 @@
             opt_reachable_post: '',
             opt_reorder_hint: '→ Reordering may change the result',
             opt_note: '* Tier unlock points are not taken into account. Exchanging requires the corresponding tier to be unlocked.',
+            copy_plan_btn: '📋 Copy Plan',
+            copy_success: '✅ Copied',
+            copy_failed: '⚠️ Copy failed',
             shared_title: '📌 Shared notes & calculator (all spirits)',
             shared_close: 'Close ▲',
             shared_open: 'Open ▼',
@@ -4139,7 +4262,7 @@
             tree_remaining_mid: '(spent:',
             tree_remaining_excluded: '· excluded:',
             tree_remaining_unit: '',
-            tree_remaining_post: ')',
+            tree_remaining_post: 'candles)',
             tree_pass_heart_label: 'Trading for the Heart',
             tree_pass_frag1: ' (🕯️',
             tree_pass_frag2: ') and each tier\'s right-column ',
@@ -4245,6 +4368,7 @@
             pfcur_season: '🕯️🍂 季節蠟燭',
             pfcur_gift_pass: '🎟️ 禮物通行證',
 
+            record_compare_btn: '🆚 比較記錄',
             dm_open_btn: '💾 資料備份・還原・刪除',
             dm_title: '💾 資料備份・還原・刪除',
             dm_hint: '可以將這個瀏覽器中儲存的 taipak5000.github.io 系列工具（item・wings・companion・spirit-catalog 等）的資料一次匯出・匯入・刪除。所有記錄都會一併處理。',
@@ -4260,11 +4384,25 @@
             dm_status_wrong_file: '這似乎不是由本工具匯出的檔案。',
             dm_status_imported: '匯入完成。即將重新載入頁面…',
             dm_status_wiped: '刪除完成。即將重新載入頁面…',
+            compare_title: '🆚 記錄比較',
+            compare_hint: '選擇兩筆記錄，並排比較進度。',
+            compare_select_a_label: '記錄A',
+            compare_select_b_label: '記錄B',
+            compare_hearts_label: '❤️ 已獲得心',
+            compare_candles_label: '🕯️ 持有蠟燭',
+            compare_pass_label: '🎫 季節通行證',
+            compare_pass_yes: '有',
+            compare_pass_no: '沒有',
 
             dash_title: '🗓️ 今日・本週・本月',
             dash_btn_title: '今日・本週・本月儀表板',
             dash_loading: '載入中…',
             dash_load_error: '載入失敗',
+            dash_refresh_btn: '更新',
+            dash_refresh_title: '更新為最新資料',
+            dash_last_updated_prefix: '最後更新:',
+            dash_refresh_success: '✅ 已更新為最新資料',
+            dash_refresh_failed: '⚠️ 更新失敗',
             dash_daily_label: '每日',
             dash_today_label: '今日',
             dash_week_label: '本週',
@@ -4447,6 +4585,9 @@
             opt_reachable_post: '個',
             opt_reorder_hint: '→ 調整順序可能改變結果',
             opt_note: '※ 未考慮各層解鎖所需的累計點數。兌換前需先解鎖對應的層。',
+            copy_plan_btn: '📋 複製方案',
+            copy_success: '✅ 已複製',
+            copy_failed: '⚠️ 複製失敗',
             shared_title: '📌 全精靈共用備忘錄・計算',
             shared_close: '關閉 ▲',
             shared_open: '開啟 ▼',
@@ -4576,6 +4717,7 @@
             pfcur_season: '🕯️🍂 시즌 초',
             pfcur_gift_pass: '🎟️ 기프트 패스',
 
+            record_compare_btn: '🆚 기록 비교',
             dm_open_btn: '💾 데이터 백업・복원・삭제',
             dm_title: '💾 데이터 백업・복원・삭제',
             dm_hint: '이 브라우저에 저장된 taipak5000.github.io 계열 도구(item・wings・companion・spirit-catalog 등)의 데이터를 한꺼번에 내보내기・가져오기・삭제할 수 있습니다. 모든 기록이 함께 적용됩니다.',
@@ -4591,11 +4733,25 @@
             dm_status_wrong_file: '이 도구에서 내보낸 파일이 아닌 것 같습니다.',
             dm_status_imported: '가져왔습니다. 페이지를 새로고침합니다…',
             dm_status_wiped: '삭제했습니다. 페이지를 새로고침합니다…',
+            compare_title: '🆚 기록 비교',
+            compare_hint: '두 개의 기록을 선택해 진행 상황을 나란히 비교할 수 있습니다.',
+            compare_select_a_label: '기록 A',
+            compare_select_b_label: '기록 B',
+            compare_hearts_label: '❤️ 획득한 하트 수',
+            compare_candles_label: '🕯️ 보유 초',
+            compare_pass_label: '🎫 시즌 패스',
+            compare_pass_yes: '있음',
+            compare_pass_no: '없음',
 
             dash_title: '🗓️ 오늘・이번 주・이번 달',
             dash_btn_title: '오늘・이번 주・이번 달 대시보드',
             dash_loading: '불러오는 중…',
             dash_load_error: '불러오기에 실패했습니다',
+            dash_refresh_btn: '새로고침',
+            dash_refresh_title: '최신 데이터로 업데이트',
+            dash_last_updated_prefix: '마지막 업데이트:',
+            dash_refresh_success: '✅ 최신 데이터로 업데이트했습니다',
+            dash_refresh_failed: '⚠️ 업데이트에 실패했습니다',
             dash_daily_label: '데일리',
             dash_today_label: '오늘',
             dash_week_label: '이번 주',
@@ -4778,6 +4934,9 @@
             opt_reachable_post: '개',
             opt_reorder_hint: '→ 순서를 바꾸면 결과가 달라질 수 있습니다',
             opt_note: '※ 각 층 해금에 필요한 누적 포인트는 고려하지 않습니다. 교환하려면 해당 층이 해금되어 있어야 합니다.',
+            copy_plan_btn: '📋 계획 복사',
+            copy_success: '✅ 복사했습니다',
+            copy_failed: '⚠️ 복사에 실패했습니다',
             shared_title: '📌 전체 정령 공통 메모・계산',
             shared_close: '닫기 ▲',
             shared_open: '열기 ▼',
@@ -4850,6 +5009,67 @@
             const isDarkMode = ref(false);
             const currentLang = ref('ja'); // 🌐 'ja' または 'en'
             const showSidebar = ref(false);
+
+            // ♿ モーダル共通のフォーカストラップ。開いたときにフォーカスをモーダル内へ移し、
+            // Tab/Shift+Tabでモーダルの外（背景に隠れて見えなくなっている要素）へ出られないようにする。
+            // 閉じたらモーダルを開く直前にフォーカスしていた要素（トリガー）へフォーカスを戻す。
+            // 個々のOpen/Close関数を直接ラップするのではなく showXxxModal 系のref（真偽値）自体を
+            // watchすることで、専用関数を経由しない直接代入（例: @click="switchRecord(rec.id); showProfileModal = false"）
+            // でも確実に効くようにしている。共有オーバーレイパターン（.pf-modal-overlay/.pf-modal-card）を
+            // 使う全モーダルに useModalFocusTrap(...) で紐付ける。
+            const FT_FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+            let ftLastTrigger = null;
+            let ftContainerEl = null;
+            const ftGetFocusable = (container) => Array.from(container.querySelectorAll(FT_FOCUSABLE_SELECTOR))
+                .filter(el => el.offsetParent !== null); // 非表示要素（v-show等）は対象外にする
+            const ftHandleKeydown = (e) => {
+                if (e.key !== 'Tab' || !ftContainerEl) return;
+                const focusables = ftGetFocusable(ftContainerEl);
+                if (focusables.length === 0) { e.preventDefault(); ftContainerEl.focus(); return; }
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                const activeInside = ftContainerEl.contains(document.activeElement);
+                if (e.shiftKey) {
+                    if (!activeInside || document.activeElement === first) { e.preventDefault(); last.focus(); }
+                } else {
+                    if (!activeInside || document.activeElement === last) { e.preventDefault(); first.focus(); }
+                }
+            };
+            const ftOpen = (containerEl) => {
+                if (!containerEl) return;
+                ftLastTrigger = document.activeElement;
+                ftContainerEl = containerEl;
+                document.addEventListener('keydown', ftHandleKeydown);
+                nextTick(() => {
+                    if (ftContainerEl !== containerEl) return; // 待っている間に別モーダルへ切り替わっていたら何もしない
+                    const focusables = ftGetFocusable(containerEl);
+                    (focusables[0] || containerEl).focus();
+                });
+            };
+            const ftClose = () => {
+                document.removeEventListener('keydown', ftHandleKeydown);
+                ftContainerEl = null;
+                const trigger = ftLastTrigger;
+                ftLastTrigger = null;
+                if (trigger && typeof trigger.focus === 'function' && document.contains(trigger)) {
+                    trigger.focus();
+                }
+            };
+            // isOpenRef（表示状態の真偽値ref）とcontainerRef（モーダルカードのtemplate ref）を紐付ける
+            const useModalFocusTrap = (isOpenRef, containerRef) => {
+                watch(isOpenRef, (isOpen) => {
+                    if (isOpen) ftOpen(containerRef.value);
+                    else ftClose();
+                });
+            };
+            // 各モーダルの .pf-modal-card 本体を指すtemplate ref（フォーカストラップの対象コンテナ）
+            const pfModalCardEl = ref(null);
+            const dmModalCardEl = ref(null);
+            const dashModalCardEl = ref(null);
+            const iconModalCardEl = ref(null);
+            const settingsModalCardEl = ref(null);
+            const compareModalCardEl = ref(null);
+
             const showSharedTools = ref(false); // 📌 メモ・計算欄はデフォルトで折りたたみ
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
 
@@ -4933,6 +5153,11 @@
             const pfDeletingId = ref(null); // 削除確認中の記録id（null=確認していない）
             const activeRecordName = computed(() => (records.value.find(r => r.id === activeRecordId.value) || {}).name || '');
 
+            // 🆚 プロフィール比較（2件を選んで進捗を横並びで確認する）の状態変数
+            const showCompareModal = ref(false);
+            const compareIdA = ref('');
+            const compareIdB = ref('');
+
             // 🗓️ ダッシュボード（今日・今週・今月）の状態。データの本家はitemのindex.html
             // （CURRENT_EVENTS・REVISIT_SPIRIT_SCHEDULE・CURRENT_SEASON）で、開いたときに
             // fetchして読み込む（他サイトと同じ考え方）。一度読み込んだらキャッシュする。
@@ -4940,6 +5165,19 @@
             const dashLoading = ref(false);
             const dashError = ref(false);
             const dashData = ref(null); // { revisit, season, eventSchedule, nextUpdate } | null
+            // 🔄 手動更新（キャッシュを無視して再取得）用の状態。シーズン境界をまたいで
+            // タブを開きっぱなしにしているユーザーが、ページ全体を再読み込みしなくても
+            // 最新のダッシュボードデータを取り直せるようにする。
+            const dashRefreshing = ref(false);
+            const dashLastUpdated = ref(null); // Date | null（最後にデータ取得に成功した時刻）
+            const dashRefreshStatus = ref(''); // 手動更新の結果を一時的に表示するステータス文言
+            let dashRefreshStatusTimer = null;
+            // 🌐 最終更新時刻の表示も、現在の言語ロケールに合わせてIntlで整形する（時刻は24時間表記で統一）
+            const dashLastUpdatedText = computed(() => {
+                if (!dashLastUpdated.value) return '';
+                const locale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
+                return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hour12: false }).format(dashLastUpdated.value);
+            });
             // モーダルを開いている間1秒おきに更新するトリガー。各カウントダウン系computedが
             // これを読むことで、Vueの依存追跡により1秒おきに再計算される。
             const dashNow = ref(Date.now());
@@ -4974,7 +5212,8 @@
                 dashNow.value;
                 if (!dashShard.value) return [];
                 const now = Date.now();
-                return dashShard.value.occurrences.map(occ => ({ text: pfDashFormatShardTime(occ), past: occ.getTime() <= now }));
+                const locale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
+                return dashShard.value.occurrences.map(occ => ({ text: pfDashFormatShardTime(occ, locale), past: occ.getTime() <= now }));
             });
             const dashShardRealmLabel = computed(() => dashShard.value ? `${dashRealmName(dashShard.value.realm)}・${dashLocationName(dashShard.value.location)}` : '');
             const dashShardCountdown = computed(() => {
@@ -5169,6 +5408,19 @@
                 return new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(target);
             });
 
+            // 🌐 シーズン開始・終了日時（ヘッダー・コンプリート診断見出し用）も、SEASON_START/SEASON_END
+            // （Dateオブジェクト）から現在の言語ロケールに合わせてIntlで整形する
+            // （旧SEASON_START_TEXT/SEASON_END_TEXTは常に日本語形式の固定文字列だったため未対応言語でも
+            // 言語が切り替わらなかった）
+            const seasonStartText = computed(() => {
+                const locale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
+                return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(SEASON_START);
+            });
+            const seasonEndText = computed(() => {
+                const locale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
+                return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(SEASON_END);
+            });
+
             // 🏁 シーズン終了日までに「魔法を除く全アイテムコンプリート（4体分）」が間に合うか診断する
             // ・キャンドル面: 今日から終了日までの見込み獲得数（所持数含む）で、魔法以外の残りコストをまかなえるか
             // ・連れ歩き面: 魔法なしで280p到達に必要な連れ歩き日数（1精霊につき最大9日）を、
@@ -5340,7 +5592,7 @@
                 let candlePool = ownedCandles.value || 0;
                 const perDay = candlesPerDay.value;
                 const heartCost = heartItem.candles || 0;
-                const heartName = cleanName(heartItem.name);
+                const heartName = cleanName(translateItemName(heartItem.name)); // 🌐 他の箇所（forecast等）と同じくtranslateItemNameを通す（未対応言語では日本語のまま表示されるバグの修正）
 
                 if (heartItem.checked) return { alreadyDone: true, order: [], totalCost: 0 };
 
@@ -5385,6 +5637,35 @@
                 }
                 return { unreachable: true, order: [], totalCost: 0 };
             });
+
+            // 📋 最短ハート交換シミュレーションの結果をプレーンテキストとしてコピーする（共有用）。
+            // pfCopyTextは後方（オプティマイザ側）で定義しているが、実際に呼ばれるのはボタンクリック時
+            // （setup()の初期実行がすべて終わった後）なので、定義順は問題にならない。
+            const heartCopyStatus = ref('');
+            const heartCopyPlan = () => {
+                const plan = activeFastestHeartPlan.value;
+                const lines = [`${t('heart_title')}（${spiritName(activeSpirit.value)}）`];
+                if (plan.alreadyDone) {
+                    lines.push(t('heart_done'));
+                } else if (plan.unreachable) {
+                    lines.push(t('heart_unreachable'));
+                } else {
+                    if (plan.day === 0) {
+                        lines.push(t('heart_ready'));
+                    } else {
+                        lines.push(`${t('heart_plan_pre')} ${plan.day} ${t('heart_plan_day_unit')} ${t('heart_plan_post')}`);
+                    }
+                    lines.push(`${t('heart_total_cost_pre')} ${plan.totalCost}${t('heart_total_cost_unit')}`);
+                    if (plan.readyExceptPass) lines.push(t('heart_pass_needed'));
+                    if (plan.order && plan.order.length) {
+                        lines.push('');
+                        plan.order.forEach((step, idx) => {
+                            lines.push(`${idx + 1}. ${step.day}${t('heart_order_day_suffix')} - ${step.name} 🕯️${step.candles}`);
+                        });
+                    }
+                }
+                pfCopyText(lines.join('\n'), heartCopyStatus);
+            };
 
             // 🧮 共通計算欄（+−×÷・全角対応）
             const sharedCalcFormula = ref('');
@@ -5757,7 +6038,9 @@
                         const estDate = new Date(now);
                         estDate.setDate(estDate.getDate() + daysNeeded);
                         row.inSeason = estDate <= SEASON_END;
-                        row.dateText = `${estDate.getMonth() + 1}/${estDate.getDate()}`;
+                        // 🌐 現在の言語ロケールに合わせてIntl.DateTimeFormatで整形する
+                        const optLocale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
+                        row.dateText = new Intl.DateTimeFormat(optLocale, { month: 'numeric', day: 'numeric' }).format(estDate);
                     }
                     return row;
                 }).filter(Boolean);
@@ -5775,6 +6058,62 @@
                     total: rows.length
                 };
             });
+
+            // 📋 テキストをクリップボードへコピーする共通ヘルパー。navigator.clipboardが使えない環境
+            // （非HTTPS等）向けに、非表示textareaへ選択→document.execCommand('copy')のフォールバックも
+            // 用意する。成功/失敗をstatusRef（呼び出し側のref('')）へ一時的に反映し、数秒後に自動で消す。
+            const pfCopyStatusTimers = new WeakMap();
+            const pfCopyText = async (text, statusRef) => {
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(text);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = text;
+                        ta.style.position = 'fixed';
+                        ta.style.opacity = '0';
+                        ta.style.pointerEvents = 'none';
+                        document.body.appendChild(ta);
+                        ta.focus();
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                    }
+                    statusRef.value = t('copy_success');
+                } catch (e) {
+                    console.error('pfCopyText', e);
+                    statusRef.value = t('copy_failed');
+                }
+                if (pfCopyStatusTimers.has(statusRef)) clearTimeout(pfCopyStatusTimers.get(statusRef));
+                pfCopyStatusTimers.set(statusRef, setTimeout(() => { statusRef.value = ''; }, 3000));
+            };
+
+            // 📋 交換アイテムの取得順プラン（オプティマイザ）をプレーンテキストとしてコピーする（共有用）
+            const optCopyStatus = ref('');
+            const optCopyPlan = () => {
+                const rows = optimizerRows.value;
+                const lines = [`🎯 ${t('opt_title')}`];
+                if (rows.length === 0) {
+                    lines.push(t('opt_empty'));
+                } else {
+                    rows.forEach((row, idx) => {
+                        let statusText;
+                        if (row.done) statusText = `✓ ${t('opt_done')}`;
+                        else if (row.affordableNow) statusText = t('opt_now');
+                        else if (row.unreachable) statusText = t('opt_unreachable');
+                        else statusText = `${row.dateText}${t('opt_est_suffix')}${row.inSeason ? ' ✓' + t('opt_within') : ' ⚠' + t('opt_over')}`;
+                        lines.push(`${idx + 1}. ${row.name} 🕯️${row.candles}（${t('opt_cum')} ${row.cumulative}） - ${statusText}`);
+                    });
+                    const s = optimizerSummary.value;
+                    lines.push('');
+                    lines.push(`${t('opt_total_pre')} ${s.totalCost}${t('opt_total_unit')}（${t('opt_lack')} ${s.lack}${t('opt_total_unit')}）`);
+                    // 🌐 opt_reachable_pre は言語によって末尾に半角スペースを含む値がある（英語・韓国語）。
+                    // HTML側ではテンプレートの半角スペースと連続しても見た目上1つに畳まれるが、
+                    // プレーンテキストのコピーでは畳まれず二重スペースになってしまうためtrim()する。
+                    lines.push(`${t('opt_reachable_pre').trim()} ${s.reachable} / ${s.total}${t('opt_reachable_post')}`);
+                }
+                pfCopyText(lines.join('\n'), optCopyStatus);
+            };
 
             // 💾 保存処理（現在アクティブな記録のデータを、その記録専用のキーへ保存する）
             const save = () => {
@@ -6067,6 +6406,86 @@
                 saveRecordsMeta();
             };
 
+            // 🆚 プロフィール比較：指定した記録idの保存データを、現在アクティブな記録を書き換えずに
+            // 読み取り専用で復元する。loadRecordData()/applyLoadedData()と同じ考え方
+            // （保存データにはchecked/excluded/walkDaysのみを反映し、ポイント・キャンドルコストは
+            // 常に最新の正規データ=createDefaultSpiritsData()を使う）を踏襲するが、グローバルな
+            // spirits等のstateは一切変更しない。
+            const pfReadRecordSnapshot = (id) => {
+                const snapSpirits = createDefaultSpiritsData();
+                let snapOwnedCandles = 0;
+                let snapHasSeasonPass = true;
+                try {
+                    const saved = localStorage.getItem(dataKeyForRecord(id));
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (parsed.ownedCandles !== undefined) snapOwnedCandles = parsed.ownedCandles;
+                        if (parsed.hasSeasonPass !== undefined) snapHasSeasonPass = parsed.hasSeasonPass;
+                        if (parsed.spirits && Array.isArray(parsed.spirits)) {
+                            parsed.spirits.forEach((savedSpirit, sIdx) => {
+                                if (!snapSpirits[sIdx]) return;
+                                if (savedSpirit.walkDays !== undefined) snapSpirits[sIdx].walkDays = savedSpirit.walkDays;
+                                if (savedSpirit.treeData) {
+                                    Object.keys(savedSpirit.treeData).forEach(tierKey => {
+                                        if (!snapSpirits[sIdx].treeData[tierKey]) return;
+                                        savedSpirit.treeData[tierKey].forEach((savedItem, iIdx) => {
+                                            const targetItem = snapSpirits[sIdx].treeData[tierKey][iIdx];
+                                            if (!targetItem || (savedItem.id && targetItem.id !== savedItem.id)) return;
+                                            targetItem.checked = savedItem.checked;
+                                            if (savedItem.excluded !== undefined) targetItem.excluded = savedItem.excluded;
+                                        });
+                                    });
+                                }
+                            });
+                        }
+                    }
+                } catch (e) { console.error('pfReadRecordSnapshot', e); }
+                return { spirits: snapSpirits, ownedCandles: snapOwnedCandles, hasSeasonPass: snapHasSeasonPass };
+            };
+            // 🆚 プロフィール比較：1件分のサマリー（精霊ごとの進捗・ハート合計・所持キャンドル・アドパス）を作る
+            const pfBuildCompareSummary = (recordId) => {
+                const rec = records.value.find(r => r.id === recordId);
+                if (!rec) return null;
+                const snap = pfReadRecordSnapshot(recordId);
+                const perSpirit = snap.spirits.map(sp => ({
+                    id: sp.id,
+                    name: spiritName(sp),
+                    points: getSpiritPoints(sp),
+                    cap: (TIER_TOTAL_OVERRIDES[sp.id] || {}).t4 || 280,
+                    heartDone: !!sp.treeData.tier4[2].checked
+                }));
+                return {
+                    id: rec.id,
+                    name: rec.name,
+                    color: rec.color || null,
+                    totalHearts: snap.spirits.filter(sp => sp.treeData.tier4[2].checked).length,
+                    ownedCandles: snap.ownedCandles,
+                    hasSeasonPass: snap.hasSeasonPass,
+                    perSpirit
+                };
+            };
+            const compareSummaryA = computed(() => compareIdA.value ? pfBuildCompareSummary(compareIdA.value) : null);
+            const compareSummaryB = computed(() => compareIdB.value ? pfBuildCompareSummary(compareIdB.value) : null);
+            const compareSpiritRows = computed(() => {
+                const a = compareSummaryA.value, b = compareSummaryB.value;
+                if (!a || !b) return [];
+                return a.perSpirit.map((spA, idx) => {
+                    const spB = b.perSpirit[idx] || {};
+                    return {
+                        id: spA.id, name: spA.name,
+                        aPoints: spA.points, aCap: spA.cap, aHeart: spA.heartDone,
+                        bPoints: spB.points, bCap: spB.cap, bHeart: spB.heartDone
+                    };
+                });
+            });
+            const pfCompareOpenModal = () => {
+                compareIdA.value = activeRecordId.value;
+                const other = records.value.find(r => r.id !== activeRecordId.value);
+                compareIdB.value = other ? other.id : activeRecordId.value;
+                showCompareModal.value = true;
+            };
+            const pfCompareCloseModal = () => { showCompareModal.value = false; };
+
             // 💰 所持通貨の統一管理（プロフィール切替モーダル内、全サイト共通）
             // candle/heartはitem自身のwishOwnCurrencyを、seasonCandleは
             // companion自身のownedCandles（既存の季節キャンドル計算機の値）を
@@ -6216,12 +6635,11 @@
             const pfDashStopTimer = () => {
                 if (pfDashTimer) { clearInterval(pfDashTimer); pfDashTimer = null; }
             };
-            const pfDashOpen = async () => {
-                dashOpen.value = true;
-                pfDashStartTimer();
-                if (dashData.value) return;
-                dashLoading.value = true;
-                dashError.value = false;
+            // 🔁 実際のfetch処理本体。初回読み込み・手動更新の両方から呼ばれる共通処理。
+            // isRefresh=true（手動更新）の場合、失敗してもdashError（既存データごと隠す全面エラー表示）
+            // は立てず、dashRefreshStatusへ一時的なエラー文言を出すだけにする。手元に既にある
+            // （古い）データを、更新失敗のたびに消してしまわないようにするため。
+            const pfDashFetchData = async (isRefresh) => {
                 try {
                     const res = await fetch(`${location.origin}/tai-item/index.html`);
                     const html = await res.text();
@@ -6231,16 +6649,41 @@
                         eventSchedule: pfExtractArray(html, 'EVENT_SCHEDULE') || [],
                         nextUpdate: pfExtractArray(html, 'NEXT_UPDATE') || null,
                     };
+                    dashError.value = false;
+                    dashLastUpdated.value = new Date();
+                    if (isRefresh) dashRefreshStatus.value = t('dash_refresh_success');
                 } catch (e) {
-                    console.error('pfDashOpen', e);
-                    dashError.value = true;
-                } finally {
-                    dashLoading.value = false;
+                    console.error('pfDashFetchData', e);
+                    if (isRefresh) {
+                        dashRefreshStatus.value = t('dash_refresh_failed');
+                    } else {
+                        dashError.value = true;
+                    }
                 }
+            };
+            const pfDashOpen = async () => {
+                dashOpen.value = true;
+                pfDashStartTimer();
+                if (dashData.value) return;
+                dashLoading.value = true;
+                dashError.value = false;
+                await pfDashFetchData(false);
+                dashLoading.value = false;
             };
             const pfDashClose = () => {
                 dashOpen.value = false;
                 pfDashStopTimer();
+            };
+            // 🔄 手動更新：キャッシュの有無に関わらず必ず再取得する（シーズン境界をまたいでタブを
+            // 開きっぱなしにしているユーザーが、ページ全体をリロードせず最新データを取得できるように）
+            const pfDashRefresh = async () => {
+                if (dashRefreshing.value) return;
+                dashRefreshing.value = true;
+                dashRefreshStatus.value = '';
+                await pfDashFetchData(true);
+                dashRefreshing.value = false;
+                if (dashRefreshStatusTimer) clearTimeout(dashRefreshStatusTimer);
+                dashRefreshStatusTimer = setTimeout(() => { dashRefreshStatus.value = ''; }, 3000);
             };
 
             // 📱 ホーム画面アイコンのカスタマイズ
@@ -6414,6 +6857,7 @@
                 if (showSettingsModal.value) { settingsCloseModal(); return; }
                 if (showIconModal.value) { pfIconCloseModal(); return; }
                 if (dashOpen.value) { pfDashClose(); return; }
+                if (showCompareModal.value) { pfCompareCloseModal(); return; }
                 if (showDmModal.value) { dmCloseModal(); return; }
                 if (showProfileModal.value) {
                     if (pfEditingId.value !== null || pfDeletingId.value !== null) {
@@ -6454,6 +6898,17 @@
                     applyAccentColor(rec && rec.color);
                 }
             };
+
+            // ♿ 共有オーバーレイパターン（.pf-modal-overlay/.pf-modal-card）を使う全モーダルに
+            // フォーカストラップを紐付ける（開いたときにフォーカスをモーダル内へ移し、Tab/Shift+Tabで
+            // 背後の非表示コンテンツへ出られないようにし、閉じたら開く前の要素へフォーカスを戻す）。
+            useModalFocusTrap(showProfileModal, pfModalCardEl);
+            useModalFocusTrap(showDmModal, dmModalCardEl);
+            useModalFocusTrap(dashOpen, dashModalCardEl);
+            useModalFocusTrap(showIconModal, iconModalCardEl);
+            useModalFocusTrap(showSettingsModal, settingsModalCardEl);
+            useModalFocusTrap(showCompareModal, compareModalCardEl);
+
             onMounted(() => {
                 load();
                 seasonCountdownTimer = setInterval(() => { nowForCountdown.value = new Date(); }, 1000);
@@ -6476,12 +6931,13 @@
                 currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay, translateEventName,
                 showSidebar, showSharedTools, sharedNotes,
                 showOptimizer, optSelectedId, optimizerDaily, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
+                optCopyStatus, optCopyPlan, heartCopyStatus, heartCopyPlan,
                 hasSeasonPass, ownedCandles, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan, pfCurrencyOpen,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles, activeExcludedCandles,
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
-                CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonCountdown, seasonDayInfo, pad2,
+                CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonStartText, seasonEndText, seasonCountdown, seasonDayInfo, pad2,
                 activeFastestHeartPlan,
                 spiritForecasts, grandTotalCandles, getForecastIconId,
                 records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
@@ -6491,6 +6947,7 @@
                 showDmModal, dmStatus, dmPendingImportCount, dmWipeConfirming,
                 dmOpenModal, dmCloseModal, dmExport, dmImportFileSelected, dmCancelImport, dmConfirmImport, dmConfirmWipe,
                 dashOpen, dashLoading, dashError, dashData,
+                dashRefreshing, dashRefreshStatus, dashLastUpdatedText, pfDashRefresh,
                 dashRevisitStatus, dashRevisitCountdown,
                 dashShard, dashShardOccurrences, dashShardRealmLabel, dashShardCountdown, dashNextShardCountdown,
                 dashCandleRealmLabel, dashCandleCountdown, dashQuestCandleRealmLabel,
@@ -6504,7 +6961,10 @@
                 setRecordColor, clearRecordColor,
                 currencyCandle, currencyHeart, currencyAscended, currencyGiftPass,
                 saveCurrencyCandleHeart, saveCurrencyExtra,
-                showSettingsModal, settingsOpenModal, settingsCloseModal, shortcutsEnabled, settingsSaveShortcutsPref
+                showSettingsModal, settingsOpenModal, settingsCloseModal, shortcutsEnabled, settingsSaveShortcutsPref,
+                showCompareModal, compareIdA, compareIdB, compareSummaryA, compareSummaryB, compareSpiritRows,
+                pfCompareOpenModal, pfCompareCloseModal,
+                pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl
             };
         }
     }).mount('#app');
