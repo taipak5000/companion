@@ -20,10 +20,14 @@
     <script>
         // 🌓 描画前にテーマを確定させ、ダークモード時に一瞬でも明るい背景が
         // 表示されてしまう「ちらつき」を防止する（Vue読み込み前に同期実行）
+        // 🔁 sky_app_theme は 'light' / 'dark' / 'system'（またはキー未設定＝systemと同義）の
+        // 3状態を取り得る。この解決ロジックは、後段の共有ヘルパー resolveEffectiveTheme() と
+        // バイト単位で同じ内容を保つこと（このスクリプトは他スクリプトの読み込み前に単独実行される
+        // ため、ヘルパーを呼び出せずやむを得ず複製している）。
         (function () {
             try {
                 var saved = localStorage.getItem('sky_app_theme');
-                var isDark = saved ? (saved === 'dark') : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = (saved === 'light' || saved === 'dark') ? (saved === 'dark') : window.matchMedia('(prefers-color-scheme: dark)').matches;
                 document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -1882,8 +1886,9 @@
                     <option value="ko">🌐 한국어</option>
                 </select>
                 <button class="theme-toggle-btn" @click="toggleTheme">
-                    <span v-if="isDarkMode">{{ t('theme_dark') }}</span>
-                    <span v-else>{{ t('theme_light') }}</span>
+                    <span v-if="themeMode === 'dark'">{{ t('theme_dark') }}</span>
+                    <span v-else-if="themeMode === 'light'">{{ t('theme_light') }}</span>
+                    <span v-else>{{ t('theme_system') }}</span>
                 </button>
                 <button class="theme-toggle-btn" @click="settingsOpenModal" :title="t('settings_title')" :aria-label="t('settings_title')">⚙️</button>
             </div>
@@ -2139,8 +2144,9 @@
                     <span class="dash-row-icon">🌙</span>
                     <span class="dash-row-text">{{ t('settings_dark_mode_label') }}</span>
                     <button type="button" class="theme-toggle-btn" @click="toggleTheme">
-                        <span v-if="isDarkMode">{{ t('theme_dark') }}</span>
-                        <span v-else>{{ t('theme_light') }}</span>
+                        <span v-if="themeMode === 'dark'">{{ t('theme_dark') }}</span>
+                        <span v-else-if="themeMode === 'light'">{{ t('theme_light') }}</span>
+                        <span v-else>{{ t('theme_system') }}</span>
                     </button>
                 </div>
             </div>
@@ -3611,6 +3617,7 @@
             sidebar_toggle: '☰ ツール',
             theme_dark: '🌙 ダーク',
             theme_light: '☀️ ライト',
+            theme_system: '🖥️ システム',
             countdown_label: '⏳ 残り',
             countdown_day_suffix: '日',
             countdown_ended: '🏁 シーズン終了しました',
@@ -3960,6 +3967,7 @@
             sidebar_toggle: '☰ Tools',
             theme_dark: '🌙 Dark',
             theme_light: '☀️ Light',
+            theme_system: '🖥️ System',
             countdown_label: '⏳ Remaining',
             countdown_day_suffix: 'd',
             countdown_ended: '🏁 Season has ended',
@@ -4309,6 +4317,7 @@
             sidebar_toggle: '☰ 工具',
             theme_dark: '🌙 深色',
             theme_light: '☀️ 淺色',
+            theme_system: '🖥️ 系統',
             countdown_label: '⏳ 剩餘',
             countdown_day_suffix: '天',
             countdown_ended: '🏁 本季已結束',
@@ -4658,6 +4667,7 @@
             sidebar_toggle: '☰ 도구',
             theme_dark: '🌙 다크',
             theme_light: '☀️ 라이트',
+            theme_system: '🖥️ 시스템',
             countdown_label: '⏳ 남은 시간',
             countdown_day_suffix: '일',
             countdown_ended: '🏁 시즌이 종료되었습니다',
@@ -5003,10 +5013,20 @@
         }
     };
 
+    // 🌓 保存されているテーマ設定値（'light' / 'dark' / 'system' またはキー未設定）から、
+    // 現在適用すべき実際のテーマ（ダークかどうか）を解決する共有ヘルパー。
+    // 'light'・'dark' はそのまま採用し、'system'（またはキー未設定＝systemと同義）の場合は
+    // OS側の設定（prefers-color-scheme）に従う。head内のちらつき防止スクリプトにも
+    // 同じロジックを複製している（そちらはVue読み込み前に単独実行される必要があるため）。
+    const resolveEffectiveTheme = (mode) => {
+        return (mode === 'light' || mode === 'dark') ? (mode === 'dark') : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
+
     createApp({
         setup() {
             const activeIndex = ref(0);
             const isDarkMode = ref(false);
+            const themeMode = ref('system'); // 🔁 'light' / 'dark' / 'system'。保存された生の状態（未設定時は'system'扱い）
             const currentLang = ref('ja'); // 🌐 'ja' または 'en'
             const showSidebar = ref(false);
 
@@ -5881,11 +5901,13 @@
                 document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
             };
 
+            // 🔁 ライト → ダーク → システム追従 → ライト …の3状態を順番に切り替える
             const toggleTheme = () => {
-                isDarkMode.value = !isDarkMode.value;
+                themeMode.value = themeMode.value === 'light' ? 'dark' : (themeMode.value === 'dark' ? 'system' : 'light');
+                isDarkMode.value = resolveEffectiveTheme(themeMode.value);
                 applyThemeToDOM(); // 🔒 watch経由だけに頼らず、クリック時に即座にDOMへ反映する
                 try {
-                    localStorage.setItem('sky_app_theme', isDarkMode.value ? 'dark' : 'light');
+                    localStorage.setItem('sky_app_theme', themeMode.value);
                 } catch (e) { /* プライベートブラウジング等でlocalStorageが使えない場合も表示は継続する */ }
             };
 
@@ -6296,12 +6318,10 @@
             const load = () => {
                 try {
                     const savedTheme = localStorage.getItem('sky_app_theme');
-                    if (savedTheme) {
-                        isDarkMode.value = (savedTheme === 'dark');
-                    } else {
-                        isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    }
+                    themeMode.value = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'system';
+                    isDarkMode.value = resolveEffectiveTheme(themeMode.value);
                 } catch (e) {
+                    themeMode.value = 'system';
                     isDarkMode.value = false;
                 }
                 applyThemeToDOM();
@@ -6896,6 +6916,22 @@
                 if (e.key === PROFILES_KEY) {
                     const rec = records.value.find(r => r.id === activeRecordId.value);
                     applyAccentColor(rec && rec.color);
+                } else if (e.key === 'sky_app_theme') {
+                    // 🌓 別タブ・同一オリジンの他ツールでテーマが変更された場合、
+                    // このタブにも（リロードなしで）即座に反映する
+                    themeMode.value = (e.newValue === 'light' || e.newValue === 'dark') ? e.newValue : 'system';
+                    isDarkMode.value = resolveEffectiveTheme(themeMode.value);
+                    applyThemeToDOM();
+                }
+            };
+
+            // 🌓 OS側のダーク/ライト設定がタブを開いたまま切り替わった場合（例: 日没での自動切替）に、
+            // 現在の設定が「システム追従」であれば、リロードなしでライブに反映するためのリスナー
+            const systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const onSystemThemeChange = () => {
+                if (themeMode.value === 'system') {
+                    isDarkMode.value = resolveEffectiveTheme(themeMode.value);
+                    applyThemeToDOM();
                 }
             };
 
@@ -6914,11 +6950,13 @@
                 seasonCountdownTimer = setInterval(() => { nowForCountdown.value = new Date(); }, 1000);
                 window.addEventListener('storage', onStorageChange);
                 document.addEventListener('keydown', handleGlobalKeydown);
+                systemThemeMediaQuery.addEventListener('change', onSystemThemeChange);
             });
             onUnmounted(() => {
                 if (seasonCountdownTimer) clearInterval(seasonCountdownTimer);
                 window.removeEventListener('storage', onStorageChange);
                 document.removeEventListener('keydown', handleGlobalKeydown);
+                systemThemeMediaQuery.removeEventListener('change', onSystemThemeChange);
             });
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
@@ -6927,7 +6965,7 @@
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
-                getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, toggleTheme,
+                getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, themeMode, toggleTheme,
                 currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay, translateEventName,
                 showSidebar, showSharedTools, sharedNotes,
                 showOptimizer, optSelectedId, optimizerDaily, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
