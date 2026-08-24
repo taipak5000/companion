@@ -2032,6 +2032,31 @@
             <div v-else-if="dashError"><div class="dash-empty">{{ t('dash_load_error') }}</div></div>
             <template v-else-if="dashData">
                 <div class="dash-section">
+                    <p class="dash-section-label">{{ t('dash_walk_label') }}</p>
+                    <div class="dash-row" v-if="hasLoggedWalkToday" style="background:rgba(52,197,89,0.08); color:var(--success-text);">
+                        <span class="dash-row-icon">✅</span>
+                        <span class="dash-row-text">{{ t('dash_walk_logged_pre') }}<b>{{ todayWalkLogSpiritName }}</b>{{ t('dash_walk_logged_post') }}</span>
+                    </div>
+                    <template v-else>
+                        <p class="pf-hint" style="margin:0 0 8px;">{{ t('dash_walk_hint') }}</p>
+                        <div class="preset-group">
+                            <button type="button" class="btn-sm" v-for="spirit in spirits" :key="spirit.id" @click="logTodayWalk(spirit.id)">{{ spiritName(spirit) }}</button>
+                        </div>
+                    </template>
+                    <div v-if="walkLog.length" style="margin-top:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showWalkHistory = !showWalkHistory">
+                            <span style="font-size:10.5px; color:var(--text-gray); font-weight:bold;">{{ t('dash_walk_history_toggle', { n: walkLog.length }) }}</span>
+                            <span style="font-size:10.5px; color:var(--text-gray); font-weight:bold;">{{ showWalkHistory ? t('dash_walk_history_close') : t('dash_walk_history_open') }}</span>
+                        </div>
+                        <div v-if="showWalkHistory" class="multi-spirit-log">
+                            <div v-for="(entry, idx) in walkLogDisplay" :key="idx" class="multi-spirit-log-row">
+                                <span class="msl-day">{{ entry.date }}</span>
+                                <span>👣 {{ entry.spiritNameDisplay }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_daily_label') }}</p>
                     <div class="dash-row" v-if="dashShard && dashShard.hasShard">
                         <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix') }}<span class="dash-shard-times"><span v-for="(o, idx) in dashShardOccurrences" :key="idx"><span class="dash-shard-time" :class="{ past: o.past }">{{ o.text }}</span><span v-if="idx < dashShardOccurrences.length - 1"> / </span></span></span> <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
@@ -2073,6 +2098,12 @@
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
                     <div class="dash-row" v-if="dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">{{ t('dash_season_quote_open') }}<b>{{ translateEventName(dashData.season.name) }}</b>{{ t('dash_season_quote_close') }}{{ t('dash_season_end_suffix') }} <span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
                     <div class="dash-empty" v-else>{{ t('dash_season_error') }}</div>
+                </div>
+                <div class="dash-section">
+                    <p class="dash-section-label">{{ t('dash_ics_label') }}</p>
+                    <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box;" @click="pfDashExportIcs">{{ t('dash_ics_export_btn') }}</button>
+                    <p class="pf-hint" style="margin-top:8px;">{{ t('dash_ics_export_hint') }}</p>
+                    <p v-if="dashIcsStatus" class="pf-hint" style="margin-top:6px; color:var(--accent-green);">{{ dashIcsStatus }}</p>
                 </div>
             </template>
             <button type="button" class="pf-close-btn" @click="pfDashClose">{{ t('record_close') }}</button>
@@ -2392,6 +2423,40 @@
                 <div v-if="totalHearts === 4" class="goal-complete-message">{{ t('goal_complete_msg') }}</div>
             </div>
 
+            <!-- ☀️ 効率的な進め方の提案を「今日はこの子」に集約したCTA。4体それぞれの最短ハート到達
+                 シミュレーション(activeFastestHeartPlanの汎用版)のうち、最もペースから遅れている
+                 1体だけをタブ切り替えなしで提案し、その場でワンタップ記録もできるようにする。 -->
+            <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0,102,204,0.03);">
+                <template v-if="todayWalkRecommendation.allDone">
+                    <div class="advice-box" style="margin: 0; background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);">
+                        {{ t('today_reco_all_done') }}
+                    </div>
+                </template>
+                <template v-else>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <span style="font-weight:bold; font-size:16px;">
+                            {{ t('today_reco_walk_pre') }}<span style="color:var(--accent-blue);">{{ spiritName(todayWalkRecommendation.spirit) }}</span>{{ t('today_reco_walk_post') }}
+                        </span>
+                        <button type="button" class="btn-sm" style="flex:none; min-width:0; padding:8px 14px;"
+                                :disabled="hasLoggedWalkToday"
+                                @click="logTodayWalk(todayWalkRecommendation.spirit.id)">
+                            {{ hasLoggedWalkToday ? t('today_reco_logged_badge') : t('today_reco_log_btn') }}
+                        </button>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-gray); margin-top: 6px;">
+                        <template v-if="todayWalkRecommendation.plan.unreachable">
+                            {{ t('heart_unreachable') }}
+                        </template>
+                        <template v-else-if="todayWalkRecommendation.plan.day > 0">
+                            {{ t('today_reco_pace_pre') }}<strong>{{ todayWalkRecommendation.plan.day }}</strong>{{ t('today_reco_pace_post') }}
+                        </template>
+                        <template v-else>
+                            {{ t('today_reco_ready') }}
+                        </template>
+                    </div>
+                </template>
+            </div>
+
             <div class="section-card" style="border: 1px solid var(--accent-orange); background: rgba(255, 149, 0, 0.02);">
                 <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px;">
                     {{ t('calc_title') }}
@@ -2583,6 +2648,11 @@
                             {{ t('pts_advice_warn') }}
                         </span>
                     </div>
+                </div>
+
+                <!-- 📊 予測（このペースで進めた場合の見込み）と、ワンタップ記録による実績（実際に記録した連れ歩き日数）を突き合わせる -->
+                <div v-if="walkLog.length" style="font-size: 10.5px; color: var(--text-gray); margin-top: 6px; padding-left: 2px;">
+                    {{ t('pts_actual_compare', { logged: activeSpiritLoggedWalkDays, counter: activeSpirit.walkDays }) }}
                 </div>
 
                 <div class="advice-box" style="margin-top: 10px; border-color: rgba(255,149,0,0.3); background: rgba(255,149,0,0.05); color: var(--text-color);">
@@ -3301,6 +3371,14 @@
         return target;
     };
 
+    // 🚶 「今日」の連れ歩き記録用の日付文字列（YYYY-MM-DD）を、端末のローカル日付で返す。
+    // Date#toISOString()はUTC基準になり日本時間などでは日付がずれるため、タイムゾーンオフセットを
+    // 引いてからISO文字列化することでローカルの暦日をそのまま取り出す。
+    const pfLocalDateStr = (d = new Date()) => {
+        const tzOffsetMs = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 10);
+    };
+
     /* ================================================================
        🗓️ ダッシュボード（今日・今週・今月）
        全サイト共通のボタン。データの本家はitem（アイテム所持管理）のindex.html
@@ -3395,6 +3473,30 @@
         const intervalMs = group.intervalH * 3600000;
         const occurrences = [0, 1, 2].map(i => new Date(firstStartFake.getTime() + intervalMs * i + realOffsetMs));
         return { isRed, hasShard, realm, location, occurrences };
+    };
+    // 📅 ICSカレンダー書き出し用：pfDashShardInfo()の「今日」判定をdayOffset日後にずらした汎用版。
+    // pfDashGrandCandleRealm(dayOffset)と同じ考え方で、今日から数日先までの出現予測をまとめて算出する。
+    const pfIcsShardInfoForOffset = (dayOffset) => {
+        const pacNow = pfDashPacificNow();
+        const realOffsetMs = Date.now() - pacNow.getTime();
+        const base = new Date(pacNow);
+        base.setHours(0, 0, 0, 0);
+        base.setDate(base.getDate() + dayOffset);
+        const dayOfMth = base.getDate();
+        const dayOfWk = base.getDay();
+        const isRed = dayOfMth % 2 === 1;
+        const realmIdx = (dayOfMth - 1) % 5;
+        const groupIdx = isRed ? (Math.floor((dayOfMth - 1) / 2) % 3) + 2 : Math.floor(dayOfMth / 2) % 2;
+        const group = SHARD_GROUPS[groupIdx];
+        const hasShard = !group.noShardWkDay.includes(dayOfWk);
+        if (!hasShard) return { hasShard: false };
+        const realm = SHARD_REALMS[realmIdx];
+        const location = SHARD_LOCATIONS[groupIdx][realm];
+        const firstStartFake = new Date(base);
+        firstStartFake.setHours(group.offsetH, group.offsetM, 0, 0);
+        const intervalMs = group.intervalH * 3600000;
+        const occurrences = [0, 1, 2].map(i => new Date(firstStartFake.getTime() + intervalMs * i + realOffsetMs));
+        return { hasShard: true, isRed, realm, location, occurrences };
     };
     // 今日の3回の出現が全て過去の場合に備え、翌日以降（出現なしの日はスキップ）も
     // 探索して次に出現する闇の破片の実時刻を求める
@@ -3959,7 +4061,40 @@
             footer_disclaimer: 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。',
             footer_credit_pre: '作成・ご意見:',
             footer_sources: '参考データ・画像引用元:',
-            footer_settings_link: '⚙️ 設定・更新情報・クレジット・プライバシーポリシー'
+            footer_settings_link: '⚙️ 設定・更新情報・クレジット・プライバシーポリシー',
+
+            today_reco_walk_pre: '☀️ 今日は',
+            today_reco_walk_post: 'と歩こう！',
+            today_reco_pace_pre: 'このペースなら、あと',
+            today_reco_pace_post: '日でハートと交換できる見込みです。',
+            today_reco_ready: '今すぐハートと交換できる状態です！',
+            today_reco_all_done: '🎉 4体ともシーズンハートを獲得済みです。おつかれさまでした！',
+            today_reco_log_btn: '📝 記録する',
+            today_reco_logged_badge: '✅ 記録済み',
+
+            dash_walk_label: '🚶 今日の連れ歩き記録',
+            dash_walk_hint: 'どの精霊と歩いたか、ワンタップで記録できます（1日1回まで）',
+            dash_walk_logged_pre: '今日は',
+            dash_walk_logged_post: 'と記録しました ✅',
+            dash_walk_history_toggle: '📖 最近の記録（{n}件）',
+            dash_walk_history_close: '閉じる ▲',
+            dash_walk_history_open: '開く ▼',
+
+            dash_ics_label: '📅 カレンダーへの登録',
+            dash_ics_export_btn: '⬇️ 予定をエクスポート（.icsファイル）',
+            dash_ics_export_hint: 'シーズン終了・日替わり大キャンドル/クエストキャンドルの切替・週間リセット・闇の破片の出現（直近14日分）の予定をまとめたカレンダーファイルです。お使いのカレンダーアプリに取り込むと、通知を受け取れます。',
+            dash_ics_export_ok: '✅ カレンダーファイルを書き出しました',
+            dash_ics_export_failed: '⚠️ 書き出しに失敗しました',
+            ics_season_end_summary: '🌟 「{name}」シーズン終了',
+            ics_season_end_desc: 'このシーズンの精霊ツリー・コンプリート期限です',
+            ics_daily_reset_summary: '🕯️ 大キャンドル・クエストキャンドル切替',
+            ics_daily_reset_desc: '闇の破片・大キャンドルの出現エリアが切り替わります（太平洋時間0時）',
+            ics_weekly_reset_summary: '🌩️ 週間リセット（原罪など）',
+            ics_shard_red: '🔴 赤闇',
+            ics_shard_black: '⚫ 黒闇',
+            ics_shard_suffix: 'の出現',
+
+            pts_actual_compare: '📊 実績: 記録した連れ歩き日数 {logged}日 ／ 現在のカウンター {counter}日'
         },
         en: {
             app_title: '✨ Sky Spirit Companion Tracker',
@@ -4309,7 +4444,40 @@
             footer_disclaimer: 'This site is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
             footer_credit_pre: 'Made by / feedback:',
             footer_sources: 'Reference data & image sources:',
-            footer_settings_link: '⚙️ Settings / Update Notes / Credits / Privacy Policy'
+            footer_settings_link: '⚙️ Settings / Update Notes / Credits / Privacy Policy',
+
+            today_reco_walk_pre: '☀️ Walk with ',
+            today_reco_walk_post: ' today!',
+            today_reco_pace_pre: 'At this pace, you can trade for the Heart in about ',
+            today_reco_pace_post: ' more day(s).',
+            today_reco_ready: "You're ready to trade for the Heart right now!",
+            today_reco_all_done: '🎉 All 4 spirits have earned their Season Heart. Great work!',
+            today_reco_log_btn: '📝 Log it',
+            today_reco_logged_badge: '✅ Logged',
+
+            dash_walk_label: '🚶 Today\'s Walk Log',
+            dash_walk_hint: 'Tap once to record which spirit you walked with (once per day).',
+            dash_walk_logged_pre: 'Logged a walk with ',
+            dash_walk_logged_post: ' today ✅',
+            dash_walk_history_toggle: '📖 Recent entries ({n})',
+            dash_walk_history_close: 'Close ▲',
+            dash_walk_history_open: 'Open ▼',
+
+            dash_ics_label: '📅 Add to Calendar',
+            dash_ics_export_btn: '⬇️ Export schedule (.ics file)',
+            dash_ics_export_hint: 'A calendar file covering the season-end deadline, the daily Grand/Quest Candle change, the weekly reset, and shard eruptions for the next 14 days. Import it into your calendar app to get native notifications.',
+            dash_ics_export_ok: '✅ Downloaded the calendar file',
+            dash_ics_export_failed: '⚠️ Failed to export',
+            ics_season_end_summary: '🌟 "{name}" season ends',
+            ics_season_end_desc: 'Deadline to complete this season\'s spirit trees',
+            ics_daily_reset_summary: '🕯️ Grand Candle / Quest Candle change',
+            ics_daily_reset_desc: 'The shard and Grand Candle spawn areas change (midnight Pacific Time)',
+            ics_weekly_reset_summary: '🌩️ Weekly reset (Eye of Eden, etc.)',
+            ics_shard_red: '🔴 Red Shard',
+            ics_shard_black: '⚫ Black Shard',
+            ics_shard_suffix: ' erupts',
+
+            pts_actual_compare: '📊 Actual: {logged} day(s) logged / current counter {counter} day(s)'
         },
         'zh-TW': {
             app_title: '✨ Sky 精靈同行點數計算機',
@@ -4659,7 +4827,40 @@
             footer_disclaimer: '本網站為《Sky：光・遇》的非官方粉絲網站，thatgamecompany 概不參與。',
             footer_credit_pre: '製作・意見回饋:',
             footer_sources: '參考資料・圖片引用來源:',
-            footer_settings_link: '⚙️ 設定・更新資訊・製作名單・隱私權政策'
+            footer_settings_link: '⚙️ 設定・更新資訊・製作名單・隱私權政策',
+
+            today_reco_walk_pre: '☀️ 今天和',
+            today_reco_walk_post: '一起同行吧！',
+            today_reco_pace_pre: '照這個節奏，再過',
+            today_reco_pace_post: '天就能兌換愛心。',
+            today_reco_ready: '現在就能兌換愛心了！',
+            today_reco_all_done: '🎉 4隻精靈都已獲得季節之心，辛苦了！',
+            today_reco_log_btn: '📝 記錄',
+            today_reco_logged_badge: '✅ 已記錄',
+
+            dash_walk_label: '🚶 今日同行記錄',
+            dash_walk_hint: '點一下即可記錄今天和哪隻精靈同行（每天限一次）',
+            dash_walk_logged_pre: '今天已和',
+            dash_walk_logged_post: '記錄同行 ✅',
+            dash_walk_history_toggle: '📖 最近的記錄（{n}筆）',
+            dash_walk_history_close: '關閉 ▲',
+            dash_walk_history_open: '展開 ▼',
+
+            dash_ics_label: '📅 加入行事曆',
+            dash_ics_export_btn: '⬇️ 匯出行程（.ics檔）',
+            dash_ics_export_hint: '包含季節結束期限、每日大蠟燭・任務蠟燭切換、每週重置、以及未來14天闇之碎片出現時間的行事曆檔案。匯入行事曆App即可收到通知。',
+            dash_ics_export_ok: '✅ 已下載行事曆檔案',
+            dash_ics_export_failed: '⚠️ 匯出失敗',
+            ics_season_end_summary: '🌟「{name}」季節結束',
+            ics_season_end_desc: '本季精靈樹的完成期限',
+            ics_daily_reset_summary: '🕯️ 大蠟燭・任務蠟燭切換',
+            ics_daily_reset_desc: '闇之碎片・大蠟燭的出現區域將會切換（太平洋時間0點）',
+            ics_weekly_reset_summary: '🌩️ 每週重置（伊甸之眼等）',
+            ics_shard_red: '🔴 紅色碎片',
+            ics_shard_black: '⚫ 黑色碎片',
+            ics_shard_suffix: '出現',
+
+            pts_actual_compare: '📊 實績: 已記錄同行天數 {logged}天 ／ 目前計數器 {counter}天'
         },
         ko: {
             app_title: '✨ Sky 정령 동행 포인트 계산기',
@@ -5009,7 +5210,40 @@
             footer_disclaimer: '이 사이트는 Sky: Children of the Light의 비공식 팬 사이트입니다. thatgamecompany는 전혀 관여하지 않습니다.',
             footer_credit_pre: '제작・의견:',
             footer_sources: '참고 데이터・이미지 출처:',
-            footer_settings_link: '⚙️ 설정・업데이트 정보・크레딧・개인정보처리방침'
+            footer_settings_link: '⚙️ 설정・업데이트 정보・크레딧・개인정보처리방침',
+
+            today_reco_walk_pre: '☀️ 오늘은 ',
+            today_reco_walk_post: '와(과) 함께 걸어요!',
+            today_reco_pace_pre: '이 페이스라면 앞으로 ',
+            today_reco_pace_post: '일이면 하트와 교환할 수 있어요.',
+            today_reco_ready: '지금 바로 하트와 교환할 수 있는 상태예요!',
+            today_reco_all_done: '🎉 4마리 모두 시즌 하트를 획득했습니다. 수고하셨어요!',
+            today_reco_log_btn: '📝 기록하기',
+            today_reco_logged_badge: '✅ 기록 완료',
+
+            dash_walk_label: '🚶 오늘의 동행 기록',
+            dash_walk_hint: '오늘 어떤 정령과 걸었는지 한 번의 탭으로 기록할 수 있습니다（하루 1회）',
+            dash_walk_logged_pre: '오늘은 ',
+            dash_walk_logged_post: '와(과) 기록했습니다 ✅',
+            dash_walk_history_toggle: '📖 최근 기록（{n}건）',
+            dash_walk_history_close: '닫기 ▲',
+            dash_walk_history_open: '열기 ▼',
+
+            dash_ics_label: '📅 캘린더에 등록',
+            dash_ics_export_btn: '⬇️ 일정 내보내기(.ics 파일)',
+            dash_ics_export_hint: '시즌 종료 기한・일일 큰 초/퀘스트 초 전환・주간 리셋・어둠의 파편 출현(향후 14일분)을 담은 캘린더 파일입니다. 사용 중인 캘린더 앱으로 가져오면 알림을 받을 수 있습니다.',
+            dash_ics_export_ok: '✅ 캘린더 파일을 다운로드했습니다',
+            dash_ics_export_failed: '⚠️ 내보내기에 실패했습니다',
+            ics_season_end_summary: '🌟 "{name}" 시즌 종료',
+            ics_season_end_desc: '이번 시즌 정령 트리 완료 기한입니다',
+            ics_daily_reset_summary: '🕯️ 큰 초・퀘스트 초 전환',
+            ics_daily_reset_desc: '어둠의 파편・큰 초의 출현 지역이 바뀝니다（태평양 시간 0시）',
+            ics_weekly_reset_summary: '🌩️ 주간 리셋（에덴의 눈 등）',
+            ics_shard_red: '🔴 빨간 파편',
+            ics_shard_black: '⚫ 검은 파편',
+            ics_shard_suffix: ' 출현',
+
+            pts_actual_compare: '📊 실적: 기록한 동행 일수 {logged}일 ／ 현재 카운터 {counter}일'
         }
     };
 
@@ -5130,6 +5364,10 @@
             // 🕯️ シーズンキャンドル計算機の状態管理変数
             const hasSeasonPass = ref(true);
             const ownedCandles = ref(0);
+            // 🚶 今日の連れ歩き記録（ダッシュボードのワンタップ記録・簡易履歴ログ）。
+            // { date: 'YYYY-MM-DD', spiritId }の配列。新しい記録が先頭(index 0)に来るよう常にunshiftする。
+            const walkLog = ref([]);
+            const showWalkHistory = ref(false); // 📖 最近の記録一覧は初期は折りたたみ
             const showForecast = ref(false); // 🔮 4体比較の詳細は初期状態で折りたたみ（情報量を抑える）
             const showHeartPlanDetail = ref(false); // 🚀 最短交換シミュレーションの優先順位チャートも初期は折りたたみ
             const showMultiSpiritLog = ref(false); // 📋 4体分の日別プランも初期は折りたたみ
@@ -5591,8 +5829,9 @@
             // 最短何日でポイント280&ハート交換分のキャンドルが揃うかをシミュレーションする。
             // 併せて「どのアイテムから交換すべきか」の優先順位(order)も記録する。
             // （他の精霊のキャンドル消費は考慮しないため、あくまで「この精霊に集中した場合」の目安）
-            const activeFastestHeartPlan = computed(() => {
-                const spirit = activeSpirit.value;
+            // 🧭 任意の精霊を受け取れる汎用版（4体横断で「今日はこの子」を判定するのに使う）。
+            // アイテム名の採番はgetItemLabel(activeSpirit限定)ではなく、getItemLabelForSpiritを使う。
+            const computeFastestHeartPlanFor = (spirit) => {
                 const heartItem = spirit.treeData.tier4[2];
                 const tierThreshold = getTierThresholds(spirit.id);
                 const goalPoints = getSpiritTier4Total(spirit); // 🔓 ハート交換に必要な最終累計（喜びの思い出はTIER_TOTAL_OVERRIDESで380に上書き）
@@ -5603,7 +5842,7 @@
                     spirit.treeData[tierKey].forEach(item => {
                         if (item === heartItem || item.noPoints || item.checked || !item.points || item.excluded) return; // 0ptアイテムと除外指定アイテムは280p到達に寄与しないため候補から除外
                         remaining.push({
-                            name: cleanName(getItemLabel(item)),
+                            name: cleanName(getItemLabelForSpirit(item, spirit)),
                             icon: getIcon(item),
                             imageUrl: getItemImageUrl(item),
                             candles: item.candles || 0,
@@ -5661,7 +5900,53 @@
                     }
                 }
                 return { unreachable: true, order: [], totalCost: 0 };
+            };
+
+            const activeFastestHeartPlan = computed(() => computeFastestHeartPlanFor(activeSpirit.value));
+
+            // 🧭 4体それぞれの最短ハート到達シミュレーション結果（「今日はこの子」の判定に使う）
+            const allSpiritsFastestHeartPlans = computed(() => spirits.value.map(s => ({ spirit: s, plan: computeFastestHeartPlanFor(s) })));
+
+            // ☀️ 効率的な進め方の提案を「今日はこの子」に集約する。
+            // まだハートと交換していない精霊のうち、「自分ひとりに集中して連れ歩いた場合の最短到達日数(day)」
+            // が最も大きい＝自身の最速ペースから最も遅れている1体だけを提案する（タブを4つ見比べる必要をなくす）。
+            const todayWalkRecommendation = computed(() => {
+                const candidates = allSpiritsFastestHeartPlans.value.filter(x => !x.plan.alreadyDone);
+                if (!candidates.length) return { allDone: true };
+                const worst = candidates.reduce((worstX, cur) => {
+                    const curDay = cur.plan.unreachable ? Infinity : (cur.plan.day || 0);
+                    const worstDay = worstX.plan.unreachable ? Infinity : (worstX.plan.day || 0);
+                    return curDay > worstDay ? cur : worstX;
+                }, candidates[0]);
+                return { allDone: false, spirit: worst.spirit, plan: worst.plan };
             });
+
+            // 🚶 今日の連れ歩き記録（ダッシュボードのワンタップ記録・簡易履歴ログ）。
+            // 実際のゲームでは1日1体としか連れ歩けないため、ガードは精霊単位ではなく「今日という日」単位で行う。
+            const todayWalkEntry = computed(() => walkLog.value.find(e => e.date === pfLocalDateStr()));
+            const hasLoggedWalkToday = computed(() => !!todayWalkEntry.value);
+            const todayWalkLogSpiritName = computed(() => {
+                if (!todayWalkEntry.value) return '';
+                const sp = spirits.value.find(s => s.id === todayWalkEntry.value.spiritId);
+                return sp ? spiritName(sp) : '';
+            });
+            const WALK_LOG_KEEP_MAX = 200; // 🧹 保存容量の肥大化を防ぐため、直近分だけ保持する
+            const logTodayWalk = (spiritId) => {
+                if (hasLoggedWalkToday.value) return; // 🔒 二重記録防止ガード（「+6 candles today」ボタンと違い、実際のゲーム仕様に合わせ1日1回までに制限する）
+                const spirit = spirits.value.find(s => s.id === spiritId);
+                if (!spirit) return;
+                if (spirit.walkDays < 77) spirit.walkDays++;
+                spirit.currentPreset = 'custom';
+                walkLog.value.unshift({ date: pfLocalDateStr(), spiritId });
+                if (walkLog.value.length > WALK_LOG_KEEP_MAX) walkLog.value.length = WALK_LOG_KEEP_MAX;
+            };
+            const WALK_LOG_DISPLAY_LIMIT = 20; // 📖 ダッシュボードの履歴表示は直近20件まで
+            const walkLogDisplay = computed(() => walkLog.value.slice(0, WALK_LOG_DISPLAY_LIMIT).map(e => {
+                const sp = spirits.value.find(s => s.id === e.spiritId);
+                return { date: e.date, spiritNameDisplay: sp ? spiritName(sp) : '?' };
+            }));
+            // 📊 予測（このペースなら〜日で到達）と実績（実際にワンタップ記録した連れ歩き日数）を突き合わせる用
+            const activeSpiritLoggedWalkDays = computed(() => walkLog.value.filter(e => e.spiritId === activeSpirit.value.id).length);
 
             // 📋 最短ハート交換シミュレーションの結果をプレーンテキストとしてコピーする（共有用）。
             // pfCopyTextは後方（オプティマイザ側）で定義しているが、実際に呼ばれるのはボタンクリック時
@@ -6151,7 +6436,8 @@
                     sharedCalcFormula: sharedCalcFormula.value,
                     hasSeasonPass: hasSeasonPass.value,
                     ownedCandles: ownedCandles.value,
-                    optimizerPlan: { ids: optimizerIds.value, daily: optimizerDaily.value }
+                    optimizerPlan: { ids: optimizerIds.value, daily: optimizerDaily.value },
+                    walkLog: walkLog.value
                 };
                 try {
                     localStorage.setItem(dataKeyForRecord(activeRecordId.value), JSON.stringify(data));
@@ -6206,6 +6492,12 @@
                     optimizerIds.value = Array.isArray(parsed.optimizerPlan.ids) ? parsed.optimizerPlan.ids : [];
                     if (parsed.optimizerPlan.daily !== undefined) optimizerDaily.value = Number(parsed.optimizerPlan.daily) || 0;
                 }
+                // 🚶 連れ歩き履歴ログの復元（不正な形式の要素は防御的に除外する）
+                if (Array.isArray(parsed.walkLog)) {
+                    walkLog.value = parsed.walkLog
+                        .filter(e => e && typeof e.date === 'string' && typeof e.spiritId === 'number')
+                        .slice(0, WALK_LOG_KEEP_MAX);
+                }
 
                 if (parsed.spirits && Array.isArray(parsed.spirits)) {
                     parsed.spirits.forEach((savedSpirit, sIdx) => {
@@ -6244,6 +6536,7 @@
                 optimizerIds.value = [];
                 optimizerDaily.value = 20;
                 optSelectedId.value = '';
+                walkLog.value = [];
             };
 
             // 📂 指定した記録idのデータを読み込み、作業用stateへ反映する
@@ -6386,7 +6679,8 @@
                         sharedNotes: sharedNotes.value,
                         sharedCalcFormula: sharedCalcFormula.value,
                         hasSeasonPass: hasSeasonPass.value,
-                        ownedCandles: ownedCandles.value
+                        ownedCandles: ownedCandles.value,
+                        walkLog: JSON.parse(JSON.stringify(walkLog.value)) // 🔁 参照を共有しないよう複製する
                     };
                     try {
                         localStorage.setItem(dataKeyForRecord(newId), JSON.stringify(snapshot));
@@ -6711,6 +7005,127 @@
                 dashRefreshStatusTimer = setTimeout(() => { dashRefreshStatus.value = ''; }, 3000);
             };
 
+            // 📅 ダッシュボードの内容をカレンダー(.ics)へ書き出す。
+            // 季節終了デッドライン・日替わり大キャンドル/クエストキャンドル切替・週間リセット・
+            // 闇の破片の出現(直近14日分)をまとめて1つのファイルにする。
+            // シーズン終了日時はdashData.season.endDate（tai-itemからfetchした最新値）を使う。
+            // このアプリ自身が持つSEASON_END定数はこの計算機能用の別値のため、ズレのリスクを避けて
+            // ダッシュボードが実際に画面表示している値と必ず同じ値を使う。
+            const dashIcsStatus = ref('');
+            let dashIcsStatusTimer = null;
+            const pfIcsDate = (d) => {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+            };
+            // 📝 ICSのテキスト項目で予約されている記号(\ , ; 改行)をエスケープする
+            const pfIcsEscape = (s) => String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+            const pfIcsBuildEvent = ({ uid, start, end, summary, description, rrule, alarmTrigger }) => {
+                const lines = ['BEGIN:VEVENT', `UID:${uid}`, `DTSTAMP:${pfIcsDate(new Date())}`, `DTSTART:${pfIcsDate(start)}`, `DTEND:${pfIcsDate(end)}`];
+                if (rrule) lines.push(`RRULE:${rrule}`);
+                lines.push(`SUMMARY:${pfIcsEscape(summary)}`);
+                if (description) lines.push(`DESCRIPTION:${pfIcsEscape(description)}`);
+                if (alarmTrigger) lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${pfIcsEscape(summary)}`, `TRIGGER:${alarmTrigger}`, 'END:VALARM');
+                lines.push('END:VEVENT');
+                return lines;
+            };
+            const pfDashExportIcs = () => {
+                if (!dashData.value) return;
+                try {
+                    const now = new Date();
+                    const uidHost = 'taipak5000.github.io';
+                    const events = [];
+
+                    // 🌟 季節終了（コンプリート期限）。ダッシュボードが表示しているのと同じfetch済みの値を使う。
+                    let seasonEnd = null;
+                    if (dashData.value.season && dashData.value.season.endDate) {
+                        seasonEnd = new Date(dashData.value.season.endDate);
+                        if (!isNaN(seasonEnd.getTime())) {
+                            events.push(...pfIcsBuildEvent({
+                                uid: `companion-season-end-${seasonEnd.getTime()}@${uidHost}`,
+                                start: seasonEnd,
+                                end: new Date(seasonEnd.getTime() + 30 * 60000),
+                                summary: t('ics_season_end_summary', { name: translateEventName(dashData.value.season.name) }),
+                                description: t('ics_season_end_desc'),
+                                alarmTrigger: '-P1D',
+                            }));
+                        } else {
+                            seasonEnd = null;
+                        }
+                    }
+                    // 🗓️ 繰り返し予定を打ち切る上限日時（季節終了が取れない場合は90日先を仮の上限にする）
+                    const recurUntil = seasonEnd || new Date(now.getTime() + 90 * 86400000);
+
+                    // 🕯️ 大キャンドル・クエストキャンドルの切替（太平洋時間0時・毎日）
+                    const dailyStart = pfDashNextPacificMidnight();
+                    events.push(...pfIcsBuildEvent({
+                        uid: `companion-daily-candle@${uidHost}`,
+                        start: dailyStart,
+                        end: new Date(dailyStart.getTime() + 5 * 60000),
+                        summary: t('ics_daily_reset_summary'),
+                        description: t('ics_daily_reset_desc'),
+                        rrule: `FREQ=DAILY;UNTIL=${pfIcsDate(recurUntil)}`,
+                        alarmTrigger: '-PT10M',
+                    }));
+
+                    // 🌩️ 週間リセット（原罪など・毎週日曜0時＝太平洋時間）
+                    const weeklyStart = pfDashNextEdenResetTarget();
+                    events.push(...pfIcsBuildEvent({
+                        uid: `companion-weekly-eden@${uidHost}`,
+                        start: weeklyStart,
+                        end: new Date(weeklyStart.getTime() + 5 * 60000),
+                        summary: t('ics_weekly_reset_summary'),
+                        rrule: `FREQ=WEEKLY;BYDAY=SU;UNTIL=${pfIcsDate(recurUntil)}`,
+                        alarmTrigger: '-PT30M',
+                    }));
+
+                    // 🔴⚫ 闇の破片（赤闇・黒闇）出現ウィンドウ：直近14日分（季節終了がそれより早ければ短縮する）
+                    const daysUntilEnd = seasonEnd ? Math.ceil((seasonEnd - now) / 86400000) : 14;
+                    const shardHorizon = Math.max(0, Math.min(14, daysUntilEnd));
+                    for (let offset = 0; offset <= shardHorizon; offset++) {
+                        const info = pfIcsShardInfoForOffset(offset);
+                        if (!info.hasShard) continue;
+                        info.occurrences.forEach((occ) => {
+                            if (occ.getTime() <= now.getTime()) return; // 過去の出現分は含めない
+                            const label = `${dashRealmName(info.realm)}・${dashLocationName(info.location)}`;
+                            events.push(...pfIcsBuildEvent({
+                                uid: `companion-shard-${occ.getTime()}@${uidHost}`,
+                                start: occ,
+                                end: new Date(occ.getTime() + 20 * 60000),
+                                summary: `${info.isRed ? t('ics_shard_red') : t('ics_shard_black')}${t('ics_shard_suffix')}`,
+                                description: label,
+                                alarmTrigger: '-PT10M',
+                            }));
+                        });
+                    }
+
+                    const body = [
+                        'BEGIN:VCALENDAR',
+                        'VERSION:2.0',
+                        `PRODID:-//${uidHost}//companion//${currentLang.value.toUpperCase()}`,
+                        'CALSCALE:GREGORIAN',
+                        'METHOD:PUBLISH',
+                        ...events,
+                        'END:VCALENDAR'
+                    ].join('\r\n');
+
+                    const blob = new Blob([body], { type: 'text/calendar;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sky-companion-schedule_${pfLocalDateStr(now)}.ics`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    dashIcsStatus.value = t('dash_ics_export_ok');
+                } catch (e) {
+                    console.error('pfDashExportIcs', e);
+                    dashIcsStatus.value = t('dash_ics_export_failed');
+                }
+                if (dashIcsStatusTimer) clearTimeout(dashIcsStatusTimer);
+                dashIcsStatusTimer = setTimeout(() => { dashIcsStatus.value = ''; }, 4000);
+            };
+
             // 📱 ホーム画面アイコンのカスタマイズ
             const pfIconOpenModal = () => {
                 showIconModal.value = true;
@@ -6963,7 +7378,7 @@
                 document.removeEventListener('keydown', handleGlobalKeydown);
                 systemThemeMediaQuery.removeEventListener('change', onSystemThemeChange);
             });
-            watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
+            watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles, walkLog], () => { save(); }, { deep: true });
 
             return {
                 activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeTier2Total, activeTier3Total, activeTier4Total, getSpiritTier4Total, toggleTreeItem, toggleExcluded,
@@ -6981,7 +7396,8 @@
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonStartText, seasonEndText, seasonCountdown, seasonDayInfo, pad2,
-                activeFastestHeartPlan,
+                activeFastestHeartPlan, todayWalkRecommendation,
+                walkLog, showWalkHistory, walkLogDisplay, hasLoggedWalkToday, todayWalkLogSpiritName, logTodayWalk, activeSpiritLoggedWalkDays,
                 spiritForecasts, grandTotalCandles, getForecastIconId,
                 records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
                 pfEditingId, pfEditingName, pfDeletingId,
@@ -6998,6 +7414,7 @@
                 dashEdenCountdown, dashSeasonCountdown,
                 dashSeasonActive, dashActiveScheduledEvents, dashNextUpdateCountdown,
                 pfDashOpen, pfDashClose,
+                dashIcsStatus, pfDashExportIcs,
                 showIconModal, pfIconMode, pfIconEmoji, pfIconBgColor, pfIconSaveStatus,
                 pfIconOpenModal, pfIconCloseModal, pfIconSetMode, pfIconPickSwatch, pfIconHandleFile, pfIconSave, pfIconReset,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
