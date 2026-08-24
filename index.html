@@ -2542,7 +2542,7 @@
                         @click="activeIndex = index">
                     <span class="tab-name">{{ spiritName(spirit) }}</span>
                     <span class="tab-p-sub">
-                        <template v-if="getSpiritPoints(spirit) >= 280">{{ t('tabs_complete') }}</template>
+                        <template v-if="getSpiritPoints(spirit) >= getSpiritTier4Total(spirit)">{{ t('tabs_complete') }}</template>
                         <template v-else>{{ getSpiritPoints(spirit) }} p</template>
                     </span>
                 </button>
@@ -2551,34 +2551,34 @@
             <div class="section-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: bold; font-size: 15px;">{{ spiritName(activeSpirit) }}{{ t('pts_progress_suffix') }}</span>
-                    <span style="font-weight: bold; color: var(--accent-orange);">{{ activePoints }} / 280 p</span>
+                    <span style="font-weight: bold; color: var(--accent-orange);">{{ activePoints }} / {{ activeTier4Total }} p</span>
                 </div>
-                
+
                 <div class="progress-container">
-                    <div class="progress-bar" :style="{ width: (activePoints / 280 * 100) + '%' }"></div>
+                    <div class="progress-bar" :style="{ width: (activePoints / activeTier4Total * 100) + '%' }"></div>
                 </div>
 
                 <div class="stats-grid">
                     <div class="stat-box">
                         <div style="font-size: 11px; color: var(--text-gray);">{{ t('pts_current_status') }}</div>
-                        <div class="stat-val" :style="{ color: activePoints >= 280 ? '#ff2d55' : 'var(--accent-orange)' }">
+                        <div class="stat-val" :style="{ color: activePoints >= activeTier4Total ? '#ff2d55' : 'var(--accent-orange)' }">
                             {{ activeStatusText }}
                         </div>
                     </div>
                     <div class="stat-box">
                         <div style="font-size: 11px; color: var(--text-gray);">{{ t('pts_remaining_to_heart') }}</div>
                         <div class="stat-val">
-                            {{ Math.max(0, 280 - activePoints) }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">p</span>
+                            {{ Math.max(0, activeTier4Total - activePoints) }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">p</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="advice-box" :style="activePoints >= 280 ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);' : ''">
-                    <div v-if="activePoints >= 280">
+                <div class="advice-box" :style="activePoints >= activeTier4Total ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);' : ''">
+                    <div v-if="activePoints >= activeTier4Total">
                         🎉 <strong>{{ t('pts_congrats_label') }}</strong> {{ t('pts_congrats_rest') }}
                     </div>
                     <div v-else>
-                        💡 <strong>{{ t('pts_advice_label') }}</strong> {{ t('pts_advice_pre') }} <strong>{{ activeRemainingDays }} {{ t('pts_advice_day_unit') }}</strong> {{ t('pts_advice_post') }}
+                        💡 <strong>{{ t('pts_advice_label') }}</strong> {{ t('pts_advice_pre') }} <strong>{{ activeRemainingDays }} {{ t('pts_advice_day_unit') }}</strong> {{ t('pts_advice_post', {n: activeTier4Total}) }}
                         <span v-if="activeSpirit.walkDays + activeRemainingDays > 77" style="color: var(--danger-text); display: block; margin-top: 4px; font-weight: bold;">
                             {{ t('pts_advice_warn') }}
                         </span>
@@ -2776,7 +2776,7 @@
                     <button v-for="(spirit, index) in spirits" :key="spirit.id"
                             class="mini-tab-btn" :class="{ active: activeIndex === index }"
                             @click="activeIndex = index">
-                        <span class="mini-tab-name">{{ spiritName(spirit) }}</span><span v-if="getSpiritPoints(spirit) >= 280" class="mini-tab-check">🧡</span>
+                        <span class="mini-tab-name">{{ spiritName(spirit) }}</span><span v-if="getSpiritPoints(spirit) >= getSpiritTier4Total(spirit)" class="mini-tab-check">🧡</span>
                     </button>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -2903,11 +2903,11 @@
                             <span class="tier-req">{{ activePoints >= activeTier3Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < activeTier2Total ? activeTier3Total - activeTier2Total : activeTier3Total - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
                         <div class="game-node-wrapper">
-                            <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isPhantomItem(i))" :key="item.id" 
-                                 class="game-node-btn" 
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 100 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
+                            <div v-for="item in activeSpirit.treeData.tier3.filter(i => !isPhantomItem(i))" :key="item.id"
+                                 class="game-node-btn"
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < activeTier2Total && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? t('tree_pass_required') : null"
-                                 @click="toggleTreeItem(item, 100)">
+                                 @click="toggleTreeItem(item, activeTier2Total)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -2937,8 +2937,8 @@
                             <div class="node-placeholder"></div>
                             <div v-for="item in activeSpirit.treeData.tier4.filter(i => i.wrapRow && !isPhantomItem(i))" :key="item.id"
                                  class="game-node-btn"
-                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < 180 && !item.checked}"
-                                 @click="toggleTreeItem(item, 180)">
+                                 :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < activeTier3Total && !item.checked}"
+                                 @click="toggleTreeItem(item, activeTier3Total)">
                                 <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
@@ -2962,8 +2962,8 @@
                                 <div v-if="!item" class="node-placeholder"></div>
                                 <div v-else
                                      class="game-node-btn" 
-                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < 180 && !item.checked}"
-                                     @click="toggleTreeItem(item, 180)">
+                                     :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < activeTier3Total && !item.checked}"
+                                     @click="toggleTreeItem(item, activeTier3Total)">
                                     <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
                                     <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                     <div class="node-icon">
@@ -2985,14 +2985,14 @@
 
                     <div class="heart-goal-container">
                         <div class="game-node-btn heart-node"
-                             :class="{'node-checked': activeSpirit.treeData.tier4[2].checked, 'node-disabled': (activePoints < 280 && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked), 'node-pass-locked': !hasSeasonPass && !activeSpirit.treeData.tier4[2].checked}"
+                             :class="{'node-checked': activeSpirit.treeData.tier4[2].checked, 'node-disabled': (activePoints < activeTier4Total && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked), 'node-pass-locked': !hasSeasonPass && !activeSpirit.treeData.tier4[2].checked}"
                              :title="(!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked) ? t('tree_pass_required') : null"
-                             @click="toggleTreeItem(activeSpirit.treeData.tier4[2], 280)">
+                             @click="toggleTreeItem(activeSpirit.treeData.tier4[2], activeTier4Total)">
                             <div class="node-candle-badge">🕯️{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
                             <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
                             <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">{{ t('heart_node_name') }}</div>
-                            <div class="node-cost" style="color: #ff5e7e;">{{ activeSpirit.treeData.tier4[2].checked ? t('heart_node_got') : '280p' }}</div>
+                            <div class="node-cost" style="color: #ff5e7e;">{{ activeSpirit.treeData.tier4[2].checked ? t('heart_node_got') : (activeTier4Total + 'p') }}</div>
                         </div>
                     </div>
                 </div>
@@ -3680,7 +3680,7 @@
             record_compare_btn: '🆚 記録を比較',
             dm_open_btn: '💾 データのバックアップ・復元・削除',
             dm_title: '💾 データのバックアップ・復元・削除',
-            dm_hint: 'このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。',
+            dm_hint: 'このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。',
             dm_export_btn: '⬇️ データをエクスポート（ファイルに保存）',
             dm_import_btn: '⬆️ ファイルからインポート',
             dm_import_confirm: '{n}件のキーをインポートします。現在保存されているデータは上書きされます（インポートするファイルに無いキーはそのまま残ります）。よろしいですか？',
@@ -3846,7 +3846,7 @@
             pts_advice_label: 'アドバイス:',
             pts_advice_pre: 'あと',
             pts_advice_day_unit: '日',
-            pts_advice_post: '連れ歩けば、280pに到達します！',
+            pts_advice_post: '連れ歩けば、{n}pに到達します！',
             pts_advice_warn: '⚠️ 注意: 季節の残り日数を超えてしまうため、魔法などの追加交換が必要です。',
 
             heart_title: '🚀 最短ハート交換シミュレーション',
@@ -4030,7 +4030,7 @@
             record_compare_btn: '🆚 Compare Records',
             dm_open_btn: '💾 Data Backup / Restore / Delete',
             dm_title: '💾 Data Backup / Restore / Delete',
-            dm_hint: 'Export, import, or delete data saved in this browser for the taipak5000.github.io family of tools (item, wings, companion, spirit-catalog, etc.) all at once. This applies to all profiles together.',
+            dm_hint: 'Export, import, or delete data saved in this browser for the taipak5000.github.io family of tools (item, wings, companion, etc.) all at once. This applies to all profiles together.',
             dm_export_btn: '⬇️ Export Data (save to file)',
             dm_import_btn: '⬆️ Import from File',
             dm_import_confirm: 'This will import {n} item(s). Currently saved data will be overwritten (items not in the imported file will be left as-is). Continue?',
@@ -4196,7 +4196,7 @@
             pts_advice_label: 'Tip:',
             pts_advice_pre: 'Walk together for',
             pts_advice_day_unit: 'more day(s)',
-            pts_advice_post: 'to reach 280p!',
+            pts_advice_post: 'to reach {n}p!',
             pts_advice_warn: '⚠️ Note: this would exceed the days left in the season, so you\'ll need extra exchanges like Spells too.',
 
             heart_title: '🚀 Fastest Heart Exchange Simulation',
@@ -4380,7 +4380,7 @@
             record_compare_btn: '🆚 比較記錄',
             dm_open_btn: '💾 資料備份・還原・刪除',
             dm_title: '💾 資料備份・還原・刪除',
-            dm_hint: '可以將這個瀏覽器中儲存的 taipak5000.github.io 系列工具（item・wings・companion・spirit-catalog 等）的資料一次匯出・匯入・刪除。所有記錄都會一併處理。',
+            dm_hint: '可以將這個瀏覽器中儲存的 taipak5000.github.io 系列工具（item・wings・companion 等）的資料一次匯出・匯入・刪除。所有記錄都會一併處理。',
             dm_export_btn: '⬇️ 匯出資料（儲存為檔案）',
             dm_import_btn: '⬆️ 從檔案匯入',
             dm_import_confirm: '將匯入 {n} 筆資料項目。目前已儲存的資料將被覆蓋（匯入檔案中沒有的項目會保留原樣）。確定要繼續嗎？',
@@ -4546,7 +4546,7 @@
             pts_advice_label: '建議:',
             pts_advice_pre: '再',
             pts_advice_day_unit: '天',
-            pts_advice_post: '同行即可達到280p！',
+            pts_advice_post: '同行即可達到{n}p！',
             pts_advice_warn: '⚠️ 注意: 這會超過本季剩餘天數，因此還需要法術等額外的兌換方式。',
 
             heart_title: '🚀 最快兌換心模擬',
@@ -4730,7 +4730,7 @@
             record_compare_btn: '🆚 기록 비교',
             dm_open_btn: '💾 데이터 백업・복원・삭제',
             dm_title: '💾 데이터 백업・복원・삭제',
-            dm_hint: '이 브라우저에 저장된 taipak5000.github.io 계열 도구(item・wings・companion・spirit-catalog 등)의 데이터를 한꺼번에 내보내기・가져오기・삭제할 수 있습니다. 모든 기록이 함께 적용됩니다.',
+            dm_hint: '이 브라우저에 저장된 taipak5000.github.io 계열 도구(item・wings・companion 등)의 데이터를 한꺼번에 내보내기・가져오기・삭제할 수 있습니다. 모든 기록이 함께 적용됩니다.',
             dm_export_btn: '⬇️ 데이터 내보내기(파일로 저장)',
             dm_import_btn: '⬆️ 파일에서 가져오기',
             dm_import_confirm: '{n}개의 항목을 가져옵니다. 현재 저장된 데이터는 덮어쓰기됩니다(가져올 파일에 없는 항목은 그대로 유지됩니다). 계속하시겠습니까?',
@@ -4896,7 +4896,7 @@
             pts_advice_label: '조언:',
             pts_advice_pre: '앞으로',
             pts_advice_day_unit: '일',
-            pts_advice_post: '동행하면 280p에 도달합니다!',
+            pts_advice_post: '동행하면 {n}p에 도달합니다!',
             pts_advice_warn: '⚠️ 주의: 시즌 남은 일수를 초과하게 되므로, 마법 등 추가 교환 수단이 필요합니다.',
 
             heart_title: '🚀 최단 하트 교환 시뮬레이션',
@@ -5149,7 +5149,7 @@
             // 🔑 保存キーをサイトごとに名前空間化する（プロフィール単位のnsKey()とは別軸）。
             // taipak5000.github.io系サイトは全サイトが同一オリジンでlocalStorageを共有するため、
             // 固定文字列のままだと、あるサイトで設定したホーム画面アイコンが他サイト（item・emote・
-            // spirit-catalog・share・star-candle・tai-nomacanなど）の設定まで上書きしてしまう。
+            // share・star-candle・tai-nomacanなど）の設定まで上書きしてしまう。
             // location.pathnameの先頭セグメント（例: '/companion/' → 'companion'）は各サイトの
             // 実際の公開URLパスと一致し、リポジトリ名の変更にも自動追従するため、これをサイト
             // 識別子として使う（wings・tai-infoと同じ方式）。
@@ -5288,6 +5288,9 @@
             const activeTier2Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t2 || 100);
             const activeTier3Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t3 || 180);
             const activeTier4Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t4 || 280);
+            // 🔢 activeTier4Totalの「任意の精霊」版。タブ一覧など、activeSpirit以外の精霊についても
+            // 完了判定(t4)が必要な箇所（本来はTIER_TOTAL_OVERRIDESで上書きされる場合がある）で使う。
+            const getSpiritTier4Total = (spirit) => (TIER_TOTAL_OVERRIDES[spirit.id] || {}).t4 || 280;
 
             // 🕯️ ツリーのアイテムをチェック/解除する共通処理。
             // ・前層の必要ポイント(minPoints)未達、またはアドパス未保有でのパス限定アイテムは新規チェック不可
@@ -5497,6 +5500,7 @@
                     spirit.treeData[tierKey].forEach(item => {
                         if (item.checked || item.type === 'magic') return;
                         if (item.noPoints) return; // 🎁 アドパス①〜③は好きなタイミングで取得できるため、プランの対象外にする
+                        if (item.isHeartGoal) return; // ♡ ハートとの交換は最終ゴールであり「交換すべきアイテム」ではないため、他のツリーアイテムと同列の候補からは除外する（activeFastestHeartPlanと同じ扱い）
                         if (item.requiresSeasonPass && !hasSeasonPass.value) return;
                         if (item.excluded) return; // 🚫 「取りたくない」指定済みのアイテムはプランの対象外にする
                         remaining.push({
@@ -5507,7 +5511,7 @@
                         });
                     });
                 });
-                return { name: spiritName(spirit), points: getSpiritPoints(spirit), remaining };
+                return { name: spiritName(spirit), points: getSpiritPoints(spirit), cap: getSpiritTier4Total(spirit), remaining };
             });
 
             // 現在のポイント状況で、購入可能なアイテムの中から最もポイント効率が良いものを1つ選ぶ
@@ -5525,7 +5529,7 @@
             };
 
             const pickWalkTarget = (state) => {
-                const candidates = state.filter(s => s.points < 280 && s.remaining.length > 0);
+                const candidates = state.filter(s => s.points < s.cap && s.remaining.length > 0);
                 if (!candidates.length) return null;
                 return candidates.reduce((min, s) => (s.points < min.points ? s : min), candidates[0]);
             };
@@ -5541,7 +5545,7 @@
                 while ((picked = pickBestBuy(state, pool))) {
                     const { best, bestSIdx, bestIIdx } = picked;
                     pool -= best.candles;
-                    state[bestSIdx].points = Math.min(280, state[bestSIdx].points + best.points);
+                    state[bestSIdx].points = Math.min(state[bestSIdx].cap, state[bestSIdx].points + best.points);
                     buyNow.push({ spiritName: state[bestSIdx].name, itemName: best.name, candles: best.candles });
                     state[bestSIdx].remaining.splice(bestIIdx, 1);
                 }
@@ -5558,13 +5562,13 @@
                     day++;
                     pool += perDay;
                     const w = pickWalkTarget(state);
-                    if (w) w.points = Math.min(280, w.points + 10);
+                    if (w) w.points = Math.min(w.cap, w.points + 10);
                     const buysToday = [];
                     let p;
                     while ((p = pickBestBuy(state, pool))) {
                         const { best, bestSIdx, bestIIdx } = p;
                         pool -= best.candles;
-                        state[bestSIdx].points = Math.min(280, state[bestSIdx].points + best.points);
+                        state[bestSIdx].points = Math.min(state[bestSIdx].cap, state[bestSIdx].points + best.points);
                         buysToday.push({ spiritName: state[bestSIdx].name, itemName: best.name });
                         state[bestSIdx].remaining.splice(bestIIdx, 1);
                     }
@@ -5591,6 +5595,7 @@
                 const spirit = activeSpirit.value;
                 const heartItem = spirit.treeData.tier4[2];
                 const tierThreshold = getTierThresholds(spirit.id);
+                const goalPoints = getSpiritTier4Total(spirit); // 🔓 ハート交換に必要な最終累計（喜びの思い出はTIER_TOTAL_OVERRIDESで380に上書き）
 
                 // まだ購入していない、アドパス枠でもハートでもない通常アイテムを集める
                 let remaining = [];
@@ -5617,7 +5622,7 @@
                 if (heartItem.checked) return { alreadyDone: true, order: [], totalCost: 0 };
 
                 const order = [];
-                const meetsGoal = () => points >= 280 && candlePool >= heartCost;
+                const meetsGoal = () => points >= goalPoints && candlePool >= heartCost;
                 if (meetsGoal()) {
                     return { day: 0, passOk: hasSeasonPass.value, candlePool, readyExceptPass: !hasSeasonPass.value, order: [], totalCost: 0 };
                 }
@@ -5627,7 +5632,7 @@
                 while (day < MAX_DAYS) {
                     day++;
                     candlePool += perDay;
-                    points = Math.min(280, points + 10); // この精霊に毎日連れ歩きを割り当てた場合
+                    points = Math.min(goalPoints, points + 10); // この精霊に毎日連れ歩きを割り当てた場合
 
                     // 買えるアイテムをポイント効率(points/candles)の高い順に買えるだけ買う
                     let bought = true;
@@ -5643,13 +5648,13 @@
                         if (bestIdx >= 0) {
                             const it = remaining.splice(bestIdx, 1)[0];
                             candlePool -= it.candles;
-                            points = Math.min(280, points + it.points);
+                            points = Math.min(goalPoints, points + it.points);
                             order.push({ name: it.name, icon: it.icon, imageUrl: it.imageUrl, candles: it.candles, points: it.points, day });
                             bought = true;
                         }
                     }
 
-                    if (points >= 280 && candlePool >= heartCost) {
+                    if (points >= goalPoints && candlePool >= heartCost) {
                         order.push({ name: heartName, icon: '♡', imageUrl: null, candles: heartCost, points: 0, day, isHeart: true });
                         const totalCost = order.reduce((sum, o) => sum + (o.candles || 0), 0);
                         return { day, candlePool, passOk: hasSeasonPass.value, readyExceptPass: !hasSeasonPass.value, order, totalCost };
@@ -5721,7 +5726,7 @@
                 Object.values(activeSpirit.value.treeData).forEach(tier => {
                     tier.forEach(item => { if (item.checked) itemPoints += item.points; });
                 });
-                const totalDaysNeeded = Math.max(0, Math.ceil((280 - itemPoints) / 10));
+                const totalDaysNeeded = Math.max(0, Math.ceil((activeTier4Total.value - itemPoints) / 10));
                 return Math.max(0, totalDaysNeeded - activeSpirit.value.walkDays);
             });
 
@@ -6569,7 +6574,7 @@
             // 💾 データのエクスポート/インポート/全削除
             // localStorage は taipak5000.github.io 配下の全ツールで共有されているため、
             // ここで書き出す/読み込む/消す内容はこのサイトだけでなく item・wings・
-            // companion・spirit-catalog 等すべてのデータが対象になる。
+            // companion 等すべてのデータが対象になる。
             const showDmModal = ref(false);
             const dmStatus = ref('');
             const dmPendingImportCount = ref(null);
@@ -6961,7 +6966,7 @@
             watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles], () => { save(); }, { deep: true });
 
             return {
-                activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeTier2Total, activeTier3Total, activeTier4Total, toggleTreeItem, toggleExcluded,
+                activeIndex, spirits, activeSpirit, activePoints, totalHearts, activeTier2Total, activeTier3Total, activeTier4Total, getSpiritTier4Total, toggleTreeItem, toggleExcluded,
                 sharedCalcFormula, sharedCalcTotal,
                 activeStatusText, activeRemainingDays, getSpiritPoints,
                 incrementWalkDays, decrementWalkDays, applyPreset,
