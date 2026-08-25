@@ -105,7 +105,15 @@
         header {
             text-align: center;
             margin-bottom: 24px;
-            position: relative;
+            /* 🧭 デスクトップレイアウト統一：他姉妹サイトのheaderと同じくsticky化。
+               スクロール中のコンテンツと重ならないよう、プロフィールの色合い(--pf-tint-rgb)も
+               bodyと同じ式で反映した不透明背景と下境界線を付与する。 */
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: linear-gradient(var(--pf-tint-rgb, transparent), var(--pf-tint-rgb, transparent)), var(--bg-color);
+            padding: 10px 0;
+            border-bottom: 0.5px solid var(--border-color);
         }
 
         h1 {
@@ -306,7 +314,7 @@
            デスクトップ幅では左カラム自体がsticky表示されるため、このバーは非表示にする。 */
         .mobile-candle-bar { display: none; }
 
-        @media (max-width: 767px) {
+        @media (max-width: 849px) {
             .mobile-candle-bar {
                 display: flex;
                 align-items: center;
@@ -343,7 +351,7 @@
             }
         }
 
-        @media (min-width: 768px) {
+        @media (min-width: 850px) {
             .container {
                 max-width: 1200px;
             }
@@ -373,7 +381,7 @@
         }
         /* 🕯️ スマホ幅では画面上部に所持キャンドルバー（sticky, 高さ約56px）が重なるため、
            連れ歩き日数カードの固定位置をその分だけ下げて重なりを防ぐ */
-        @media (max-width: 767px) {
+        @media (max-width: 849px) {
             .walk-days-card {
                 top: 60px;
             }
@@ -1189,26 +1197,10 @@
             box-shadow: 0 0 18px rgba(255, 45, 85, 0.6), inset 0 0 8px rgba(255, 45, 85, 0.2);
         }
 
-        /* ═══ サイドバーレイアウト ═══ */
-        .app-layout {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            width: 100%;
-        }
-
+        /* ═══ サイドバー（他のツール一覧。常時表示カラムは廃止し、ボトムドックの
+           「他のツール」ボタンから開くオーバーレイ／ドロワーとしてのみ機能する） ═══ */
         .sidebar {
-            width: 200px;
-            flex-shrink: 0;
-            position: sticky;
-            top: 16px;
             display: none;
-        }
-
-        @media (min-width: 850px) {
-            .sidebar {
-                display: block;
-            }
         }
 
         .sidebar.sidebar-open {
@@ -1234,11 +1226,6 @@
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .main-content-wrapper {
-            flex: 1;
-            min-width: 0;
-        }
 
         .sidebar-section-label {
             font-size: 11px;
@@ -1310,8 +1297,11 @@
         }
 
         @media (min-width: 850px) {
+            /* 「他のツール」ドロワーはデスクトップ幅でもオーバーレイとして開くため、
+               閉じるボタン(×)は常に表示する。ヘッダー内の開閉ハンバーガー
+               (.sidebar-toggle-btn)はボトムドックの「他のツール」と重複するため、
+               デスクトップ幅ではこちらのみ非表示にする。 */
             .sidebar-toggle-btn { display: none; }
-            .sidebar-close-btn  { display: none; }
         }
 
         /* --------------------------------------------------------------------------------- */
@@ -1499,6 +1489,37 @@
         .site-dock .site-dock-label { font-size: 10px; font-weight: 700; color: var(--text-gray);
             max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+        /* --------------------------------------------------------------------------------- */
+        /* 🔔 トースト通知（保存/コピー等の一時的なフィードバックを画面下部中央に表示） */
+        /* --------------------------------------------------------------------------------- */
+        .app-toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(84px + env(safe-area-inset-bottom));
+            z-index: 2000;
+            transform: translateX(-50%) translateY(6px);
+            max-width: min(90vw, 360px);
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .app-toast.is-visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        [data-theme="dark"] .app-toast {
+            box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+        }
+
         .pf-row-input {
             flex: 1;
             background: var(--input-bg);
@@ -1649,7 +1670,7 @@
         .forecast-grid::-webkit-scrollbar { height: 6px; }
         .forecast-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
-        @media (min-width: 768px) {
+        @media (min-width: 850px) {
             .forecast-grid {
                 overflow-x: visible;
                 display: grid;
@@ -1678,7 +1699,7 @@
             border: 1px solid rgba(var(--fc-tint), 0.65);
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
-        @media (min-width: 768px) { .forecast-column { width: auto; min-width: 0; } }
+        @media (min-width: 850px) { .forecast-column { width: auto; min-width: 0; } }
 
         [data-theme="dark"] .forecast-column {
             background: linear-gradient(165deg, rgba(var(--fc-tint), 0.3), rgba(9, 8, 16, 0.96) 65%);
@@ -2279,18 +2300,16 @@
         </div>
     </div>
 
-    <!-- サイドバーオーバーレイ（モバイル） -->
+    <!-- サイドバーオーバーレイ（ボトムドックの「他のツール」から開くドロワー用） -->
     <div v-if="showSidebar" class="sidebar-overlay" @click="showSidebar = false"></div>
 
-    <div class="app-layout">
-
-        <!-- ═══ サイドバー ═══ -->
-        <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('side_related_tools') }}</div>
-                <button class="sidebar-close-btn" @click="showSidebar = false">×</button>
-            </div>
-            <nav>
+    <!-- ═══ サイドバー（他のツール一覧ドロワー） ═══ -->
+    <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('side_related_tools') }}</div>
+            <button class="sidebar-close-btn" @click="showSidebar = false">×</button>
+        </div>
+        <nav>
                 <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
                     {{ t('side_item_tool') }}
                 </a>
@@ -2315,15 +2334,11 @@
                 <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link">
                     {{ t('side_transfer_tool') }}
                 </a>
+                <a href="https://taipak5000.github.io/tai-info/" class="sidebar-nav-link">
+                    {{ t('side_info_tool') }}
+                </a>
             </nav>
-            <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
-                <div class="sidebar-section-label" style="margin-bottom:8px;">{{ t('side_icon_section_label') }}</div>
-                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" @click="pfIconOpenModal(); showSidebar = false">{{ t('side_icon_customize_btn') }}</button>
-            </div>
         </aside>
-
-        <!-- ═══ メインコンテンツ ═══ -->
-        <div class="main-content-wrapper">
 
     <div class="forecast-card">
         <div class="forecast-head" style="cursor:pointer;" @click="showForecast = !showForecast">
@@ -3072,9 +3087,6 @@
         {{ t('info_3') }}
     </div>
 
-        </div> <!-- /.main-content-wrapper -->
-    </div> <!-- /.app-layout -->
-
     <footer style="text-align: center; padding: 24px 16px; color: var(--text-gray); font-size: 13px; line-height: 1.6; border-top: 1px solid var(--border-color); margin-top: 40px;">
         {{ t('footer_disclaimer') }}<br>
         {{ t('footer_credit_pre') }} <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a>
@@ -3106,6 +3118,9 @@
             <span class="site-dock-label">{{ t('dock_settings') }}</span>
         </button>
     </nav>
+
+    <!-- 🔔 トースト通知（保存/コピー等の一時的なフィードバック） -->
+    <div class="app-toast" :class="{ 'is-visible': toastVisible }" role="status" aria-live="polite">{{ toastMessage }}</div>
 
 </div>
 
@@ -3729,6 +3744,7 @@
             side_emote_tool: '🎭 エモート所持率管理',
             side_nomacan_tool: '🕯️ ノマキャン計算機',
             side_transfer_tool: '🔄 データ引継ぎ',
+            side_info_tool: '⚙️ 設定・更新情報',
             side_icon_section_label: '📱 ホーム画面アイコン',
             side_icon_customize_btn: '🎨 アイコンをカスタマイズ',
 
@@ -4111,6 +4127,7 @@
             side_emote_tool: '🎭 Emote Collection',
             side_nomacan_tool: '🕯️ Nomacan Calculator',
             side_transfer_tool: '🔄 Data Transfer',
+            side_info_tool: '⚙️ Settings & Updates',
             side_icon_section_label: '📱 Home Screen Icon',
             side_icon_customize_btn: '🎨 Customize Icon',
 
@@ -4493,6 +4510,7 @@
             side_emote_tool: '🎭 動作持有率管理',
             side_nomacan_tool: '🕯️ 一般蠟燭計算機',
             side_transfer_tool: '🔄 資料轉移',
+            side_info_tool: '⚙️ 設定・更新資訊',
             side_icon_section_label: '📱 主畫面圖示',
             side_icon_customize_btn: '🎨 自訂圖示',
 
@@ -4875,6 +4893,7 @@
             side_emote_tool: '🎭 감정표현 보유율 관리',
             side_nomacan_tool: '🕯️ 일반 초 계산기',
             side_transfer_tool: '🔄 데이터 이전',
+            side_info_tool: '⚙️ 설정・업데이트 정보',
             side_icon_section_label: '📱 홈 화면 아이콘',
             side_icon_customize_btn: '🎨 아이콘 커스터마이즈',
 
@@ -6362,6 +6381,19 @@
                 };
             });
 
+            // 🔔 画面下部中央に一時表示するトースト通知（保存/コピー等の共通フィードバック）。
+            // 同時発火時に前のトーストが残ったまま重ならないよう、表示のたびにタイマーを張り直す。
+            const toastMessage = ref('');
+            const toastVisible = ref(false);
+            let toastHideTimer = null;
+            const showToast = (msg) => {
+                if (!msg) return;
+                toastMessage.value = msg;
+                toastVisible.value = true;
+                clearTimeout(toastHideTimer);
+                toastHideTimer = setTimeout(() => { toastVisible.value = false; }, 2600);
+            };
+
             // 📋 テキストをクリップボードへコピーする共通ヘルパー。navigator.clipboardが使えない環境
             // （非HTTPS等）向けに、非表示textareaへ選択→document.execCommand('copy')のフォールバックも
             // 用意する。成功/失敗をstatusRef（呼び出し側のref('')）へ一時的に反映し、数秒後に自動で消す。
@@ -6383,9 +6415,11 @@
                         document.body.removeChild(ta);
                     }
                     statusRef.value = t('copy_success');
+                    showToast(t('copy_success'));
                 } catch (e) {
                     console.error('pfCopyText', e);
                     statusRef.value = t('copy_failed');
+                    showToast(t('copy_failed'));
                 }
                 if (pfCopyStatusTimers.has(statusRef)) clearTimeout(pfCopyStatusTimers.get(statusRef));
                 pfCopyStatusTimers.set(statusRef, setTimeout(() => { statusRef.value = ''; }, 3000));
@@ -7415,7 +7449,8 @@
                 showSettingsModal, settingsOpenModal, settingsCloseModal, shortcutsEnabled, settingsSaveShortcutsPref,
                 showCompareModal, compareIdA, compareIdB, compareSummaryA, compareSummaryB, compareSpiritRows,
                 pfCompareOpenModal, pfCompareCloseModal,
-                pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl
+                pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl,
+                toastMessage, toastVisible
             };
         }
     }).mount('#app');
