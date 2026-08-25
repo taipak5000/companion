@@ -97,14 +97,14 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 720px;
             margin: 0 auto;
             transition: max-width 0.3s ease;
         }
 
         header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
             /* 🧭 デスクトップレイアウト統一：他姉妹サイトのheaderと同じくsticky化。
                スクロール中のコンテンツと重ならないよう、プロフィールの色合い(--pf-tint-rgb)も
                bodyと同じ式で反映した不透明背景と下境界線を付与する。 */
@@ -117,8 +117,16 @@
         }
 
         h1 {
-            font-size: 22px;
+            font-size: 17px;
+            font-weight: 600;
             margin: 0 0 4px 0;
+            /* 🩹 狭い画面幅では、隣り合うハンバーガー/言語選択/設定ボタンに押されて
+               タイトルが3行に折り返ってしまっていたため、縮んで1行で省略されるようにする */
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .subtitle {
@@ -129,14 +137,14 @@
 
         .season-info-badge {
             text-align: center;
-            font-size: 12.5px;
+            font-size: 11.5px;
             font-weight: 700;
             color: var(--accent-orange);
-            padding: 7px 10px;
+            padding: 6px 10px;
             background: rgba(255, 149, 0, 0.08);
             border: 1px solid rgba(255, 149, 0, 0.22);
             border-radius: 9px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             line-height: 1.4;
         }
 
@@ -208,7 +216,7 @@
         }
 
         .cd-days {
-            font-size: 30px;
+            font-size: 22px;
             font-weight: 800;
             color: var(--accent-orange);
             line-height: 1;
@@ -220,13 +228,13 @@
 
         .cd-days i {
             font-style: normal;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             margin-left: 2px;
         }
 
         .cd-time {
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 700;
             color: var(--accent-orange);
             font-variant-numeric: tabular-nums;
@@ -353,7 +361,7 @@
 
         @media (min-width: 850px) {
             .container {
-                max-width: 1200px;
+                max-width: 960px;
             }
             .main-layout {
                 flex-direction: row;
