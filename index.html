@@ -514,6 +514,14 @@
             flex-wrap: wrap;
         }
 
+        /* 🌐 表示設定の言語選択ボタン専用: 4つを2×2グリッドで並べ、3+1の半端な折り返しで
+           4番目だけが不格好に横幅いっぱいへ伸びてしまう見た目崩れを防ぐ
+           （.preset-groupとの複合セレクタで詳細度を上げ、定義順に関係なく確実に上書きする） */
+        .preset-group.lang-btn-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+        }
+
         .btn-sm {
             flex: 1;
             min-width: 90px;
@@ -620,6 +628,26 @@
             .total-goal-banner.goal-complete { animation: none; }
             .confetti-piece { animation: none; display: none; }
         }
+
+        /* 📤 シーズン進捗のシェアカードを開くボタン（機能: シーズン進捗のシェアカード） */
+        .goal-share-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 1;
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.22);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .goal-share-btn:hover { background: rgba(255,255,255,0.34); }
 
         .calc-input {
             width: 100%;
@@ -1724,6 +1752,15 @@
         }
         .forecast-total-icon { width: 17px; height: 17px; color: var(--fc-accent); flex-shrink: 0; }
 
+        /* ♡ 最短ハート交換までの見込み日数バッジ（機能: 4体比較にハート交換ETAを表示） */
+        .forecast-eta {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-gray);
+            margin-top: 2px;
+        }
+        .forecast-eta-done { color: var(--success-text); }
+
         /* 🌳 個別ツリーと同じ「層ごとに区切って積み上げる」配置（column-reverse で下から第1層→上へ） */
         .forecast-tree {
             display: flex;
@@ -2233,7 +2270,7 @@
 
             <div class="dash-section">
                 <p class="dash-section-label">{{ t('settings_lang_label') }}</p>
-                <div class="preset-group">
+                <div class="preset-group lang-btn-group">
                     <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ja'}" @click="setLang('ja')">日本語</button>
                     <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'en'}" @click="setLang('en')">English</button>
                     <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'zh-TW'}" @click="setLang('zh-TW')">繁體中文</button>
@@ -2297,6 +2334,22 @@
             </template>
 
             <button type="button" class="pf-close-btn" @click="pfCompareCloseModal">{{ t('record_close') }}</button>
+        </div>
+    </div>
+
+    <!-- ═══ 📤 シーズン進捗のシェアカード ═══ -->
+    <div class="pf-modal-overlay" :class="{ 'is-visible': showShareModal }" @click.self="pfShareCloseModal">
+        <div class="pf-modal-card" ref="shareModalCardEl" tabindex="-1" style="max-width:400px;">
+            <h3>{{ t('share_card_title') }}</h3>
+            <p class="pf-hint" style="margin-top:0;">{{ t('share_card_hint') }}</p>
+            <div style="display:flex; justify-content:center; margin-top:10px;">
+                <canvas id="shareCardCanvas" width="640" height="800" style="width:100%; max-width:280px; height:auto; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.25);"></canvas>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+                <a :href="shareCardDataUrl" :download="shareCardFilename" class="pf-add-btn" style="flex:1; min-width:120px; text-align:center; text-decoration:none; box-sizing:border-box; padding:10px;">{{ t('share_card_download_btn') }}</a>
+                <button v-if="shareCardCanShare" type="button" class="pf-icon-btn" style="flex:1; min-width:100px; padding:10px;" @click="pfShareCardShare">{{ t('share_card_share_btn') }}</button>
+            </div>
+            <button type="button" class="pf-close-btn" @click="pfShareCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
 
@@ -2368,6 +2421,7 @@
                     <span class="forecast-total">
                         <svg class="forecast-total-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ sf.total }}
                     </span>
+                    <span class="forecast-eta" :class="{ 'forecast-eta-done': sf.heartPlan && (sf.heartPlan.alreadyDone || sf.heartPlan.day === 0) }">{{ forecastEtaText(sf.heartPlan) }}</span>
                 </div>
 
                 <!-- 🌳 個別ツリーと全く同じDOM順（第1層→第4層→ハート）＋column-reverseで、下から第1層→上へ積み上げる -->
@@ -2425,6 +2479,7 @@
 
         <div class="left-column">
             <div class="total-goal-banner" :class="{ 'goal-complete': totalHearts === 4 }">
+                <button type="button" class="goal-share-btn" :title="t('share_card_btn')" :aria-label="t('share_card_btn')" @click="pfShareOpenModal">📤</button>
                 <div v-if="totalHearts === 4" class="confetti-burst" aria-hidden="true">
                     <span v-for="n in 16" :key="n" class="confetti-piece"
                           :style="{ left: (n * 6.2 + 2) + '%', animationDelay: (n * 0.12) + 's' }">{{ ['🎉','✨','🎊','⭐'][n % 4] }}</span>
@@ -2512,6 +2567,19 @@
                             <template v-if="candleDaysNeeded <= 0">{{ t('calc_achieved') }}</template>
                             <template v-else>{{ candleDaysNeeded }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">{{ t('calc_day_unit') }}</span></template>
                         </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span style="font-size: 11px; color: var(--text-gray); font-weight: bold;">{{ t('calc_budget_progress_label') }}</span>
+                        <span style="font-size: 11px; font-weight: bold;" :style="{ color: candleBudgetPct >= 100 ? 'var(--success-text)' : 'var(--accent-orange)' }">{{ candleBudgetPct }}%</span>
+                    </div>
+                    <div class="progress-container" style="margin-top: 6px;">
+                        <div class="progress-bar" :style="{ width: candleBudgetPct + '%', background: candleBudgetPct >= 100 ? 'var(--success-text)' : '' }"></div>
+                    </div>
+                    <div style="font-size: 10.5px; color: var(--text-gray); margin-top: 4px; text-align: right;">
+                        {{ ownedCandles || 0 }} / {{ totalRemainingCandles }} {{ t('calc_unit') }}
                     </div>
                 </div>
 
@@ -3827,6 +3895,18 @@
             compare_pass_yes: 'あり',
             compare_pass_no: 'なし',
 
+            share_card_btn: '進捗をシェア',
+            share_card_title: '📤 シーズン進捗のシェアカード',
+            share_card_hint: '今シーズンの進捗を画像として保存・共有できます。',
+            share_card_download_btn: '💾 画像を保存',
+            share_card_share_btn: '📤 共有',
+            share_card_share_success: '共有しました！',
+            share_card_share_failed: '⚠️ 共有に失敗しました',
+            share_card_brand: '✨ Sky 精霊同行',
+            share_card_hearts_label: '獲得シーズンハート',
+            share_card_candles_label: '🕯️ 必要本数への到達率',
+            share_card_footer: 'シーズン終了 {date} まで',
+
             dash_title: '🗓️ 今日・今週・今月',
             dash_btn_title: '今日・今週・今月ダッシュボード',
             dash_loading: '読み込み中…',
@@ -3896,6 +3976,10 @@
             fc_legend_heart: 'ハートと交換',
             fc_no_slot: '枠なし',
             fc_grand_total: '🕯️ 4体合計',
+            fc_eta_done: '🎉 交換済み',
+            fc_eta_ready: '✅ 今すぐ交換可能',
+            fc_eta_days: '♡ あと{n}日',
+            fc_eta_unreachable: '⚠️ 算出不可',
 
             mobile_owned: '🕯️ 所持',
             mobile_add_today: '（今日の分）',
@@ -3923,6 +4007,7 @@
             calc_advice_pace_pre: '💡 1日',
             calc_advice_pace_mid: 'ペースなら、',
             calc_advice_pace_post: ' 頃に必要数へ到達する見込みです。',
+            calc_budget_progress_label: '🕯️ 必要本数に対する所持の進捗',
 
             comp_title: '🏁 魔法を除くコンプリート診断（4体分・シーズン終了 {date}まで）',
             comp_ok_zero: '🎉 今の所持数・連れ歩き日数で、魔法を除くコンプリート条件はすでに満たせています！',
@@ -4209,6 +4294,18 @@
             compare_pass_yes: 'Yes',
             compare_pass_no: 'No',
 
+            share_card_btn: 'Share progress',
+            share_card_title: '📤 Season Progress Share Card',
+            share_card_hint: 'Save or share this season\'s progress as an image.',
+            share_card_download_btn: '💾 Save image',
+            share_card_share_btn: '📤 Share',
+            share_card_share_success: 'Shared!',
+            share_card_share_failed: '⚠️ Failed to share',
+            share_card_brand: '✨ Sky Spirit Companion',
+            share_card_hearts_label: 'Season hearts earned',
+            share_card_candles_label: '🕯️ Progress toward needed candles',
+            share_card_footer: 'Season ends {date}',
+
             dash_title: '🗓️ Today / This Week / This Month',
             dash_btn_title: 'Today / This Week / This Month Dashboard',
             dash_loading: 'Loading…',
@@ -4278,6 +4375,10 @@
             fc_legend_heart: 'Trade for Heart',
             fc_no_slot: 'No slot',
             fc_grand_total: '🕯️ Total (all 4)',
+            fc_eta_done: '🎉 Done',
+            fc_eta_ready: '✅ Ready now',
+            fc_eta_days: '♡ {n}d to go',
+            fc_eta_unreachable: '⚠️ N/A',
 
             mobile_owned: '🕯️ Owned',
             mobile_add_today: " (today's)",
@@ -4305,6 +4406,7 @@
             calc_advice_pace_pre: '💡 At a pace of',
             calc_advice_pace_mid: 'candles/day, you should reach the amount you need around',
             calc_advice_pace_post: '.',
+            calc_budget_progress_label: '🕯️ Owned vs. needed',
 
             comp_title: '🏁 Completion forecast excluding Spells (all 4 spirits, by season end {date})',
             comp_ok_zero: '🎉 With your current candles and walk days, you already meet the completion condition (excluding Spells)!',
@@ -4591,6 +4693,18 @@
             compare_pass_yes: '有',
             compare_pass_no: '沒有',
 
+            share_card_btn: '分享進度',
+            share_card_title: '📤 季節進度分享卡',
+            share_card_hint: '可將本季進度儲存或以圖片形式分享。',
+            share_card_download_btn: '💾 儲存圖片',
+            share_card_share_btn: '📤 分享',
+            share_card_share_success: '已分享！',
+            share_card_share_failed: '⚠️ 分享失敗',
+            share_card_brand: '✨ Sky 精靈同行',
+            share_card_hearts_label: '已獲得的季節之心',
+            share_card_candles_label: '🕯️ 所需數量的達成率',
+            share_card_footer: '季節結束於 {date}',
+
             dash_title: '🗓️ 今日・本週・本月',
             dash_btn_title: '今日・本週・本月儀表板',
             dash_loading: '載入中…',
@@ -4660,6 +4774,10 @@
             fc_legend_heart: '兌換心',
             fc_no_slot: '無此欄位',
             fc_grand_total: '🕯️ 4隻合計',
+            fc_eta_done: '🎉 已交換',
+            fc_eta_ready: '✅ 現在可交換',
+            fc_eta_days: '♡ 還剩{n}天',
+            fc_eta_unreachable: '⚠️ 無法計算',
 
             mobile_owned: '🕯️ 持有',
             mobile_add_today: '（今日份）',
@@ -4687,6 +4805,7 @@
             calc_advice_pace_pre: '💡 若以每天',
             calc_advice_pace_mid: '根的節奏，預計在',
             calc_advice_pace_post: ' 左右達到所需數量。',
+            calc_budget_progress_label: '🕯️ 所需數量的持有進度',
 
             comp_title: '🏁 除法術外的完成度診斷（4隻・至本季結束{date}為止）',
             comp_ok_zero: '🎉 以目前的持有數與同行天數，已經滿足除法術外的完成條件！',
@@ -4973,6 +5092,18 @@
             compare_pass_yes: '있음',
             compare_pass_no: '없음',
 
+            share_card_btn: '진행 상황 공유',
+            share_card_title: '📤 시즌 진행 상황 공유 카드',
+            share_card_hint: '이번 시즌 진행 상황을 이미지로 저장・공유할 수 있습니다.',
+            share_card_download_btn: '💾 이미지 저장',
+            share_card_share_btn: '📤 공유',
+            share_card_share_success: '공유했습니다!',
+            share_card_share_failed: '⚠️ 공유에 실패했습니다',
+            share_card_brand: '✨ Sky 정령 동행',
+            share_card_hearts_label: '획득한 시즌 하트',
+            share_card_candles_label: '🕯️ 필요 수량 대비 달성률',
+            share_card_footer: '시즌 종료 {date}까지',
+
             dash_title: '🗓️ 오늘・이번 주・이번 달',
             dash_btn_title: '오늘・이번 주・이번 달 대시보드',
             dash_loading: '불러오는 중…',
@@ -5042,6 +5173,10 @@
             fc_legend_heart: '하트 교환',
             fc_no_slot: '슬롯 없음',
             fc_grand_total: '🕯️ 4마리 합계',
+            fc_eta_done: '🎉 교환 완료',
+            fc_eta_ready: '✅ 지금 교환 가능',
+            fc_eta_days: '♡ {n}일 남음',
+            fc_eta_unreachable: '⚠️ 계산 불가',
 
             mobile_owned: '🕯️ 보유',
             mobile_add_today: ' (오늘 분)',
@@ -5069,6 +5204,7 @@
             calc_advice_pace_pre: '💡 하루',
             calc_advice_pace_mid: '개 페이스라면',
             calc_advice_pace_post: ' 경 필요한 수량에 도달할 예정입니다.',
+            calc_budget_progress_label: '🕯️ 필요 수량 대비 보유 진행률',
 
             comp_title: '🏁 마법 제외 컴플리트 진단 (4마리・시즌 종료 {date}까지)',
             comp_ok_zero: '🎉 현재 보유 수량과 동행 일수로 마법을 제외한 컴플리트 조건을 이미 충족했습니다!',
@@ -5342,6 +5478,7 @@
             const iconModalCardEl = ref(null);
             const settingsModalCardEl = ref(null);
             const compareModalCardEl = ref(null);
+            const shareModalCardEl = ref(null);
 
             const showSharedTools = ref(false); // 📌 メモ・計算欄はデフォルトで折りたたみ
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
@@ -5434,6 +5571,14 @@
             const showCompareModal = ref(false);
             const compareIdA = ref('');
             const compareIdB = ref('');
+
+            // 📤 シーズン進捗のシェアカード（機能: シーズン進捗のシェアカード）の状態変数。
+            // pfIcon（ホーム画面アイコン）と同じく、Vueのリアクティブ状態には持たず素のcanvas 2D
+            // 描画で完結させる（外部ライブラリを追加しない、既存の唯一の画像生成パターンに合わせる）。
+            const showShareModal = ref(false);
+            const shareCardDataUrl = ref('');
+            const shareCardCanShare = ref(false);
+            const shareCardFilename = computed(() => `sky-companion-season-progress_${pfLocalDateStr()}.png`);
 
             // 🗓️ ダッシュボード（今日・今週・今月）の状態。データの本家はitemのindex.html
             // （CURRENT_EVENTS・REVISIT_SPIRIT_SCHEDULE・CURRENT_SEASON）で、開いたときに
@@ -5670,11 +5815,19 @@
                 return { heartItem, rows, total: getSpiritTotalCandles(spirit) };
             };
 
-            const spiritForecasts = computed(() => spirits.value.map((s, idx) => ({
-                spirit: s,
-                themeIndex: idx,
-                ...getForecastData(s)
-            })));
+            // ♡ 4体横並び比較の各列に、最短ハート交換までの見込み日数(allSpiritsFastestHeartPlansの
+            // 計算結果)を添える。computeFastestHeartPlanFor自体は下部で定義されるが、computedの中身は
+            // 実際にアクセスされた時（テンプレート描画時）に評価されるため、宣言順は問題にならない
+            // （activeFastestHeartPlan等、既存の他computedと同じ考え方）。
+            const spiritForecasts = computed(() => spirits.value.map((s, idx) => {
+                const found = allSpiritsFastestHeartPlans.value.find(x => x.spirit.id === s.id);
+                return {
+                    spirit: s,
+                    themeIndex: idx,
+                    heartPlan: found ? found.plan : null,
+                    ...getForecastData(s)
+                };
+            }));
 
             // 4体すべてを合計したツリー総コスト（画像下部の合計表示と対応）
             const grandTotalCandles = computed(() => spirits.value.reduce((sum, s) => sum + getSpiritTotalCandles(s), 0));
@@ -5689,6 +5842,16 @@
                 if (item.type === 'dye') return 'ic-dye';
                 if (item.type === 'walk') return 'ic-emote';
                 return 'ic-sparkle';
+            };
+
+            // ♡ 4体横並び比較の各列に表示する、最短ハート交換までの見込み日数テキスト
+            // （activeFastestHeartPlanと同じplan形状を、compactな1行バッジ向けに文言化する）
+            const forecastEtaText = (plan) => {
+                if (!plan) return '';
+                if (plan.alreadyDone) return t('fc_eta_done');
+                if (plan.unreachable) return t('fc_eta_unreachable');
+                if (plan.day === 0) return t('fc_eta_ready');
+                return t('fc_eta_days', { n: plan.day });
             };
 
             // アドパスの有無で1日の獲得本数を切り替え（あり:6本 / なし:5本）
@@ -5706,6 +5869,16 @@
                 const need = totalRemainingCandles.value - (ownedCandles.value || 0);
                 if (need <= 0) return 0;
                 return Math.ceil(need / candlesPerDay.value);
+            });
+
+            // 📊 シーズンキャンドル予算の進捗バー（機能: itemの月間予算バーと同様の視覚的な進捗表示）
+            // 「残り必要数(totalRemainingCandles)」に対して「今の所持数(ownedCandles)」が
+            // どこまで賄えているかを％で表す。残り必要数が0以下（＝もう買う必要がない）の場合は
+            // 100%（達成扱い）とする。
+            const candleBudgetPct = computed(() => {
+                const need = totalRemainingCandles.value;
+                if (need <= 0) return 100;
+                return Math.max(0, Math.min(100, Math.round((ownedCandles.value || 0) / need * 100)));
             });
 
             const candleTargetDateText = computed(() => {
@@ -7327,6 +7500,125 @@
                 } catch (e) { console.error('failed to restore custom icon', e); }
             };
             pfIconApplyFromStorage();
+
+            // 📤 シーズン進捗のシェアカード（機能: シーズン進捗のシェアカード）。
+            // pfIconRenderToCanvasと同じく、素のCanvas 2Dへ直接描画する（このリポジトリに
+            // html2canvas等の画像化ライブラリはまだ無いため、新たに依存を追加しない）。
+            const shareCardRenderToCanvas = (canvas) => {
+                const w = canvas.width, h = canvas.height;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, w, h);
+
+                // 背景（CSS変数はcanvasから読めないため、アプリのアクセントに寄せた固定色でグラデーションを描く）
+                const grad = ctx.createLinearGradient(0, 0, w, h);
+                grad.addColorStop(0, '#2c2350');
+                grad.addColorStop(1, '#5b1f4a');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                const fontStack = '"Hiragino Sans","Segoe UI","Apple Color Emoji","Segoe UI Emoji",sans-serif';
+                ctx.textBaseline = 'alphabetic';
+
+                // ブランド・シーズン名
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(255,255,255,0.92)';
+                ctx.font = `700 24px ${fontStack}`;
+                ctx.fillText(t('share_card_brand'), w / 2, 62);
+                ctx.font = `400 18px ${fontStack}`;
+                ctx.fillStyle = 'rgba(255,255,255,0.75)';
+                ctx.fillText(seasonNameDisplay.value, w / 2, 92);
+
+                // ハート獲得数（ヒーロー表示）
+                ctx.font = `800 68px ${fontStack}`;
+                ctx.fillStyle = '#ffcc00';
+                ctx.fillText(`🧡 ${totalHearts.value} / 4`, w / 2, 180);
+                ctx.font = `600 15px ${fontStack}`;
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillText(t('share_card_hearts_label'), w / 2, 208);
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(56, 236);
+                ctx.lineTo(w - 56, 236);
+                ctx.stroke();
+
+                // 精霊ごとの内訳（4体分）
+                let y = 274;
+                ctx.font = `600 17px ${fontStack}`;
+                spirits.value.forEach(sp => {
+                    const done = sp.treeData.tier4[2].checked;
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                    ctx.fillText(`${done ? '✅' : '▫️'} ${spiritName(sp)}`, 56, y);
+                    ctx.textAlign = 'right';
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                    ctx.fillText(`${getSpiritPoints(sp)} / ${getSpiritTier4Total(sp)}p`, w - 56, y);
+                    y += 42;
+                });
+
+                y += 8;
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.beginPath();
+                ctx.moveTo(56, y);
+                ctx.lineTo(w - 56, y);
+                ctx.stroke();
+
+                // シーズンキャンドルの進捗（機能: シーズンキャンドル予算の進捗バーと同じcandleBudgetPctを使う）
+                y += 46;
+                ctx.textAlign = 'center';
+                ctx.font = `600 15px ${fontStack}`;
+                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.fillText(t('share_card_candles_label'), w / 2, y);
+                y += 38;
+                ctx.font = `800 32px ${fontStack}`;
+                ctx.fillStyle = '#ffcc00';
+                ctx.fillText(`${candleBudgetPct.value}%`, w / 2, y);
+                y += 26;
+                ctx.font = `400 13px ${fontStack}`;
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.fillText(`${ownedCandles.value || 0} / ${totalRemainingCandles.value} ${t('calc_unit')}`, w / 2, y);
+
+                // フッター
+                ctx.font = `400 13px ${fontStack}`;
+                ctx.fillStyle = 'rgba(255,255,255,0.55)';
+                ctx.fillText(t('share_card_footer', { date: seasonEndText.value }), w / 2, h - 42);
+                ctx.fillText('taipak5000.github.io/companion', w / 2, h - 20);
+            };
+            const shareCardGenerate = () => {
+                const canvas = document.getElementById('shareCardCanvas');
+                if (!canvas) return;
+                shareCardRenderToCanvas(canvas);
+                shareCardDataUrl.value = canvas.toDataURL('image/png');
+            };
+            const pfShareOpenModal = () => {
+                showShareModal.value = true;
+                nextTick(() => {
+                    shareCardGenerate();
+                    shareCardCanShare.value = typeof navigator.share === 'function' && typeof navigator.canShare === 'function';
+                });
+            };
+            const pfShareCloseModal = () => { showShareModal.value = false; };
+            // 📤 対応端末（主にモバイル）では、保存済みの画像ファイルとしてOSの共有シートへ渡す。
+            // 非対応環境ではボタン自体を表示しない（shareCardCanShare）ため、ダウンロードリンクが
+            // 常にフォールバックとして機能する。
+            const pfShareCardShare = async () => {
+                const canvas = document.getElementById('shareCardCanvas');
+                if (!canvas) return;
+                try {
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    if (!blob) throw new Error('toBlob failed');
+                    const file = new File([blob], shareCardFilename.value, { type: 'image/png' });
+                    if (!navigator.canShare({ files: [file] })) throw new Error('cannot share files');
+                    await navigator.share({ files: [file] });
+                    showToast(t('share_card_share_success'));
+                } catch (e) {
+                    if (e && e.name === 'AbortError') return; // ユーザー自身によるキャンセルは何もしない
+                    console.error('pfShareCardShare', e);
+                    showToast(t('share_card_share_failed'));
+                }
+            };
+
             const pfStartRename = (record) => {
                 pfDeletingId.value = null;
                 pfEditingId.value = record.id;
@@ -7362,6 +7654,7 @@
                 if (showSettingsModal.value) { settingsCloseModal(); return; }
                 if (showIconModal.value) { pfIconCloseModal(); return; }
                 if (dashOpen.value) { pfDashClose(); return; }
+                if (showShareModal.value) { pfShareCloseModal(); return; }
                 if (showCompareModal.value) { pfCompareCloseModal(); return; }
                 if (showDmModal.value) { dmCloseModal(); return; }
                 if (showProfileModal.value) {
@@ -7429,6 +7722,7 @@
             useModalFocusTrap(showIconModal, iconModalCardEl);
             useModalFocusTrap(showSettingsModal, settingsModalCardEl);
             useModalFocusTrap(showCompareModal, compareModalCardEl);
+            useModalFocusTrap(showShareModal, shareModalCardEl);
 
             onMounted(() => {
                 load();
@@ -7458,12 +7752,12 @@
                 hasSeasonPass, ownedCandles, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan, pfCurrencyOpen,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles, activeExcludedCandles,
-                totalRemainingCandles, candleDaysNeeded, candleTargetDateText,
+                totalRemainingCandles, candleDaysNeeded, candleTargetDateText, candleBudgetPct,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonStartText, seasonEndText, seasonCountdown, seasonDayInfo, pad2,
                 activeFastestHeartPlan, todayWalkRecommendation,
                 walkLog, showWalkHistory, walkLogDisplay, hasLoggedWalkToday, todayWalkLogSpiritName, logTodayWalk, activeSpiritLoggedWalkDays,
-                spiritForecasts, grandTotalCandles, getForecastIconId,
+                spiritForecasts, grandTotalCandles, getForecastIconId, forecastEtaText,
                 records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
@@ -7491,7 +7785,9 @@
                 showSettingsModal, settingsOpenModal, settingsCloseModal, shortcutsEnabled, settingsSaveShortcutsPref,
                 showCompareModal, compareIdA, compareIdB, compareSummaryA, compareSummaryB, compareSpiritRows,
                 pfCompareOpenModal, pfCompareCloseModal,
-                pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl,
+                showShareModal, shareCardDataUrl, shareCardCanShare, shareCardFilename,
+                pfShareOpenModal, pfShareCloseModal, pfShareCardShare,
+                pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl, shareModalCardEl,
                 toastMessage, toastVisible
             };
         }
