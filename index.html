@@ -250,28 +250,6 @@
             font-weight: 700;
         }
 
-        .header-nav {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-outline-blue {
-            background: transparent;
-            border: 1px solid var(--accent-blue);
-            color: var(--accent-blue);
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
-
         /* 🌓 モード切替ボタン */
         .theme-toggle-btn {
             background: var(--card-bg);
@@ -2017,7 +1995,7 @@
                 </template>
             </div>
             <button v-if="records.length > 1" type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="pfCloseModal(); pfCompareOpenModal();">{{ t('record_compare_btn') }}</button>
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="dmOpenModal">{{ t('dm_open_btn') }}</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="pfCloseModal(); dmOpenModal();">{{ t('dm_open_btn') }}</button>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
@@ -2705,7 +2683,7 @@
                         </template>
                         <template v-else>
                             {{ t('heart_plan_pre') }}
-                            <strong>{{ activeFastestHeartPlan.day }} {{ t('heart_plan_day_unit') }}</strong> {{ t('heart_plan_post') }}
+                            <strong>{{ activeFastestHeartPlan.day }}{{ t('heart_plan_day_unit') }}</strong>{{ t('heart_plan_post') }}
                             <div style="margin-top: 6px;">
                                 {{ t('heart_total_cost_pre') }} <strong style="color: var(--accent-orange); font-size: 14px;">{{ activeFastestHeartPlan.totalCost }}{{ t('heart_total_cost_unit') }}</strong>
                                 <span style="color: var(--text-gray); font-size: 10.5px;">{{ t('heart_total_cost_note_pre') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('heart_total_cost_note_mid') }} {{ ownedCandles }}{{ t('heart_total_cost_note_post') }}</span>
@@ -3801,7 +3779,6 @@
             record_title: '🗂️ 記録の切り替え',
             record_bar_suffix: 'に切替中（タップで切替）',
             record_hint: '予測用・実績用の記録や、複数アカウントの使い分けに便利です',
-            record_add: '新しい記録を追加',
             record_add_short: '追加',
             record_rename: '名前を変更',
             record_save: '保存',
@@ -3921,7 +3898,6 @@
             fc_grand_total: '🕯️ 4体合計',
 
             mobile_owned: '🕯️ 所持',
-            mobile_unit: '本',
             mobile_add_today: '（今日の分）',
 
             goal_hearts: '🧡 シーズンハート獲得: {n} / 4 個',
@@ -4185,7 +4161,6 @@
             record_title: '🗂️ Switch Records',
             record_bar_suffix: 'active (tap to switch)',
             record_hint: 'Handy for tracking predicted vs. actual progress, or managing multiple accounts',
-            record_add: 'Add a new record',
             record_add_short: 'Add',
             record_rename: 'Rename',
             record_save: 'Save',
@@ -4305,7 +4280,6 @@
             fc_grand_total: '🕯️ Total (all 4)',
 
             mobile_owned: '🕯️ Owned',
-            mobile_unit: '',
             mobile_add_today: " (today's)",
 
             goal_hearts: '🧡 Season Hearts Earned: {n} / 4',
@@ -4386,7 +4360,7 @@
             heart_unreachable: '⚠️ Couldn\'t calculate an estimate with the current settings. Please check your walk days and candle count.',
             heart_ready: '🎉 You already meet both the points and candles needed to trade for the Heart!',
             heart_plan_pre: 'If you focus all walking (choosing this spirit every day) and candle purchases on this spirit, you could trade for the Heart in as few as',
-            heart_plan_day_unit: 'day(s)',
+            heart_plan_day_unit: ' day(s)',
             heart_plan_post: '.',
             heart_total_cost_pre: '🕯️ Total candles needed from here:',
             heart_total_cost_unit: '',
@@ -4569,7 +4543,6 @@
             record_title: '🗂️ 切換記錄',
             record_bar_suffix: '使用中（點按切換）',
             record_hint: '適合用來區分預測用與實際用的記錄，或管理多個帳號',
-            record_add: '新增一筆記錄',
             record_add_short: '新增',
             record_rename: '重新命名',
             record_save: '儲存',
@@ -4689,7 +4662,6 @@
             fc_grand_total: '🕯️ 4隻合計',
 
             mobile_owned: '🕯️ 持有',
-            mobile_unit: '',
             mobile_add_today: '（今日份）',
 
             goal_hearts: '🧡 獲得季節之心：{n} / 4 個',
@@ -4953,7 +4925,6 @@
             record_title: '🗂️ 기록 전환',
             record_bar_suffix: '전환 중 (탭하여 전환)',
             record_hint: '예측용・실적용 기록 구분이나 여러 계정 관리에 편리합니다',
-            record_add: '새 기록 추가',
             record_add_short: '추가',
             record_rename: '이름 변경',
             record_save: '저장',
@@ -5073,7 +5044,6 @@
             fc_grand_total: '🕯️ 4마리 합계',
 
             mobile_owned: '🕯️ 보유',
-            mobile_unit: '',
             mobile_add_today: ' (오늘 분)',
 
             goal_hearts: '🧡 시즌 하트 획득: {n} / 4개',
@@ -5155,7 +5125,7 @@
             heart_ready: '🎉 포인트와 초 모두 하트 교환 조건을 이미 충족했습니다!',
             heart_plan_pre: '동행(매일 이 정령을 선택)과 초 구매를 이 정령에 집중하면, 최단',
             heart_plan_day_unit: '일 후',
-            heart_plan_post: '하트로 교환할 수 있을 것으로 예상됩니다.',
+            heart_plan_post: ' 하트로 교환할 수 있을 것으로 예상됩니다.',
             heart_total_cost_pre: '🕯️ 지금부터 필요한 초 합계:',
             heart_total_cost_unit: '',
             heart_total_cost_note_pre: ' (하트 교환분 🕯️',
@@ -6043,7 +6013,7 @@
                     if (plan.day === 0) {
                         lines.push(t('heart_ready'));
                     } else {
-                        lines.push(`${t('heart_plan_pre')} ${plan.day} ${t('heart_plan_day_unit')} ${t('heart_plan_post')}`);
+                        lines.push(`${t('heart_plan_pre')} ${plan.day}${t('heart_plan_day_unit')}${t('heart_plan_post')}`);
                     }
                     lines.push(`${t('heart_total_cost_pre')} ${plan.totalCost}${t('heart_total_cost_unit')}`);
                     if (plan.readyExceptPass) lines.push(t('heart_pass_needed'));
@@ -7513,7 +7483,7 @@
                 pfDashOpen, pfDashClose,
                 dashIcsStatus, pfDashExportIcs,
                 showIconModal, pfIconMode, pfIconEmoji, pfIconBgColor, pfIconSaveStatus,
-                pfIconOpenModal, pfIconCloseModal, pfIconSetMode, pfIconPickSwatch, pfIconHandleFile, pfIconSave, pfIconReset,
+                pfIconOpenModal, pfIconCloseModal, pfIconSetMode, pfIconPickSwatch, pfIconHandleFile, pfIconSave, pfIconReset, pfIconUpdatePreview,
                 pfConfirmRenameInline, pfConfirmDeleteInline,
                 setRecordColor, clearRecordColor,
                 currencyCandle, currencyHeart, currencyAscended, currencyGiftPass,
