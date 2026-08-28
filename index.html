@@ -2128,8 +2128,8 @@
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
                     <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(dashData.season.name) }}</b> {{ t('dash_event_suffix') }}</span></div>
                     <div class="dash-row" v-for="(ev, idx) in dashTodayEvents" :key="'te'+idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
-                    <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit && dashRevisitBucket === 'today'">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
+                    <div class="dash-row" v-for="(rv, idx) in dashTodayRevisits" :key="'rvt'+idx">
+                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashEdenBucket === 'today'"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }} <span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
                     <div class="dash-row" v-if="dashNextUpdateBucket === 'today'"><span class="dash-row-icon">🔧</span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
@@ -2138,8 +2138,8 @@
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashWeekEvents" :key="'we'+idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
-                    <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit && dashRevisitBucket === 'week'">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
+                    <div class="dash-row" v-for="(rv, idx) in dashWeekRevisits" :key="'rvw'+idx">
+                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashEdenBucket === 'week'"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }} <span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
                     <div class="dash-row" v-if="dashNextUpdateBucket === 'week'"><span class="dash-row-icon">🔧</span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
@@ -2149,8 +2149,8 @@
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashMonthEvents" :key="'me'+idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
-                    <div class="dash-row" v-if="dashRevisitStatus && dashData.revisit && dashRevisitBucket === 'month'">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ dashRevisitStatus.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ dashRevisitCountdown }}</span></span>
+                    <div class="dash-row" v-for="(rv, idx) in dashMonthRevisits" :key="'rvm'+idx">
+                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashNextUpdateBucket === 'month'"><span class="dash-row-icon">🔧</span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
                     <div class="dash-row" v-if="dashSeasonBucket === 'month' && dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">{{ t('dash_season_quote_open') }}<b>{{ translateEventName(dashData.season.name) }}</b>{{ t('dash_season_quote_close') }}{{ t('dash_season_end_suffix') }} <span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
@@ -3637,18 +3637,32 @@
         return new Date(candidate.getTime() + realOffsetMs);
     };
     const pfDashRevisitStatus = (schedule) => {
-        if (!schedule || !schedule.anchorStart || !schedule.anchorEnd) return null;
-        const start0 = new Date(schedule.anchorStart);
-        const end0 = new Date(schedule.anchorEnd);
-        const intervalMs = schedule.intervalDays * 86400000;
+        if (!schedule) return null;
         const now = new Date();
-        const k = Math.floor((now - start0) / intervalMs);
-        const start = new Date(start0.getTime() + k * intervalMs);
-        const end = new Date(start.getTime() + (end0 - start0));
+        if (schedule.intervalDays) {
+            if (!schedule.anchorStart || !schedule.anchorEnd) return null;
+            const start0 = new Date(schedule.anchorStart);
+            const end0 = new Date(schedule.anchorEnd);
+            const intervalMs = schedule.intervalDays * 86400000;
+            const k = Math.floor((now - start0) / intervalMs);
+            const start = new Date(start0.getTime() + k * intervalMs);
+            const end = new Date(start.getTime() + (end0 - start0));
+            if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000), target: end };
+            const nextStart = now < start ? start : new Date(start.getTime() + intervalMs);
+            return { active: false, daysUntil: Math.ceil((nextStart - now) / 86400000), target: nextStart };
+        }
+        // 一回限りの来訪（intervalDaysなし）：start/endで判定し、終了済みなら二度と表示しない
+        if (!schedule.start || !schedule.end) return null;
+        const start = new Date(schedule.start), end = new Date(schedule.end);
         if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000), target: end };
-        const nextStart = now < start ? start : new Date(start.getTime() + intervalMs);
-        return { active: false, daysUntil: Math.ceil((nextStart - now) / 86400000), target: nextStart };
+        if (now < start) return { active: false, daysUntil: Math.ceil((start - now) / 86400000), target: start };
+        return null;
     };
+    // 複数の来訪(周期的な単独の旅の精霊・期間限定の来訪団など)が同時に進行することがあるため、
+    // それぞれの状態をまとめて計算する
+    const pfDashRevisitStatuses = (schedules) => (schedules || [])
+        .map(schedule => ({ schedule, status: pfDashRevisitStatus(schedule) }))
+        .filter(x => x.status);
     // 次に太平洋時間0時（＝日替わり大キャンドルの切り替わりのタイミング）を迎える実時刻
     const pfDashNextPacificMidnight = () => {
         const pacNow = pfDashPacificNow();
@@ -5586,7 +5600,7 @@
             const dashOpen = ref(false);
             const dashLoading = ref(false);
             const dashError = ref(false);
-            const dashData = ref(null); // { revisit, season, eventSchedule, nextUpdate } | null
+            const dashData = ref(null); // { revisitSchedules, season, eventSchedule, nextUpdate } | null
             // 🔄 手動更新（キャッシュを無視して再取得）用の状態。シーズン境界をまたいで
             // タブを開きっぱなしにしているユーザーが、ページ全体を再読み込みしなくても
             // 最新のダッシュボードデータを取り直せるようにする。
@@ -5603,9 +5617,20 @@
             // モーダルを開いている間1秒おきに更新するトリガー。各カウントダウン系computedが
             // これを読むことで、Vueの依存追跡により1秒おきに再計算される。
             const dashNow = ref(Date.now());
-            const dashRevisitStatus = computed(() => { dashNow.value; return dashData.value ? pfDashRevisitStatus(dashData.value.revisit) : null; });
-            const dashRevisitCountdown = computed(() => { dashNow.value; return dashRevisitStatus.value ? pfDashCountdown(dashRevisitStatus.value.target, t('countdown_day_suffix')) : ''; });
-            const dashRevisitBucket = computed(() => { dashNow.value; return dashRevisitStatus.value ? pfDashBucketFor(dashRevisitStatus.value.target) : null; });
+            // 複数の来訪(周期的な単独の旅の精霊・期間限定の来訪団など)が同時に進行することがあるため、
+            // イベント一覧(dashActiveScheduledEvents)と同じ考え方で、それぞれを配列の1件として扱う
+            const dashRevisitEntries = computed(() => {
+                dashNow.value;
+                if (!dashData.value) return [];
+                return pfDashRevisitStatuses(dashData.value.revisitSchedules).map(({ status }) => ({
+                    active: status.active,
+                    countdown: pfDashCountdown(status.target, t('countdown_day_suffix')),
+                    bucket: pfDashBucketFor(status.target),
+                }));
+            });
+            const dashTodayRevisits = computed(() => dashRevisitEntries.value.filter(r => r.bucket === 'today'));
+            const dashWeekRevisits = computed(() => dashRevisitEntries.value.filter(r => r.bucket === 'week'));
+            const dashMonthRevisits = computed(() => dashRevisitEntries.value.filter(r => r.bucket === 'month'));
             // 開始・終了日時付きのイベント一覧（EVENT_SCHEDULE）から、現在開催期間中のものだけを返す。
             // startを省略しているエントリは「常に開催中→endで終了」として扱う
             const dashActiveScheduledEvents = computed(() => {
@@ -5685,13 +5710,13 @@
             // （すべて他の期間に流れて空になった場合、種類別の空メッセージではなく汎用の
             // 「この期間の予定はありません」を出す）
             const dashTodayHasContent = computed(() => dashSeasonActive.value || dashTodayEvents.value.length > 0
-                || (!!dashRevisitStatus.value && dashData.value && dashData.value.revisit && dashRevisitBucket.value === 'today')
+                || dashTodayRevisits.value.length > 0
                 || dashEdenBucket.value === 'today');
             const dashWeekHasContent = computed(() => dashWeekEvents.value.length > 0
-                || (!!dashRevisitStatus.value && dashData.value && dashData.value.revisit && dashRevisitBucket.value === 'week')
+                || dashWeekRevisits.value.length > 0
                 || dashEdenBucket.value === 'week' || dashNextUpdateBucket.value === 'week' || dashSeasonBucket.value === 'week');
             const dashMonthHasContent = computed(() => dashMonthEvents.value.length > 0
-                || (!!dashRevisitStatus.value && dashData.value && dashData.value.revisit && dashRevisitBucket.value === 'month')
+                || dashMonthRevisits.value.length > 0
                 || dashEdenBucket.value === 'month' || dashNextUpdateBucket.value === 'month' || dashSeasonBucket.value === 'month');
 
             const spirits = ref(createDefaultSpiritsData());
@@ -7201,7 +7226,7 @@
                     const res = await fetch(`${location.origin}/tai-item/index.html`);
                     const html = await res.text();
                     dashData.value = {
-                        revisit: pfExtractArray(html, 'REVISIT_SPIRIT_SCHEDULE') || null,
+                        revisitSchedules: pfExtractArray(html, 'REVISIT_SPIRIT_SCHEDULES') || [],
                         season: pfExtractArray(html, 'CURRENT_SEASON') || null,
                         eventSchedule: pfExtractArray(html, 'EVENT_SCHEDULE') || [],
                         nextUpdate: pfExtractArray(html, 'NEXT_UPDATE') || null,
@@ -7766,7 +7791,7 @@
                 dmOpenModal, dmCloseModal, dmExport, dmImportFileSelected, dmCancelImport, dmConfirmImport, dmConfirmWipe,
                 dashOpen, dashLoading, dashError, dashData,
                 dashRefreshing, dashRefreshStatus, dashLastUpdatedText, pfDashRefresh,
-                dashRevisitStatus, dashRevisitCountdown, dashRevisitBucket,
+                dashTodayRevisits, dashWeekRevisits, dashMonthRevisits,
                 dashShard, dashShardOccurrences, dashShardRealmLabel, dashShardCountdown, dashNextShardCountdown,
                 dashCandleRealmLabel, dashCandleCountdown, dashQuestCandleRealmLabel,
                 dashUniCountdown, dashPanCountdown, dashKameCountdown,
