@@ -3169,7 +3169,7 @@
         {{ t('footer_credit_pre') }} <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a>
         <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
             {{ t('footer_sources') }}
-            <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">季節精霊 (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">親愛なるファン・ゴッホへ (Sky Wiki 日本語)</a>・<a href="https://sky-children-of-the-light.fandom.com/wiki/Dear_Van_Gogh" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">Dear Van Gogh (Sky Wiki 英語)</a>
+            <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_source_season_spirit') }}</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_source_van_gogh_ja') }}</a>・<a href="https://sky-children-of-the-light.fandom.com/wiki/Dear_Van_Gogh" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_source_van_gogh_en') }}</a>
         </span>
         <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
             <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_settings_link') }}</a>
@@ -3177,7 +3177,7 @@
     </footer>
 
     <!-- ═══ 📌 サイトドック（クイックアクセスバー。ハンバーガーサイドバーと併設） ═══ -->
-    <nav class="site-dock" aria-label="クイックメニュー">
+    <nav class="site-dock" :aria-label="t('dock_aria_label')">
         <button type="button" @click="pfOpenModal">
             <span class="site-dock-icon">🗂️</span>
             <span class="site-dock-label">{{ activeRecordName || t('dock_profile') }}</span>
@@ -3858,6 +3858,7 @@
             dock_dashboard: 'ダッシュボード',
             dock_tools: '他のツール',
             dock_settings: '表示設定',
+            dock_aria_label: 'クイックメニュー',
 
             settings_title: '⚙️ 表示設定',
             settings_lang_label: '🌐 言語',
@@ -4193,6 +4194,9 @@
             footer_disclaimer: 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。',
             footer_credit_pre: '作成・ご意見:',
             footer_sources: '参考データ・画像引用元:',
+            footer_source_season_spirit: '季節精霊 (Sky Wiki 日本語)',
+            footer_source_van_gogh_ja: '親愛なるファン・ゴッホへ (Sky Wiki 日本語)',
+            footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki 英語)',
             footer_settings_link: '⚙️ 設定・更新情報・クレジット・プライバシーポリシー',
 
             today_reco_walk_pre: '☀️ 今日は',
@@ -4259,6 +4263,7 @@
             dock_dashboard: 'Dashboard',
             dock_tools: 'More Tools',
             dock_settings: 'Settings',
+            dock_aria_label: 'Quick menu',
 
             settings_title: '⚙️ Display Settings',
             settings_lang_label: '🌐 Language',
@@ -4594,6 +4599,9 @@
             footer_disclaimer: 'This site is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
             footer_credit_pre: 'Made by / feedback:',
             footer_sources: 'Reference data & image sources:',
+            footer_source_season_spirit: 'Season Spirits (Sky Wiki Japanese)',
+            footer_source_van_gogh_ja: 'Dear Van Gogh (Sky Wiki Japanese)',
+            footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki English)',
             footer_settings_link: '⚙️ Settings / Update Notes / Credits / Privacy Policy',
 
             today_reco_walk_pre: '☀️ Walk with ',
@@ -4660,6 +4668,7 @@
             dock_dashboard: '儀表板',
             dock_tools: '其他工具',
             dock_settings: '顯示設定',
+            dock_aria_label: '快速選單',
 
             settings_title: '⚙️ 顯示設定',
             settings_lang_label: '🌐 語言',
@@ -4995,6 +5004,9 @@
             footer_disclaimer: '本網站為《Sky：光・遇》的非官方粉絲網站，thatgamecompany 概不參與。',
             footer_credit_pre: '製作・意見回饋:',
             footer_sources: '參考資料・圖片引用來源:',
+            footer_source_season_spirit: '季節精靈 (Sky Wiki 日文版)',
+            footer_source_van_gogh_ja: '親愛的梵谷 (Sky Wiki 日文版)',
+            footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki 英文版)',
             footer_settings_link: '⚙️ 設定・更新資訊・製作名單・隱私權政策',
 
             today_reco_walk_pre: '☀️ 今天和',
@@ -5061,6 +5073,7 @@
             dock_dashboard: '대시보드',
             dock_tools: '다른 도구',
             dock_settings: '화면 설정',
+            dock_aria_label: '빠른 메뉴',
 
             settings_title: '⚙️ 화면 설정',
             settings_lang_label: '🌐 언어',
@@ -5396,6 +5409,9 @@
             footer_disclaimer: '이 사이트는 Sky: Children of the Light의 비공식 팬 사이트입니다. thatgamecompany는 전혀 관여하지 않습니다.',
             footer_credit_pre: '제작・의견:',
             footer_sources: '참고 데이터・이미지 출처:',
+            footer_source_season_spirit: '시즌 정령 (Sky Wiki 일본어판)',
+            footer_source_van_gogh_ja: '친애하는 반 고흐에게 (Sky Wiki 일본어판)',
+            footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki 영어판)',
             footer_settings_link: '⚙️ 설정・업데이트 정보・크레딧・개인정보처리방침',
 
             today_reco_walk_pre: '☀️ 오늘은 ',
@@ -6762,7 +6778,11 @@
             // 記録の切り替え・初回読み込みの両方から呼ばれる共通処理。
             const applyLoadedData = (parsed) => {
                 if (!parsed) return;
-                if (parsed.activeIndex !== undefined) activeIndex.value = parsed.activeIndex;
+                // 🔢 activeIndexは範囲外・型不正だとactiveSpiritがundefinedになりテンプレートが壊れるため、
+                // spirits配列の有効な整数インデックスであることを検証してから復元する。
+                if (Number.isInteger(parsed.activeIndex) && parsed.activeIndex >= 0 && parsed.activeIndex < spirits.value.length) {
+                    activeIndex.value = parsed.activeIndex;
+                }
                 if (parsed.sharedNotes !== undefined) sharedNotes.value = parsed.sharedNotes; // 共通メモの復元
 
                 if (parsed.sharedCalcFormula !== undefined) sharedCalcFormula.value = parsed.sharedCalcFormula;
