@@ -649,6 +649,38 @@
         }
         .goal-share-btn:hover { background: rgba(255,255,255,0.34); }
 
+        /* 🎉 「1年前の今日」通知バナー（機能: 1年前の連れ歩き記録の振り返り） */
+        .oneyear-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: rgba(255, 204, 0, 0.10);
+            border: 1px solid rgba(255, 204, 0, 0.35);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: var(--text-color);
+        }
+        .oneyear-banner-text { flex: 1; min-width: 0; }
+        .oneyear-banner-text b { color: var(--accent-orange); }
+        .oneyear-banner-close {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 6px;
+            background: var(--input-bg);
+            color: var(--text-gray);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .oneyear-banner-close:hover { background: var(--border-color); }
+
         .calc-input {
             width: 100%;
             box-sizing: border-box;
@@ -1374,6 +1406,11 @@
         .walk-cal-day.is-padding { background: transparent; }
         .walk-cal-day.has-log { background: var(--accent-green); color: #fff; font-weight: 700; }
         .walk-cal-day.is-today { border-color: var(--accent-blue); font-weight: 700; }
+
+        /* 🧡📈 ハート達成数（totalHearts）の推移スナップショット用ミニスパークライン */
+        .hearts-history-spark { display: flex; align-items: flex-end; gap: 3px; height: 42px; padding-top: 4px; }
+        .hh-bar { flex: 1 1 auto; max-width: 10px; min-width: 3px; background: var(--accent-orange);
+            border-radius: 2px 2px 0 0; }
         .pf-modal-overlay {
             display: none;
             position: fixed;
@@ -1976,6 +2013,12 @@
         </div>
     </header>
 
+    <!-- 🎉 「1年前の今日」通知バナー（walkLogに1年前ちょうどの記録があれば1日1回表示） -->
+    <div v-if="showOneYearAgoBanner" class="oneyear-banner">
+        <span class="oneyear-banner-text">{{ t('oneyear_banner_pre') }}<b>{{ oneYearAgoSpiritName }}</b>{{ t('oneyear_banner_post') }}</span>
+        <button type="button" class="oneyear-banner-close" :title="t('oneyear_dismiss_title')" :aria-label="t('oneyear_dismiss_title')" @click="dismissOneYearAgoBanner">✕</button>
+    </div>
+
     <!-- ═══ プロフィール（記録）の切り替え ═══ -->
     <div class="pf-bar">
         <span class="pf-bar-text" @click="pfOpenModal">🗂️ <b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</span>
@@ -2148,6 +2191,19 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <!-- 🧡📈 ハート達成数（totalHearts）の推移スナップショット（日次で自動記録） -->
+                <div class="dash-section">
+                    <p class="dash-section-label">{{ t('dash_hearts_history_label') }}</p>
+                    <template v-if="heartsHistory.length">
+                        <div class="hearts-history-spark">
+                            <span v-for="entry in heartsHistoryDisplay" :key="entry.date" class="hh-bar"
+                                  :style="{ height: (6 + entry.hearts * 8) + 'px' }"
+                                  :title="entry.date + ' ♡' + entry.hearts + ' / 4'"></span>
+                        </div>
+                        <p class="pf-hint" style="margin-top:8px;">{{ t('dash_hearts_history_hint', { n: heartsHistory.length }) }}</p>
+                    </template>
+                    <div class="dash-empty" v-else>{{ t('dash_hearts_history_empty') }}</div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_daily_label') }}</p>
@@ -4276,6 +4332,14 @@
             dash_walk_cal_prev_title: '前の月',
             dash_walk_cal_next_title: '次の月',
 
+            dash_hearts_history_label: '🧡 ハート達成数の推移',
+            dash_hearts_history_hint: '毎日1回、自動で記録されます（直近{n}件）',
+            dash_hearts_history_empty: 'まだ記録がありません（毎日自動で記録されます）',
+
+            oneyear_banner_pre: '🎉 1年前の今日、',
+            oneyear_banner_post: 'と歩きました',
+            oneyear_dismiss_title: '閉じる',
+
             dash_ics_label: '📅 カレンダーへの登録',
             dash_ics_export_btn: '⬇️ 予定をエクスポート（.icsファイル）',
             dash_ics_export_hint: 'シーズン終了・日替わり大キャンドル/クエストキャンドルの切替・週間リセット・闇の破片の出現（直近14日分）の予定をまとめたカレンダーファイルです。お使いのカレンダーアプリに取り込むと、通知を受け取れます。',
@@ -4687,6 +4751,14 @@
             dash_walk_cal_dow: 'Su,Mo,Tu,We,Th,Fr,Sa',
             dash_walk_cal_prev_title: 'Previous month',
             dash_walk_cal_next_title: 'Next month',
+
+            dash_hearts_history_label: '🧡 Heart Progress Over Time',
+            dash_hearts_history_hint: 'Recorded automatically once a day (last {n} entries)',
+            dash_hearts_history_empty: 'No records yet (this is recorded automatically each day)',
+
+            oneyear_banner_pre: '🎉 One year ago today, you walked with ',
+            oneyear_banner_post: '.',
+            oneyear_dismiss_title: 'Dismiss',
 
             dash_ics_label: '📅 Add to Calendar',
             dash_ics_export_btn: '⬇️ Export schedule (.ics file)',
@@ -5100,6 +5172,14 @@
             dash_walk_cal_prev_title: '上個月',
             dash_walk_cal_next_title: '下個月',
 
+            dash_hearts_history_label: '🧡 愛心達成數變化',
+            dash_hearts_history_hint: '每天自動記錄一次（最近{n}筆）',
+            dash_hearts_history_empty: '尚無記錄（每天會自動記錄）',
+
+            oneyear_banner_pre: '🎉 一年前的今天，你和',
+            oneyear_banner_post: '一起同行過',
+            oneyear_dismiss_title: '關閉',
+
             dash_ics_label: '📅 加入行事曆',
             dash_ics_export_btn: '⬇️ 匯出行程（.ics檔）',
             dash_ics_export_hint: '包含季節結束期限、每日大蠟燭・任務蠟燭切換、每週重置、以及未來14天闇之碎片出現時間的行事曆檔案。匯入行事曆App即可收到通知。',
@@ -5511,6 +5591,14 @@
             dash_walk_cal_dow: '일,월,화,수,목,금,토',
             dash_walk_cal_prev_title: '이전 달',
             dash_walk_cal_next_title: '다음 달',
+
+            dash_hearts_history_label: '🧡 하트 달성 수 변화',
+            dash_hearts_history_hint: '매일 1회 자동으로 기록됩니다（최근 {n}건）',
+            dash_hearts_history_empty: '아직 기록이 없습니다（매일 자동으로 기록됩니다）',
+
+            oneyear_banner_pre: '🎉 1년 전 오늘, ',
+            oneyear_banner_post: '와(과) 함께 걸었어요',
+            oneyear_dismiss_title: '닫기',
 
             dash_ics_label: '📅 캘린더에 등록',
             dash_ics_export_btn: '⬇️ 일정 내보내기(.ics 파일)',
@@ -6385,6 +6473,64 @@
                 return cells;
             });
 
+            // 🧡📈 ハート達成数（totalHearts, 0〜4）の推移スナップショット。
+            // 記録（プロフィール）ごとに専用のlocalStorageキー（dataKeyForRecord()と同じ命名規則）へ、
+            // 「今日」の分がまだ無ければ現在のtotalHeartsを1件追記する（1日1件・冪等）。
+            // walkLogのような「今の作業中データ」の一部ではなく、後から書き換わらない実績ログとして
+            // 独立キーで保存する（プロフィール切り替え・削除時の扱いをdataKeyForRecordに揃えるため）。
+            const HEARTS_HISTORY_KEEP_MAX = 180; // 🧹 保存容量の肥大化を防ぐため、直近180件だけ保持する
+            const HEARTS_HISTORY_DISPLAY_LIMIT = 30; // 📊 ダッシュボードのスパークライン表示は直近30件まで
+            const heartsHistoryKeyForRecord = (id) => id === 'default' ? 'sky_companion_v4_hearts_history' : ('sky_companion_v4_hearts_history__' + id);
+            const heartsHistory = ref([]); // [{date:'YYYY-MM-DD', hearts:0-4}, ...]（古い→新しい順）
+
+            const loadHeartsHistory = (id) => {
+                try {
+                    const saved = localStorage.getItem(heartsHistoryKeyForRecord(id));
+                    const parsed = saved ? JSON.parse(saved) : [];
+                    heartsHistory.value = Array.isArray(parsed)
+                        ? parsed.filter(e => e && typeof e.date === 'string' && Number.isInteger(e.hearts))
+                        : [];
+                } catch (e) { heartsHistory.value = []; }
+            };
+            const saveHeartsHistory = () => {
+                try {
+                    localStorage.setItem(heartsHistoryKeyForRecord(activeRecordId.value), JSON.stringify(heartsHistory.value));
+                } catch (e) { /* 保存領域の上限などで失敗した場合、今回の保存のみスキップする */ }
+            };
+            // 📌 現在アクティブな記録について、「今日」の分がまだ無ければtotalHeartsを追記する
+            const recordHeartsSnapshotIfNeeded = () => {
+                const todayStr = pfLocalDateStr();
+                if (heartsHistory.value.some(e => e.date === todayStr)) return; // 🔒 1日1件までの冪等ガード
+                heartsHistory.value.push({ date: todayStr, hearts: totalHearts.value });
+                if (heartsHistory.value.length > HEARTS_HISTORY_KEEP_MAX) {
+                    heartsHistory.value.splice(0, heartsHistory.value.length - HEARTS_HISTORY_KEEP_MAX);
+                }
+                saveHeartsHistory();
+            };
+            const heartsHistoryDisplay = computed(() => heartsHistory.value.slice(-HEARTS_HISTORY_DISPLAY_LIMIT));
+
+            // 🎉 「1年前の今日」通知: walkLogに、ちょうど1年前（年-1・月日は今日と同じ）の記録があれば
+            // その精霊名を通知バナーに表示する。Dateのロールオーバー（例: 2/29→3/1）で誤った日付と
+            // 一致してしまわないよう、Dateオブジェクトを経由せず年だけ引いた文字列を直接組み立てて比較する。
+            const oneYearAgoWalkEntry = computed(() => {
+                const now = new Date();
+                const oneYearAgoStr = `${now.getFullYear() - 1}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+                return walkLog.value.find(e => e.date === oneYearAgoStr) || null;
+            });
+            const oneYearAgoSpiritName = computed(() => {
+                if (!oneYearAgoWalkEntry.value) return '';
+                const sp = spirits.value.find(s => s.id === oneYearAgoWalkEntry.value.spiritId);
+                return sp ? spiritName(sp) : '';
+            });
+            // 🔕 「1日1回まで」の表示制御: 閉じた日付をlocalStorageへ記録し、同じ日はもう表示しない
+            const ONEYEAR_BANNER_DISMISS_KEY = 'sky_companion_oneyear_banner_dismissed_date';
+            const oneYearBannerDismissedToday = ref(false);
+            const showOneYearAgoBanner = computed(() => !!oneYearAgoWalkEntry.value && !oneYearBannerDismissedToday.value);
+            const dismissOneYearAgoBanner = () => {
+                oneYearBannerDismissedToday.value = true;
+                try { localStorage.setItem(ONEYEAR_BANNER_DISMISS_KEY, pfLocalDateStr()); } catch (e) { /* noop */ }
+            };
+
             // 📋 最短ハート交換シミュレーションの結果をプレーンテキストとしてコピーする（共有用）。
             // pfCopyTextは後方（オプティマイザ側）で定義しているが、実際に呼ばれるのはボタンクリック時
             // （setup()の初期実行がすべて終わった後）なので、定義順は問題にならない。
@@ -7003,6 +7149,9 @@
                     const saved = localStorage.getItem(dataKeyForRecord(id));
                     if (saved) applyLoadedData(JSON.parse(saved));
                 } catch (e) { console.error(e); }
+                // 🧡📈 この記録（プロフィール）のハート達成履歴を読み込み、「今日」の分が無ければ追記する
+                loadHeartsHistory(id);
+                recordHeartsSnapshotIfNeeded();
             };
 
             // 🛟 旧バージョンのサブ記録を復旧する。
@@ -7089,6 +7238,11 @@
                 // ⌨️ キーボードショートカットの有効/無効（表示設定モーダルのチェックボックス用）を復元
                 shortcutsEnabled.value = skyShortcutsEnabled();
 
+                // 🎉 「1年前の今日」バナーが今日すでに閉じられていれば、再読み込みしても出さない
+                try {
+                    oneYearBannerDismissedToday.value = localStorage.getItem(ONEYEAR_BANNER_DISMISS_KEY) === pfLocalDateStr();
+                } catch (e) { oneYearBannerDismissedToday.value = false; }
+
                 // 🗂️ 記録（データ）一覧を復元してから、アクティブな記録のデータを読み込む
                 loadRecordsMeta();
                 loadRecordData(activeRecordId.value);
@@ -7169,6 +7323,7 @@
                 if (id !== 'default') {
                     try { localStorage.removeItem('wishOwnCurrency__p_' + id); } catch (e) { /* noop */ }
                     try { localStorage.removeItem('skyCurrencyExtra_v1__p_' + id); } catch (e) { /* noop */ }
+                    try { localStorage.removeItem(heartsHistoryKeyForRecord(id)); } catch (e) { /* noop */ }
                 }
                 records.value = records.value.filter(r => r.id !== id);
 
@@ -7977,6 +8132,8 @@
                 walkLog, showWalkHistory, walkLogDisplay, hasLoggedWalkToday, todayWalkLogSpiritName, logTodayWalk, activeSpiritLoggedWalkDays,
                 currentWalkStreak, longestWalkStreak,
                 showWalkCalendar, walkCalendarLabel, walkCalendarDowLabels, walkCalendarDays, walkCalendarPrevMonth, walkCalendarNextMonth,
+                heartsHistory, heartsHistoryDisplay,
+                showOneYearAgoBanner, oneYearAgoSpiritName, dismissOneYearAgoBanner,
                 spiritForecasts, grandTotalCandles, getForecastIconId, forecastEtaText,
                 records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
                 pfEditingId, pfEditingName, pfDeletingId,
