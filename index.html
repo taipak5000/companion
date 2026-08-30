@@ -1359,6 +1359,21 @@
         .dash-shard-time { color: var(--accent-blue); font-weight: 600; font-variant-numeric: tabular-nums; }
         .dash-shard-time.past { color: var(--text-gray); font-weight: 400; text-decoration: line-through; }
         .dash-empty { font-size: 12.5px; color: var(--text-gray); padding: 2px 2px 4px; }
+
+        /* 🔥📅 連続記録（ストリーク）カレンダー/ヒートマップ */
+        .walk-cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+        .walk-cal-nav-btn { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color);
+            border-radius: 6px; padding: 4px 12px; font-size: 14px; line-height: 1.2; cursor: pointer; }
+        .walk-cal-nav-btn:hover { background: var(--border-color); }
+        .walk-cal-month-label { font-size: 12px; font-weight: 700; color: var(--text-color); }
+        .walk-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+        .walk-cal-dow { font-size: 10px; font-weight: 700; color: var(--text-gray); text-align: center; padding-bottom: 2px; }
+        .walk-cal-day { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; border-radius: 6px; background: var(--input-bg); color: var(--text-color);
+            border: 2px solid transparent; box-sizing: border-box; }
+        .walk-cal-day.is-padding { background: transparent; }
+        .walk-cal-day.has-log { background: var(--accent-green); color: #fff; font-weight: 700; }
+        .walk-cal-day.is-today { border-color: var(--accent-blue); font-weight: 700; }
         .pf-modal-overlay {
             display: none;
             position: fixed;
@@ -2090,6 +2105,37 @@
                             <button type="button" class="btn-sm" v-for="spirit in spirits" :key="spirit.id" @click="logTodayWalk(spirit.id)">{{ spiritName(spirit) }}</button>
                         </div>
                     </template>
+                    <div class="stats-grid" style="margin-top:10px;">
+                        <div class="stat-box">
+                            <div style="font-size: 11px; color: var(--text-gray);">{{ t('dash_walk_streak_current') }}</div>
+                            <div class="stat-val" style="color: var(--accent-orange);">
+                                {{ currentWalkStreak }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">{{ t('calc_day_unit') }}</span>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div style="font-size: 11px; color: var(--text-gray);">{{ t('dash_walk_streak_longest') }}</div>
+                            <div class="stat-val" style="color: var(--accent-blue);">
+                                {{ longestWalkStreak }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">{{ t('calc_day_unit') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showWalkCalendar = !showWalkCalendar">
+                            <span style="font-size:10.5px; color:var(--text-gray); font-weight:bold;">{{ t('dash_walk_cal_toggle') }}</span>
+                            <span style="font-size:10.5px; color:var(--text-gray); font-weight:bold;">{{ showWalkCalendar ? t('dash_walk_history_close') : t('dash_walk_history_open') }}</span>
+                        </div>
+                        <div v-if="showWalkCalendar">
+                            <div class="walk-cal-nav-row">
+                                <button type="button" class="walk-cal-nav-btn" :title="t('dash_walk_cal_prev_title')" @click="walkCalendarPrevMonth">‹</button>
+                                <span class="walk-cal-month-label">{{ walkCalendarLabel }}</span>
+                                <button type="button" class="walk-cal-nav-btn" :title="t('dash_walk_cal_next_title')" @click="walkCalendarNextMonth">›</button>
+                            </div>
+                            <div class="walk-cal-grid">
+                                <div v-for="dow in walkCalendarDowLabels" :key="'dow'+dow" class="walk-cal-dow">{{ dow }}</div>
+                                <div v-for="cell in walkCalendarDays" :key="cell.key" class="walk-cal-day" :class="{ 'is-padding': cell.isPadding, 'has-log': cell.hasLog, 'is-today': cell.isToday }">{{ cell.isPadding ? '' : cell.day }}</div>
+                            </div>
+                        </div>
+                    </div>
                     <div v-if="walkLog.length" style="margin-top:10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" @click="showWalkHistory = !showWalkHistory">
                             <span style="font-size:10.5px; color:var(--text-gray); font-weight:bold;">{{ t('dash_walk_history_toggle', { n: walkLog.length }) }}</span>
@@ -3466,6 +3512,13 @@
         return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 10);
     };
 
+    // 🔥 連続記録（ストリーク）計算・カレンダー表示用: 'YYYY-MM-DD'文字列を「通算日数」の整数に変換する。
+    // Date.UTCで固定して差分を取ることで、タイムゾーンやサマータイムの影響を受けずに暦日単位で比較できる。
+    const dayNumFromDateStr = (s) => {
+        const [y, m, d] = s.split('-').map(Number);
+        return Math.round(Date.UTC(y, m - 1, d) / 86400000);
+    };
+
     /* ================================================================
        🗓️ ダッシュボード（今日・今週・今月）
        全サイト共通のボタン。データの本家はitem（アイテム所持管理）のindex.html
@@ -4215,6 +4268,13 @@
             dash_walk_history_toggle: '📖 最近の記録（{n}件）',
             dash_walk_history_close: '閉じる ▲',
             dash_walk_history_open: '開く ▼',
+            dash_walk_streak_current: '🔥 現在の連続記録',
+            dash_walk_streak_longest: '🏆 最長連続記録',
+            dash_walk_cal_toggle: '📅 今月のカレンダー',
+            dash_walk_cal_month_label: '{year}年{month}月',
+            dash_walk_cal_dow: '日,月,火,水,木,金,土',
+            dash_walk_cal_prev_title: '前の月',
+            dash_walk_cal_next_title: '次の月',
 
             dash_ics_label: '📅 カレンダーへの登録',
             dash_ics_export_btn: '⬇️ 予定をエクスポート（.icsファイル）',
@@ -4620,6 +4680,13 @@
             dash_walk_history_toggle: '📖 Recent entries ({n})',
             dash_walk_history_close: 'Close ▲',
             dash_walk_history_open: 'Open ▼',
+            dash_walk_streak_current: '🔥 Current Streak',
+            dash_walk_streak_longest: '🏆 Longest Streak',
+            dash_walk_cal_toggle: '📅 This Month\'s Calendar',
+            dash_walk_cal_month_label: '{month}/{year}',
+            dash_walk_cal_dow: 'Su,Mo,Tu,We,Th,Fr,Sa',
+            dash_walk_cal_prev_title: 'Previous month',
+            dash_walk_cal_next_title: 'Next month',
 
             dash_ics_label: '📅 Add to Calendar',
             dash_ics_export_btn: '⬇️ Export schedule (.ics file)',
@@ -5025,6 +5092,13 @@
             dash_walk_history_toggle: '📖 最近的記錄（{n}筆）',
             dash_walk_history_close: '關閉 ▲',
             dash_walk_history_open: '展開 ▼',
+            dash_walk_streak_current: '🔥 目前連續天數',
+            dash_walk_streak_longest: '🏆 最長連續紀錄',
+            dash_walk_cal_toggle: '📅 本月行事曆',
+            dash_walk_cal_month_label: '{year}年{month}月',
+            dash_walk_cal_dow: '日,一,二,三,四,五,六',
+            dash_walk_cal_prev_title: '上個月',
+            dash_walk_cal_next_title: '下個月',
 
             dash_ics_label: '📅 加入行事曆',
             dash_ics_export_btn: '⬇️ 匯出行程（.ics檔）',
@@ -5430,6 +5504,13 @@
             dash_walk_history_toggle: '📖 최근 기록（{n}건）',
             dash_walk_history_close: '닫기 ▲',
             dash_walk_history_open: '열기 ▼',
+            dash_walk_streak_current: '🔥 현재 연속 기록',
+            dash_walk_streak_longest: '🏆 최장 연속 기록',
+            dash_walk_cal_toggle: '📅 이번 달 캘린더',
+            dash_walk_cal_month_label: '{year}년 {month}월',
+            dash_walk_cal_dow: '일,월,화,수,목,금,토',
+            dash_walk_cal_prev_title: '이전 달',
+            dash_walk_cal_next_title: '다음 달',
 
             dash_ics_label: '📅 캘린더에 등록',
             dash_ics_export_btn: '⬇️ 일정 내보내기(.ics 파일)',
@@ -5571,6 +5652,8 @@
             // { date: 'YYYY-MM-DD', spiritId }の配列。新しい記録が先頭(index 0)に来るよう常にunshiftする。
             const walkLog = ref([]);
             const showWalkHistory = ref(false); // 📖 最近の記録一覧は初期は折りたたみ
+            const showWalkCalendar = ref(false); // 📅 月間カレンダー/ヒートマップも初期は折りたたみ
+            const walkCalendarViewDate = ref((() => { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), 1); })()); // 📅 カレンダーで表示中の月（常に月初日で保持）
             const showForecast = ref(false); // 🔮 4体比較の詳細は初期状態で折りたたみ（情報量を抑える）
             const showHeartPlanDetail = ref(false); // 🚀 最短交換シミュレーションの優先順位チャートも初期は折りたたみ
             const showMultiSpiritLog = ref(false); // 📋 4体分の日別プランも初期は折りたたみ
@@ -6228,6 +6311,79 @@
             }));
             // 📊 予測（このペースなら〜日で到達）と実績（実際にワンタップ記録した連れ歩き日数）を突き合わせる用
             const activeSpiritLoggedWalkDays = computed(() => walkLog.value.filter(e => e.spiritId === activeSpirit.value.id).length);
+
+            // 🔥 連続記録（ストリーク）: walkLogから「現在の連続日数」と「これまでの最長連続日数」を算出する。
+            // walkLogは記録順（新しい順）で並んでいる保証がない・重複日付が紛れ込む可能性も考慮し、
+            // 一旦Setで日付文字列を重複排除してから通算日数の昇順に並べ替えて走査する。
+            const walkStreakInfo = computed(() => {
+                const uniqueDayNums = Array.from(new Set(walkLog.value.map(e => e.date)))
+                    .map(dayNumFromDateStr)
+                    .sort((a, b) => a - b);
+                if (!uniqueDayNums.length) return { current: 0, longest: 0 };
+
+                // 🏆 最長連続日数: 隣り合う日数が+1ずつ増えている区間の最大長を探す
+                let longest = 1;
+                let run = 1;
+                for (let i = 1; i < uniqueDayNums.length; i++) {
+                    run = (uniqueDayNums[i] === uniqueDayNums[i - 1] + 1) ? run + 1 : 1;
+                    if (run > longest) longest = run;
+                }
+
+                // 🔥 現在の連続日数: 直近の記録日が「今日」または「昨日」の場合のみ連続中とみなし、
+                // そこから過去へ1日刻みで途切れずに遡れる日数を数える（今日も昨日も記録が無ければ0＝途切れている）
+                const todayNum = dayNumFromDateStr(pfLocalDateStr());
+                const lastDayNum = uniqueDayNums[uniqueDayNums.length - 1];
+                let current = 0;
+                if (lastDayNum === todayNum || lastDayNum === todayNum - 1) {
+                    current = 1;
+                    for (let i = uniqueDayNums.length - 1; i > 0; i--) {
+                        if (uniqueDayNums[i] === uniqueDayNums[i - 1] + 1) current++;
+                        else break;
+                    }
+                }
+                return { current, longest };
+            });
+            const currentWalkStreak = computed(() => walkStreakInfo.value.current);
+            const longestWalkStreak = computed(() => walkStreakInfo.value.longest);
+
+            // 📅 月間カレンダー/ヒートマップ: 表示中の月の日数分のセル＋週の曜日を揃えるための先頭パディングを生成する
+            const walkCalendarPrevMonth = () => {
+                const d = walkCalendarViewDate.value;
+                walkCalendarViewDate.value = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+            };
+            const walkCalendarNextMonth = () => {
+                const d = walkCalendarViewDate.value;
+                walkCalendarViewDate.value = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+            };
+            const walkCalendarLabel = computed(() => {
+                const d = walkCalendarViewDate.value;
+                return t('dash_walk_cal_month_label', { year: d.getFullYear(), month: pad2(d.getMonth() + 1) });
+            });
+            const walkCalendarDowLabels = computed(() => t('dash_walk_cal_dow').split(','));
+            const walkCalendarDays = computed(() => {
+                const viewDate = walkCalendarViewDate.value;
+                const year = viewDate.getFullYear();
+                const month = viewDate.getMonth(); // 0-indexed
+                const firstWeekday = new Date(year, month, 1).getDay(); // 0=日曜
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const loggedDates = new Set(walkLog.value.map(e => e.date));
+                const todayStr = pfLocalDateStr();
+                const cells = [];
+                for (let i = 0; i < firstWeekday; i++) {
+                    cells.push({ key: 'pad-' + i, isPadding: true });
+                }
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+                    cells.push({
+                        key: dateStr,
+                        isPadding: false,
+                        day,
+                        hasLog: loggedDates.has(dateStr),
+                        isToday: dateStr === todayStr
+                    });
+                }
+                return cells;
+            });
 
             // 📋 最短ハート交換シミュレーションの結果をプレーンテキストとしてコピーする（共有用）。
             // pfCopyTextは後方（オプティマイザ側）で定義しているが、実際に呼ばれるのはボタンクリック時
@@ -7819,6 +7975,8 @@
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonStartText, seasonEndText, seasonCountdown, seasonDayInfo, pad2,
                 activeFastestHeartPlan, todayWalkRecommendation,
                 walkLog, showWalkHistory, walkLogDisplay, hasLoggedWalkToday, todayWalkLogSpiritName, logTodayWalk, activeSpiritLoggedWalkDays,
+                currentWalkStreak, longestWalkStreak,
+                showWalkCalendar, walkCalendarLabel, walkCalendarDowLabels, walkCalendarDays, walkCalendarPrevMonth, walkCalendarNextMonth,
                 spiritForecasts, grandTotalCandles, getForecastIconId, forecastEtaText,
                 records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
                 pfEditingId, pfEditingName, pfDeletingId,
