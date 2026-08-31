@@ -119,13 +119,6 @@
         header {
             text-align: center;
             margin-bottom: 16px;
-            /* 🧭 デスクトップレイアウト統一：他姉妹サイトのheaderと同じくsticky化。
-               スクロール中のコンテンツと重ならないよう、プロフィールの色合い(--pf-tint-rgb)も
-               bodyと同じ式で反映した不透明背景と下境界線を付与する。 */
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background: linear-gradient(var(--pf-tint-rgb, transparent), var(--pf-tint-rgb, transparent)), var(--bg-color);
             padding: 10px 0;
             border-bottom: 0.5px solid var(--border-color);
         }
@@ -2001,20 +1994,6 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <button class="sidebar-toggle-btn" @click="showSidebar = !showSidebar">{{ t('sidebar_toggle') }}</button>
             <h1>{{ t('app_title') }}</h1>
-            <div style="display:flex; gap:6px;">
-                <select class="lang-select" :value="currentLang" @change="setLang($event.target.value)" aria-label="Language / 言語 / 語言 / 언어">
-                    <option value="ja">🌐 日本語</option>
-                    <option value="en">🌐 English</option>
-                    <option value="zh-TW">🌐 繁體中文</option>
-                    <option value="ko">🌐 한국어</option>
-                </select>
-                <button class="theme-toggle-btn" @click="toggleTheme">
-                    <span v-if="themeMode === 'dark'">{{ t('theme_dark') }}</span>
-                    <span v-else-if="themeMode === 'light'">{{ t('theme_light') }}</span>
-                    <span v-else>{{ t('theme_system') }}</span>
-                </button>
-                <button class="theme-toggle-btn" @click="settingsOpenModal" :title="t('settings_title')" :aria-label="t('settings_title')">⚙️</button>
-            </div>
         </div>
         <div class="subtitle">{{ t('app_subtitle') }}</div>
         <div class="season-info-badge">
