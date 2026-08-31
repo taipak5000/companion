@@ -3557,19 +3557,26 @@
     const SEASON_START_TEXT = '2026/7/17 16:00';
     const SEASON_END_TEXT = '2026/10/2 15:59';
 
-    // 🕓 デイリー（キャンドル等の獲得チャンス）はこの時刻にリセットされる。
-    // シーズン終了時刻はリセット時刻の1分前(15:59)に設定されているため、
-    // 「終了日の16:00リセット分」は発生しない＝その日はキャンドルを稼げない。
-    // そのため「残り日数」は単純な24時間単位の切り上げではなく、
-    // 実際に何回リセットを迎えられるかで数える必要がある。
-    const DAILY_RESET_HOUR = 16;
+    // 🕓 デイリー（キャンドル等の獲得チャンス）は太平洋時間0時（日替わり大キャンドルの
+    // 切り替わりと同じ瞬間）にリセットされる。夏時間(PDT)期間は日本時間16:00に相当するが、
+    // 冬時間(PST)期間は17:00に相当し1時間ずれる。そのため固定のローカル時刻(旧: 16:00固定)
+    // ではなく、pfDashPacificNow()と同じ手法（fromTimeをアメリカ/ロサンゼルスのlocaleで
+    // 文字列化→再パースして「その瞬間の太平洋時間の壁時計表示」を求め、実際の瞬間との差分
+    // オフセットを加算し直す）をfromTime基準に一般化し、夏時間/冬時間どちらでも正しい
+    // リセット時刻を算出する（バグ修正: 冬時間期間をまたぐシーズンでは旧実装だと1時間ずれていた）。
+    // シーズン終了時刻はリセット時刻の1分前に設定されているため、「終了日のリセット分」は
+    // 発生しない＝その日はキャンドルを稼げない。そのため「残り日数」は単純な24時間単位の
+    // 切り上げではなく、実際に何回リセットを迎えられるかで数える必要がある。
+    const pacificWallClock = (t) => new Date(t.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
 
     // 🕓 指定時刻以降で、最初に迎える（まだ来ていない）デイリーリセット日時を返す
     const getNextDailyReset = (fromTime) => {
-        const next = new Date(fromTime);
-        next.setHours(DAILY_RESET_HOUR, 0, 0, 0);
-        if (next < fromTime) next.setDate(next.getDate() + 1);
-        return next;
+        const pacFrom = pacificWallClock(fromTime);
+        const realOffsetMs = fromTime.getTime() - pacFrom.getTime();
+        const next = new Date(pacFrom);
+        next.setHours(0, 0, 0, 0);
+        if (next.getTime() < pacFrom.getTime()) next.setDate(next.getDate() + 1);
+        return new Date(next.getTime() + realOffsetMs);
     };
 
     // 🕓 fromTime以降・untilTime以前に発生するデイリーリセットの回数を正確に数える
