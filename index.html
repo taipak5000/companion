@@ -6003,8 +6003,15 @@
 
             // 🔓 各層の「完了時の累計ポイント」。t2=第2層完了(第3層解放)、t3=第3層完了(第4層解放)、
             // t4=第4層まで全アイテム取得後の最終累計。通常は100/180/280だが、
-            // 喜びの思い出(id:4)はツリー構成が異なるため、実機確認により180/280/380（280+第4層の50+50）に修正。
-            const TIER_TOTAL_OVERRIDES = { 4: { t2: 180, t3: 280, t4: 380 } };
+            // 喜びの思い出(id:4)はツリー構成が異なるため上書きする。
+            // 🐛 バグ修正: 以前は180/280/380だったが、これは各層のアイテムのポイント（第2層60p・
+            // 第3層27p×3・第4層50p×2、いずれも実機確認済み）を個別に見直した際にここが
+            // 追従更新されていなかった値だった。そのため第2層完了時の実際の累計は
+            // 40(第1層)+60(第2層)=100にしかならないのに解放ラインが180のままとなり、
+            // 第3層のアイテムを「連れ歩き」で+10p×8日分を稼がない限り絶対に押せない
+            // （実質ずっと押せないように見える）不具合が起きていた。実際のアイテム構成から
+            // 逆算した正しい累計値（100/181/281）に修正する。
+            const TIER_TOTAL_OVERRIDES = { 4: { t2: 100, t3: 181, t4: 281 } };
             const activeTier2Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t2 || 100);
             const activeTier3Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t3 || 180);
             const activeTier4Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t4 || 280);
@@ -6235,7 +6242,7 @@
             // ・ハートとの交換はアドパス未保有の場合、対象から除外する
             // 各層のアイテムが「候補として提案されてよい」ようになる、必要累計ポイントの下限。
             // 第3層の解放累計=t2、第4層の解放累計=t3（t4は「全取得後の最終累計」なのでここでは使わない）。
-            // 通常は0/40/100/180だが、喜びの思い出(id:4)はTIER_TOTAL_OVERRIDESに合わせて100→180・180→280に修正。
+            // 通常は0/40/100/180だが、喜びの思い出(id:4)はTIER_TOTAL_OVERRIDESに合わせて100→100・180→181に修正。
             const getTierThresholds = (spiritId) => {
                 const o = TIER_TOTAL_OVERRIDES[spiritId];
                 return { tier1: 0, tier2: 40, tier3: o ? o.t2 : 100, tier4: o ? o.t3 : 180 };
@@ -6344,7 +6351,7 @@
             const computeFastestHeartPlanFor = (spirit) => {
                 const heartItem = spirit.treeData.tier4[2];
                 const tierThreshold = getTierThresholds(spirit.id);
-                const goalPoints = getSpiritTier4Total(spirit); // 🔓 ハート交換に必要な最終累計（喜びの思い出はTIER_TOTAL_OVERRIDESで380に上書き）
+                const goalPoints = getSpiritTier4Total(spirit); // 🔓 ハート交換に必要な最終累計（喜びの思い出はTIER_TOTAL_OVERRIDESで281に上書き）
 
                 // まだ購入していない、アドパス枠でもハートでもない通常アイテムを集める
                 let remaining = [];
@@ -6639,7 +6646,7 @@
 
             const activeStatusText = computed(() => {
                 const p = activePoints.value;
-                // 精霊ごとの累計しきい値（喜びの思い出はTIER_TOTAL_OVERRIDESで180/280/380に上書きされる）
+                // 精霊ごとの累計しきい値（喜びの思い出はTIER_TOTAL_OVERRIDESで100/181/281に上書きされる）
                 if (p >= activeTier4Total.value) return t('status_complete');
                 if (p >= activeTier3Total.value) return t('status_tier4');
                 if (p >= activeTier2Total.value) return t('status_tier3');
