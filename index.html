@@ -1992,8 +1992,13 @@
 <div id="app" class="container" v-cloak>
     <header>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <button class="sidebar-toggle-btn" @click="showSidebar = !showSidebar">{{ t('sidebar_toggle') }}</button>
             <h1>{{ t('app_title') }}</h1>
+            <select class="lang-select" :value="currentLang" @change="setLang($event.target.value)" aria-label="Language / 言語 / 語言 / 언어">
+                <option value="ja">🌐 日本語</option>
+                <option value="en">🌐 English</option>
+                <option value="zh-TW">🌐 繁體中文</option>
+                <option value="ko">🌐 한국어</option>
+            </select>
         </div>
         <div class="subtitle">{{ t('app_subtitle') }}</div>
         <div class="season-info-badge">
