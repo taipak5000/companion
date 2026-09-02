@@ -703,6 +703,14 @@
         }
         .calc-input:focus { background: var(--card-bg); border-color: var(--accent-blue); outline: none; }
 
+        /* 🕯️ 所持キャンドル数は他の入力欄よりも大きく・目立つ色で表示する（色はインラインstyleで動的に指定） */
+        .owned-candle-input {
+            width: auto;
+            max-width: 130px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
         .memo-textarea {
             width: 100%;
             box-sizing: border-box;
@@ -2611,6 +2619,15 @@
                         <button class="btn-sm" :class="{'btn-active': !hasSeasonPass}" @click="hasSeasonPass = false">{{ t('calc_pass_no') }}</button>
                     </div>
                 </div>
+
+                <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top: 12px; flex-wrap: wrap;">
+                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold;">{{ t('calc_owned_label') }}</label>
+                    <div style="display:flex; align-items:baseline; gap:6px;">
+                        <input type="number" v-model.number="ownedCandles" class="calc-input owned-candle-input"
+                               :style="{ color: (ownedCandles || 0) < 0 ? 'var(--danger-text)' : 'var(--accent-orange)' }">
+                        <span style="font-size: 13px; color: var(--text-gray);">{{ t('calc_unit') }}</span>
+                    </div>
+                </div>
             </div>
 
             <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0,122,255,0.02);">
@@ -4023,6 +4040,7 @@
             calc_pass_yes: 'あり（1日6本）',
             calc_pass_no: 'なし（1日5本）',
             calc_unit: '本',
+            calc_owned_label: '所持本数',
             calc_day_unit: '日',
 
             plan_title: '効率的な進め方のおすすめ（4体分・魔法除く）',
@@ -4407,6 +4425,7 @@
             calc_pass_yes: 'Yes (6/day)',
             calc_pass_no: 'No (5/day)',
             calc_unit: '',
+            calc_owned_label: 'Candles currently owned',
             calc_day_unit: 'd',
 
             plan_title: 'Recommended efficient route (all 4 spirits, excluding Spells)',
@@ -4791,6 +4810,7 @@
             calc_pass_yes: '有（每日6根）',
             calc_pass_no: '沒有（每日5根）',
             calc_unit: '',
+            calc_owned_label: '目前持有的蠟燭數',
             calc_day_unit: '天',
 
             plan_title: '高效進行方式建議（4隻・不含法術）',
@@ -5175,6 +5195,7 @@
             calc_pass_yes: '있음 (하루 6개)',
             calc_pass_no: '없음 (하루 5개)',
             calc_unit: '',
+            calc_owned_label: '현재 보유 중인 초 개수',
             calc_day_unit: '일',
 
             plan_title: '효율적인 진행 추천 (4마리・마법 제외)',
