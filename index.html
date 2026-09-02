@@ -703,14 +703,6 @@
         }
         .calc-input:focus { background: var(--card-bg); border-color: var(--accent-blue); outline: none; }
 
-        /* 🕯️ 所持キャンドル数は他の入力欄よりも大きく・目立つ色で表示する（色はインラインstyleで動的に指定） */
-        .owned-candle-input {
-            width: auto;
-            max-width: 130px;
-            font-size: 22px;
-            font-weight: bold;
-        }
-        
         .memo-textarea {
             width: 100%;
             box-sizing: border-box;
@@ -2612,96 +2604,12 @@
             </div>
 
             <div class="section-card" style="border: 1px solid var(--accent-orange); background: rgba(255, 149, 0, 0.02);">
-                <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px;">
-                    {{ t('calc_title') }}
-                </div>
-
-                <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
-                    {{ t('calc_adpass_label') }}
-                </label>
-                <div class="preset-group" style="margin-bottom: 12px;">
-                    <button class="btn-sm" :class="{'btn-active': hasSeasonPass}" @click="hasSeasonPass = true">{{ t('calc_pass_yes') }}</button>
-                    <button class="btn-sm" :class="{'btn-active': !hasSeasonPass}" @click="hasSeasonPass = false">{{ t('calc_pass_no') }}</button>
-                </div>
-
-                <label style="font-size: 11px; color: var(--text-gray); font-weight: bold; display: block; margin-bottom: 6px;">
-                    {{ t('calc_owned_label') }}
-                </label>
-                <div style="display:flex; align-items:baseline; gap:8px;">
-                    <input type="number" min="0" v-model.number="ownedCandles" class="calc-input owned-candle-input"
-                           :style="{ color: (ownedCandles || 0) < 0 ? 'var(--danger-text)' : 'var(--accent-orange)' }" :placeholder="t('calc_owned_placeholder')">
-                    <span style="font-size: 13px; color: var(--text-gray);">{{ t('calc_unit') }}</span>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:8px; margin-top: 10px; flex-wrap: wrap;">
-                    <button class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">{{ t('calc_add_today', {n: candlesPerDay}) }}</button>
-                    <span style="font-size: 10px; color: var(--text-gray);">{{ t('calc_add_today_note') }}</span>
-                </div>
-
-                <div v-if="hasSeasonPass" style="display:flex; align-items:center; gap:8px; margin-top: 8px; flex-wrap: wrap;">
-                    <button class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + 30">{{ t('calc_add_bonus') }}</button>
-                    <span style="font-size: 10px; color: var(--text-gray);">{{ t('calc_add_bonus_note') }}</span>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div style="font-size: 11px; color: var(--text-gray);">{{ t('calc_total_remaining') }}</div>
-                        <div class="stat-val" style="color: var(--accent-orange);">
-                            {{ totalRemainingCandles }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">{{ t('calc_unit') }}</span>
-                        </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <span style="font-size: 11px; color: var(--text-gray); font-weight: bold;">{{ t('calc_adpass_label') }}</span>
+                    <div class="preset-group">
+                        <button class="btn-sm" :class="{'btn-active': hasSeasonPass}" @click="hasSeasonPass = true">{{ t('calc_pass_yes') }}</button>
+                        <button class="btn-sm" :class="{'btn-active': !hasSeasonPass}" @click="hasSeasonPass = false">{{ t('calc_pass_no') }}</button>
                     </div>
-                    <div class="stat-box">
-                        <div style="font-size: 11px; color: var(--text-gray);">{{ t('calc_days_to_go') }}</div>
-                        <div class="stat-val" :style="{ color: candleDaysNeeded <= 0 ? '#34c759' : 'var(--accent-blue)' }">
-                            <template v-if="candleDaysNeeded <= 0">{{ t('calc_achieved') }}</template>
-                            <template v-else>{{ candleDaysNeeded }} <span style="font-size: 12px; font-weight: normal; color: var(--text-gray);">{{ t('calc_day_unit') }}</span></template>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                        <span style="font-size: 11px; color: var(--text-gray); font-weight: bold;">{{ t('calc_budget_progress_label') }}</span>
-                        <span style="font-size: 11px; font-weight: bold;" :style="{ color: candleBudgetPct >= 100 ? 'var(--success-text)' : 'var(--accent-orange)' }">{{ candleBudgetPct }}%</span>
-                    </div>
-                    <div class="progress-container" style="margin-top: 6px;">
-                        <div class="progress-bar" :style="{ width: candleBudgetPct + '%', background: candleBudgetPct >= 100 ? 'var(--success-text)' : '' }"></div>
-                    </div>
-                    <div style="font-size: 10.5px; color: var(--text-gray); margin-top: 4px; text-align: right;">
-                        {{ ownedCandles || 0 }} / {{ totalRemainingCandles }} {{ t('calc_unit') }}
-                    </div>
-                </div>
-
-                <div class="advice-box" style="margin-top: 12px;" :style="candleDaysNeeded <= 0 ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2); margin-top:12px;' : ''">
-                    <template v-if="candleDaysNeeded <= 0">
-                        {{ t('calc_advice_ok') }}
-                    </template>
-                    <template v-else>
-                        {{ t('calc_advice_pace_pre') }} <strong>{{ candlesPerDay }}{{ t('calc_unit') }}</strong> {{ t('calc_advice_pace_mid') }} <strong>{{ candleTargetDateText }}</strong>{{ t('calc_advice_pace_post') }}
-                    </template>
-                </div>
-
-                <div class="advice-box" style="margin-top: 10px;" :style="completionForecast.isPossible ? 'background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);' : 'background:rgba(255,59,48,0.06); color:var(--danger-text); border-color:rgba(255,59,48,0.25);'">
-                    <div style="font-weight: bold; margin-bottom: 4px;">{{ t('comp_title', {date: seasonEndText}) }}</div>
-                    <template v-if="completionForecast.isPossible">
-                        <template v-if="completionForecast.daysNeeded <= 0">
-                            {{ t('comp_ok_zero') }}
-                        </template>
-                        <template v-else>
-                            {{ t('comp_ok_pre') }}<strong>{{ completionForecast.daysNeeded }}</strong>{{ t('comp_ok_mid') }}{{ completionForecast.daysLeft }}{{ t('comp_ok_post') }}
-                        </template>
-                    </template>
-                    <template v-else>
-                        {{ t('comp_bad_pre') }}<strong>{{ completionForecast.daysLeft }}</strong>{{ t('comp_bad_post') }}
-                        <div v-if="completionForecast.candleShortfall > 0" style="margin-top: 4px;">{{ t('comp_candle_short', {n: completionForecast.candleShortfall}) }}</div>
-                        <div v-if="completionForecast.walkShortfallDays > 0" style="margin-top: 4px;">{{ t('comp_walk_short', {n: completionForecast.walkShortfallDays}) }}</div>
-                    </template>
-                </div>
-                <div style="font-size: 10px; color: var(--text-gray); margin-top: 6px; line-height: 1.5;">
-                    {{ t('comp_note1') }}
-                </div>
-                <div style="font-size: 10px; color: var(--text-gray); margin-top: 8px; line-height: 1.5;">
-                    {{ t('comp_note2') }}
                 </div>
             </div>
 
@@ -4111,39 +4019,11 @@
             goal_hearts: '🧡 シーズンハート獲得: {n} / 4 個',
             goal_complete_msg: '🎉 おめでとうございます！全精霊のシーズンハートを獲得しました！',
 
-            calc_title: '🕯️ シーズンキャンドル計算機',
             calc_adpass_label: 'アドパス',
             calc_pass_yes: 'あり（1日6本）',
             calc_pass_no: 'なし（1日5本）',
-            calc_owned_label: '🕯️ 現在の所持キャンドル数',
-            calc_owned_placeholder: '例: 20',
             calc_unit: '本',
-            calc_add_today: '🕯️ 今日の分を追加（+{n}）',
-            calc_add_today_note: '獲得できなかった日は押さなくてOK。上の欄で直接調整も可能です',
-            calc_add_bonus: '🎁 購入特典 +30本を追加',
-            calc_add_bonus_note: 'アドパス購入時に一度だけ配布される30本を、タップで所持数に加算できます',
-            calc_total_remaining: '全精霊の残り必要数',
-            calc_days_to_go: '到達まで',
-            calc_achieved: '達成✓',
-            calc_target_achieved: '達成済み',
             calc_day_unit: '日',
-            calc_advice_ok: '🎉 今の所持数で、全精霊ツリーの残りコストをまかなえます！',
-            calc_advice_pace_pre: '💡 1日',
-            calc_advice_pace_mid: 'ペースなら、',
-            calc_advice_pace_post: ' 頃に必要数へ到達する見込みです。',
-            calc_budget_progress_label: '🕯️ 必要本数に対する所持の進捗',
-
-            comp_title: '🏁 魔法を除くコンプリート診断（4体分・シーズン終了 {date}まで）',
-            comp_ok_zero: '🎉 今の所持数・連れ歩き日数で、魔法を除くコンプリート条件はすでに満たせています！',
-            comp_ok_pre: '🎉 今からでも、あと',
-            comp_ok_mid: '日ほどでコンプリートできる見込みです（シーズン終了まで残り',
-            comp_ok_post: '日）。',
-            comp_bad_pre: '⚠️ このままのペースだと厳しいかもしれません（残り',
-            comp_bad_post: '日）。',
-            comp_candle_short: '🕯️ キャンドルが約 {n}本 不足する見込みです。',
-            comp_walk_short: '👣 連れ歩き日数があと {n}日 分足りません（4体合計で判定）。',
-            comp_note1: '※「コンプリート」は魔法アイテムを除く全アイテム（アドパスアイテム・ハートとの交換を含む）が対象です。アドパス関連アイテムの取得には別途アドパスの保有が必要です。',
-            comp_note2: '※ キャンドルは精霊間で共通の所持数として計算されます。',
 
             plan_title: '🧭 効率的な進め方のおすすめ（4体分・魔法除く）',
             plan_close: '閉じる ▲',
@@ -4523,39 +4403,11 @@
             goal_hearts: '🧡 Season Hearts Earned: {n} / 4',
             goal_complete_msg: '🎉 Congratulations! You\'ve earned every spirit\'s Season Heart!',
 
-            calc_title: '🕯️ Seasonal Candle Calculator',
             calc_adpass_label: 'Season Pass',
             calc_pass_yes: 'Yes (6/day)',
             calc_pass_no: 'No (5/day)',
-            calc_owned_label: '🕯️ Candles currently owned',
-            calc_owned_placeholder: 'e.g. 20',
             calc_unit: '',
-            calc_add_today: "🕯️ Add today's candles (+{n})",
-            calc_add_today_note: "No worries if you missed a day — you can also adjust the number directly above",
-            calc_add_bonus: '🎁 Add +30 purchase bonus',
-            calc_add_bonus_note: 'Tap to add the one-time 30 candles granted when buying the Season Pass',
-            calc_total_remaining: 'Total still needed (all spirits)',
-            calc_days_to_go: 'Time to reach it',
-            calc_achieved: 'Reached ✓',
-            calc_target_achieved: 'Already achieved',
             calc_day_unit: 'd',
-            calc_advice_ok: '🎉 Your current candles cover the remaining cost of every spirit tree!',
-            calc_advice_pace_pre: '💡 At a pace of',
-            calc_advice_pace_mid: 'candles/day, you should reach the amount you need around',
-            calc_advice_pace_post: '.',
-            calc_budget_progress_label: '🕯️ Owned vs. needed',
-
-            comp_title: '🏁 Completion forecast excluding Spells (all 4 spirits, by season end {date})',
-            comp_ok_zero: '🎉 With your current candles and walk days, you already meet the completion condition (excluding Spells)!',
-            comp_ok_pre: '🎉 Starting now, you should be able to complete it in about ',
-            comp_ok_mid: ' more day(s) (',
-            comp_ok_post: ' day(s) left until the season ends).',
-            comp_bad_pre: '⚠️ At this pace it may be tight (',
-            comp_bad_post: ' day(s) left).',
-            comp_candle_short: '🕯️ You may be short by about {n} candle(s).',
-            comp_walk_short: '👣 You may be short by about {n} walk day(s) (measured across all 4 spirits).',
-            comp_note1: '※ "Completion" covers every item except Spells (including Season Pass items and the Heart trade). Season Pass items also require owning the Season Pass separately.',
-            comp_note2: '※ Candles are calculated as a shared amount across spirits.',
 
             plan_title: '🧭 Recommended efficient route (all 4 spirits, excluding Spells)',
             plan_close: 'Close ▲',
@@ -4935,39 +4787,11 @@
             goal_hearts: '🧡 獲得季節之心：{n} / 4 個',
             goal_complete_msg: '🎉 恭喜！你已獲得所有精靈的季節之心！',
 
-            calc_title: '🕯️ 季節蠟燭計算機',
             calc_adpass_label: '季節通行證',
             calc_pass_yes: '有（每日6根）',
             calc_pass_no: '沒有（每日5根）',
-            calc_owned_label: '🕯️ 目前持有的蠟燭數',
-            calc_owned_placeholder: '例: 20',
             calc_unit: '',
-            calc_add_today: '🕯️ 加上今天的份（+{n}）',
-            calc_add_today_note: '沒領到的日子不用點，也可以直接在上方欄位調整數值',
-            calc_add_bonus: '🎁 加上購買特典 +30根',
-            calc_add_bonus_note: '購買季節通行證時僅發放一次的30根，可點擊加到持有數中',
-            calc_total_remaining: '全部精靈剩餘所需數量',
-            calc_days_to_go: '到達所需天數',
-            calc_achieved: '已達成✓',
-            calc_target_achieved: '已達成',
             calc_day_unit: '天',
-            calc_advice_ok: '🎉 以目前的持有數，已足夠支付所有精靈樹剩餘的花費！',
-            calc_advice_pace_pre: '💡 若以每天',
-            calc_advice_pace_mid: '根的節奏，預計在',
-            calc_advice_pace_post: ' 左右達到所需數量。',
-            calc_budget_progress_label: '🕯️ 所需數量的持有進度',
-
-            comp_title: '🏁 除法術外的完成度診斷（4隻・至本季結束{date}為止）',
-            comp_ok_zero: '🎉 以目前的持有數與同行天數，已經滿足除法術外的完成條件！',
-            comp_ok_pre: '🎉 從現在開始，預計再過',
-            comp_ok_mid: '天左右即可完成（距本季結束還剩',
-            comp_ok_post: '天）。',
-            comp_bad_pre: '⚠️ 照這個節奏可能會有點吃緊（剩餘',
-            comp_bad_post: '天）。',
-            comp_candle_short: '🕯️ 預計蠟燭將短少約 {n} 根。',
-            comp_walk_short: '👣 同行天數預計還差 {n} 天（以4隻合計判定）。',
-            comp_note1: '※「完成」是指除法術道具外的所有道具（含季節通行證道具、兌換心），取得季節通行證相關道具需另外持有季節通行證。',
-            comp_note2: '※ 蠟燭是以精靈間共用的持有數計算。',
 
             plan_title: '🧭 高效進行方式建議（4隻・不含法術）',
             plan_close: '關閉 ▲',
@@ -5347,39 +5171,11 @@
             goal_hearts: '🧡 시즌 하트 획득: {n} / 4개',
             goal_complete_msg: '🎉 축하합니다! 모든 정령의 시즌 하트를 획득했습니다!',
 
-            calc_title: '🕯️ 시즌 초 계산기',
             calc_adpass_label: '시즌 패스',
             calc_pass_yes: '있음 (하루 6개)',
             calc_pass_no: '없음 (하루 5개)',
-            calc_owned_label: '🕯️ 현재 보유 중인 초 개수',
-            calc_owned_placeholder: '예: 20',
             calc_unit: '',
-            calc_add_today: '🕯️ 오늘 분 추가 (+{n})',
-            calc_add_today_note: '받지 못한 날은 누르지 않아도 됩니다. 위 입력란에서 직접 조정도 가능합니다',
-            calc_add_bonus: '🎁 구매 특전 +30개 추가',
-            calc_add_bonus_note: '시즌 패스 구매 시 한 번만 지급되는 30개를 탭하여 보유 수량에 더할 수 있습니다',
-            calc_total_remaining: '전체 정령의 남은 필요 수량',
-            calc_days_to_go: '도달까지',
-            calc_achieved: '달성✓',
-            calc_target_achieved: '이미 달성함',
             calc_day_unit: '일',
-            calc_advice_ok: '🎉 현재 보유 수량으로 모든 정령 트리의 남은 비용을 충당할 수 있습니다!',
-            calc_advice_pace_pre: '💡 하루',
-            calc_advice_pace_mid: '개 페이스라면',
-            calc_advice_pace_post: ' 경 필요한 수량에 도달할 예정입니다.',
-            calc_budget_progress_label: '🕯️ 필요 수량 대비 보유 진행률',
-
-            comp_title: '🏁 마법 제외 컴플리트 진단 (4마리・시즌 종료 {date}까지)',
-            comp_ok_zero: '🎉 현재 보유 수량과 동행 일수로 마법을 제외한 컴플리트 조건을 이미 충족했습니다!',
-            comp_ok_pre: '🎉 지금부터라도 앞으로 ',
-            comp_ok_mid: '일 정도면 컴플리트 가능할 것으로 보입니다 (시즌 종료까지 남은 기간 ',
-            comp_ok_post: '일).',
-            comp_bad_pre: '⚠️ 이 페이스라면 다소 빠듯할 수 있습니다 (남은 ',
-            comp_bad_post: '일).',
-            comp_candle_short: '🕯️ 초가 약 {n}개 부족할 것으로 예상됩니다.',
-            comp_walk_short: '👣 동행 일수가 약 {n}일 부족합니다 (4마리 합산 기준).',
-            comp_note1: '※ "컴플리트"는 마법 아이템을 제외한 모든 아이템(시즌 패스 아이템, 하트 교환 포함)이 대상입니다. 시즌 패스 관련 아이템을 얻으려면 별도로 시즌 패스를 보유해야 합니다.',
-            comp_note2: '※ 초는 정령 간 공통으로 보유한 수량으로 계산됩니다.',
 
             plan_title: '🧭 효율적인 진행 추천 (4마리・마법 제외)',
             plan_close: '닫기 ▲',
@@ -5973,11 +5769,6 @@
                 .filter(item => !item.checked)
                 .reduce((sum, item) => sum + (item.candles || 0), 0);
 
-            // 🏁 「魔法を除くコンプリート」判定用：魔法アイテム（type === 'magic'）と、除外指定したアイテムを除いた残りコスト
-            const getSpiritRemainingCandlesExcludingMagic = (spirit) => getSpiritCandleItems(spirit)
-                .filter(item => !item.checked && item.type !== 'magic' && !item.excluded)
-                .reduce((sum, item) => sum + (item.candles || 0), 0);
-
             // 🔒 アドパス未保有時は、未交換のハートと交換できない（＝そのキャンドルを使う機会がない）。
             // 「現在の実質的な必要数・総数」からは、そのハート分のコストを除外して考える必要があるため、
             // 除外すべき本数(交換済み、またはアドパス保有時は 0)を返す共通ヘルパー。
@@ -6076,13 +5867,6 @@
             const totalRemainingCandles = computed(() => spirits.value.reduce((sum, s) =>
                 sum + getSpiritRemainingCandles(s) - getSpiritLockedHeartCost(s) - getSpiritExcludedCandles(s), 0));
 
-            // 現在の所持数から、あと何日で全精霊分の残りコストを賄えるか
-            const candleDaysNeeded = computed(() => {
-                const need = totalRemainingCandles.value - (ownedCandles.value || 0);
-                if (need <= 0) return 0;
-                return Math.ceil(need / candlesPerDay.value);
-            });
-
             // 📊 シーズンキャンドル予算の進捗バー（機能: itemの月間予算バーと同様の視覚的な進捗表示）
             // 「残り必要数(totalRemainingCandles)」に対して「今の所持数(ownedCandles)」が
             // どこまで賄えているかを％で表す。残り必要数が0以下（＝もう買う必要がない）の場合は
@@ -6091,17 +5875,6 @@
                 const need = totalRemainingCandles.value;
                 if (need <= 0) return 100;
                 return Math.max(0, Math.min(100, Math.round((ownedCandles.value || 0) / need * 100)));
-            });
-
-            const candleTargetDateText = computed(() => {
-                const days = candleDaysNeeded.value;
-                if (days <= 0) return t('calc_target_achieved');
-                // 🕓 単純な「今日+N日」ではなく、実際にN回目のリセットを迎える日付で算出する
-                // （例: 今日の16:00リセット前なら、1回目のリセット＝今日になる）
-                const target = getNthDailyResetDate(new Date(), days);
-                // 🌐 現在の言語に応じたロケールで日付を整形する（未対応言語はjaへフォールバック）
-                const locale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
-                return new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(target);
             });
 
             // 🌐 シーズン開始・終了日時（ヘッダー・コンプリート診断見出し用）も、SEASON_START/SEASON_END
@@ -6115,42 +5888,6 @@
             const seasonEndText = computed(() => {
                 const locale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
                 return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(SEASON_END);
-            });
-
-            // 🏁 シーズン終了日までに「魔法を除く全アイテムコンプリート（4体分）」が間に合うか診断する
-            // ・キャンドル面: 今日から終了日までの見込み獲得数（所持数含む）で、魔法以外の残りコストをまかなえるか
-            // ・連れ歩き面: 魔法なしで280p到達に必要な連れ歩き日数（1精霊につき最大9日）を、
-            //   4体分カレンダー日数内に確保できるか（1日1体しか連れ歩けないため合算で判定）
-            const totalRemainingCandlesExcludingMagic = computed(() => spirits.value.reduce((sum, s) => sum + getSpiritRemainingCandlesExcludingMagic(s), 0));
-
-            const completionForecast = computed(() => {
-                const now = new Date();
-                // シーズン開始前なら開始日を起点に、開始後なら「今日」を起点に残り日数を数える
-                const effectiveStart = now < SEASON_START ? SEASON_START : now;
-                const msLeft = SEASON_END - effectiveStart;
-                const seasonEnded = msLeft <= 0;
-                // 🕓 単純な24時間切り上げだと、シーズン終了時刻(15:59)が16:00リセットを
-                // またがない関係で「本当は間に合わないリセット回数」を1回多く数えてしまうため、
-                // 実際のリセット回数ベースで残り日数を算出する。
-                const daysLeft = Math.max(0, countDailyResetsUntil(effectiveStart, SEASON_END));
-
-                const neededCandles = totalRemainingCandlesExcludingMagic.value;
-                const availableCandles = (ownedCandles.value || 0) + daysLeft * candlesPerDay.value;
-                const candleShortfall = Math.max(0, neededCandles - availableCandles);
-
-                // 魔法アイテム(90p分)を除くと、280p到達には最低9日分の連れ歩きが必要（既存の「魔法スルー」と同じ計算）
-                const walkDaysNeeded = spirits.value.reduce((sum, s) => sum + Math.max(0, 9 - s.walkDays), 0);
-                const walkShortfallDays = Math.max(0, walkDaysNeeded - daysLeft);
-
-                const isPossible = !seasonEnded && candleShortfall === 0 && walkShortfallDays === 0;
-
-                // 🗓️ 実際に完了までかかる見込み日数（キャンドルが貯まるまでの日数と、連れ歩きに必要な日数の大きい方）。
-                // 「残り日数」は開幕前だとシーズン全体の日数と一致してしまい、「残り日数あれば間に合う」という
-                // 診断が常に自明な文言になってしまうため、実際に必要な日数を別途算出してメッセージに使う。
-                const candleDaysUntilReady = Math.ceil(Math.max(0, neededCandles - (ownedCandles.value || 0)) / candlesPerDay.value);
-                const daysNeeded = Math.max(candleDaysUntilReady, walkDaysNeeded);
-
-                return { daysLeft, neededCandles, availableCandles, candleShortfall, walkDaysNeeded, walkShortfallDays, isPossible, seasonEnded, daysNeeded };
             });
 
             // 🧭 4体をまたいだ効率的な進め方のシミュレーション（魔法を除く）
@@ -8094,8 +7831,8 @@
                 hasSeasonPass, ownedCandles, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan, pfCurrencyOpen,
                 activeCandleItems, activeTotalCandles, activeRemainingCandles, activeDistributedCandles, activeExcludedCandles,
-                totalRemainingCandles, candleDaysNeeded, candleTargetDateText, candleBudgetPct,
-                totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
+                totalRemainingCandles, candleBudgetPct,
+                multiSpiritPlan,
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonStartText, seasonEndText, seasonCountdown, seasonDayInfo, pad2,
                 activeFastestHeartPlan,
                 walkLog, showWalkHistory, walkLogDisplay, hasLoggedWalkToday, todayWalkLogSpiritName, logTodayWalk, activeSpiritLoggedWalkDays,
