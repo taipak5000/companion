@@ -636,25 +636,27 @@
             .confetti-piece { animation: none; display: none; }
         }
 
-        /* 📤 シーズン進捗のシェアカードを開くボタン（機能: シーズン進捗のシェアカード） */
+        /* 📤 シーズン進捗のシェアカードを開くボタン（機能: シーズン進捗のシェアカード）。
+           以前は右上に小さいアイコンだけを絶対配置していて見つけにくかったため、
+           見出しの下に文字ラベル付きのピル形ボタンとして通常のフロー内に置き、
+           バナーの背景に対してはっきり浮き上がる不透明な白背景にした。 */
         .goal-share-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            z-index: 1;
-            width: 30px;
-            height: 30px;
+            position: relative;
+            margin-top: 10px;
             border: none;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.22);
-            color: #fff;
-            font-size: 14px;
+            border-radius: 999px;
+            background: #fff;
+            color: #ff2d55;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 18px;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.18);
         }
-        .goal-share-btn:hover { background: rgba(255,255,255,0.34); }
+        .goal-share-btn:hover { background: #fff5f5; }
 
         /* 🎉 「1年前の今日」通知バナー（機能: 1年前の連れ歩き記録の振り返り） */
         .oneyear-banner {
@@ -2598,13 +2600,15 @@
 
         <div class="left-column">
             <div class="total-goal-banner" :class="{ 'goal-complete': totalHearts === 4 }">
-                <button type="button" class="goal-share-btn" :title="t('share_card_btn')" :aria-label="t('share_card_btn')" @click="pfShareOpenModal">📤</button>
                 <div v-if="totalHearts === 4" class="confetti-burst" aria-hidden="true">
                     <span v-for="n in 16" :key="n" class="confetti-piece"
                           :style="{ left: (n * 6.2 + 2) + '%', animationDelay: (n * 0.12) + 's' }">{{ ['🎉','✨','🎊','⭐'][n % 4] }}</span>
                 </div>
                 <div style="font-size: 22px; font-weight: bold; margin: 0; position: relative;">{{ t('goal_hearts', {n: totalHearts}) }}</div>
                 <div v-if="totalHearts === 4" class="goal-complete-message">{{ t('goal_complete_msg') }}</div>
+                <button type="button" class="goal-share-btn" :aria-label="t('share_card_btn')" @click="pfShareOpenModal">
+                    <span aria-hidden="true">📤</span>{{ t('share_card_btn') }}
+                </button>
             </div>
 
             <!-- ☀️ 効率的な進め方の提案を「今日はこの子」に集約したCTA。4体それぞれの最短ハート到達
@@ -4138,7 +4142,7 @@
             mobile_owned: '🕯️ 所持',
             mobile_add_today: '（今日の分）',
 
-            goal_hearts: '🧡 シーズンハート獲得: {n} / 4 個',
+            goal_hearts: '🧡 シーズンハート獲得: {n} / 4 個',
             goal_complete_msg: '🎉 おめでとうございます！全精霊のシーズンハートを獲得しました！',
 
             calc_title: '🕯️ シーズンキャンドル計算機',
@@ -4559,7 +4563,7 @@
             mobile_owned: '🕯️ Owned',
             mobile_add_today: " (today's)",
 
-            goal_hearts: '🧡 Season Hearts Earned: {n} / 4',
+            goal_hearts: '🧡 Season Hearts Earned: {n} / 4',
             goal_complete_msg: '🎉 Congratulations! You\'ve earned every spirit\'s Season Heart!',
 
             calc_title: '🕯️ Seasonal Candle Calculator',
@@ -4980,7 +4984,7 @@
             mobile_owned: '🕯️ 持有',
             mobile_add_today: '（今日份）',
 
-            goal_hearts: '🧡 獲得季節之心：{n} / 4 個',
+            goal_hearts: '🧡 獲得季節之心：{n} / 4 個',
             goal_complete_msg: '🎉 恭喜！你已獲得所有精靈的季節之心！',
 
             calc_title: '🕯️ 季節蠟燭計算機',
@@ -5401,7 +5405,7 @@
             mobile_owned: '🕯️ 보유',
             mobile_add_today: ' (오늘 분)',
 
-            goal_hearts: '🧡 시즌 하트 획득: {n} / 4개',
+            goal_hearts: '🧡 시즌 하트 획득: {n} / 4개',
             goal_complete_msg: '🎉 축하합니다! 모든 정령의 시즌 하트를 획득했습니다!',
 
             calc_title: '🕯️ 시즌 초 계산기',
