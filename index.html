@@ -6420,7 +6420,7 @@
             const isPhantomItem = (item) => !!(item.type && !item.firstUnlock && !item.candles);
 
             // 🧩 第2層の下段は常に3列（左:通常アイテム / 中:通常アイテム / 右:アドパスボーナス）を維持したい。
-            // treeData.tier2 自体の並び順は他のロジック（プリセットのtier2[1]参照など）が前提にしているため変更できない。
+            // treeData.tier2 自体の並び順は他のロジック（自動採番①②③…など）が前提にしているため変更できない。
             // そのため表示専用に「フリー枠（noPoints以外）は詰めて左から、ボーナス枠（noPoints）は右端固定」で
             // 3枠に再配置する。フリー枠が1つしかない精霊（例: 喜びの思い出）は中央が自動的に空欄になる。
             const getTier2Slots = (spirit) => {
@@ -6457,9 +6457,11 @@
                 } else if (type === 'no-magic') {
                     activeSpirit.value.walkDays = 9;
                     setSpiritItems(activeSpirit.value, true);
-                    activeSpirit.value.treeData.tier1[1].checked = false;
-                    activeSpirit.value.treeData.tier2[1].checked = false;
-                    activeSpirit.value.treeData.tier3[1].checked = false;
+                    // ⚠️ 「魔法」枠の位置(tier1[1]/tier2[1]/tier3[1]など)は精霊ごとにcreateDefaultSpiritsDataで
+                    // 染料・季節アイテムへ個別に上書きされている場合があるため、位置ではなくitem.typeで判定する。
+                    Object.values(activeSpirit.value.treeData).forEach(tier => {
+                        tier.forEach(item => { if (item.type === 'magic') item.checked = false; });
+                    });
                     if (!hasSeasonPass.value) {
                         // 🔒 アドパス未保有時は、パス必須アイテム（アドパス①〜③・ハート）まで
                         // 自動チェックしない（実際には交換できていないため）。
