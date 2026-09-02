@@ -2628,6 +2628,10 @@
                         <span style="font-size: 13px; color: var(--text-gray);">{{ t('calc_unit') }}</span>
                     </div>
                 </div>
+
+                <div style="display:flex; justify-content:flex-end; margin-top: 8px;">
+                    <button type="button" class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">+{{ candlesPerDay }}{{ t('mobile_add_today') }}</button>
+                </div>
             </div>
 
             <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0,122,255,0.02);">
