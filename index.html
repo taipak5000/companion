@@ -2611,40 +2611,6 @@
                 </button>
             </div>
 
-            <!-- ☀️ 効率的な進め方の提案を「今日はこの子」に集約したCTA。4体それぞれの最短ハート到達
-                 シミュレーション(activeFastestHeartPlanの汎用版)のうち、最もペースから遅れている
-                 1体だけをタブ切り替えなしで提案し、その場でワンタップ記録もできるようにする。 -->
-            <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0,102,204,0.03);">
-                <template v-if="todayWalkRecommendation.allDone">
-                    <div class="advice-box" style="margin: 0; background:rgba(52,197,89,0.08); color:var(--success-text); border-color:rgba(52,197,89,0.2);">
-                        {{ t('today_reco_all_done') }}
-                    </div>
-                </template>
-                <template v-else>
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                        <span style="font-weight:bold; font-size:16px;">
-                            {{ t('today_reco_walk_pre') }}<span style="color:var(--accent-blue);">{{ spiritName(todayWalkRecommendation.spirit) }}</span>{{ t('today_reco_walk_post') }}
-                        </span>
-                        <button type="button" class="btn-sm" style="flex:none; min-width:0; padding:8px 14px;"
-                                :disabled="hasLoggedWalkToday"
-                                @click="logTodayWalk(todayWalkRecommendation.spirit.id)">
-                            {{ hasLoggedWalkToday ? t('today_reco_logged_badge') : t('today_reco_log_btn') }}
-                        </button>
-                    </div>
-                    <div style="font-size: 11.5px; color: var(--text-gray); margin-top: 6px;">
-                        <template v-if="todayWalkRecommendation.plan.unreachable">
-                            {{ t('heart_unreachable') }}
-                        </template>
-                        <template v-else-if="todayWalkRecommendation.plan.day > 0">
-                            {{ t('today_reco_pace_pre') }}<strong>{{ todayWalkRecommendation.plan.day }}</strong>{{ t('today_reco_pace_post') }}
-                        </template>
-                        <template v-else>
-                            {{ t('today_reco_ready') }}
-                        </template>
-                    </div>
-                </template>
-            </div>
-
             <div class="section-card" style="border: 1px solid var(--accent-orange); background: rgba(255, 149, 0, 0.02);">
                 <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px;">
                     {{ t('calc_title') }}
@@ -4331,15 +4297,6 @@
             footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki 英語)',
             footer_settings_link: '⚙️ 設定・更新情報・クレジット・プライバシーポリシー',
 
-            today_reco_walk_pre: '☀️ 今日は',
-            today_reco_walk_post: 'と歩こう！',
-            today_reco_pace_pre: 'このペースなら、あと',
-            today_reco_pace_post: '日でハートと交換できる見込みです。',
-            today_reco_ready: '今すぐハートと交換できる状態です！',
-            today_reco_all_done: '🎉 4体ともシーズンハートを獲得済みです。おつかれさまでした！',
-            today_reco_log_btn: '📝 記録する',
-            today_reco_logged_badge: '✅ 記録済み',
-
             dash_walk_label: '🚶 今日の連れ歩き記録',
             dash_walk_hint: 'どの精霊と歩いたか、ワンタップで記録できます（1日1回まで）',
             dash_walk_logged_pre: '今日は',
@@ -4751,15 +4708,6 @@
             footer_source_van_gogh_ja: 'Dear Van Gogh (Sky Wiki Japanese)',
             footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki English)',
             footer_settings_link: '⚙️ Settings / Update Notes / Credits / Privacy Policy',
-
-            today_reco_walk_pre: '☀️ Walk with ',
-            today_reco_walk_post: ' today!',
-            today_reco_pace_pre: 'At this pace, you can trade for the Heart in about ',
-            today_reco_pace_post: ' more day(s).',
-            today_reco_ready: "You're ready to trade for the Heart right now!",
-            today_reco_all_done: '🎉 All 4 spirits have earned their Season Heart. Great work!',
-            today_reco_log_btn: '📝 Log it',
-            today_reco_logged_badge: '✅ Logged',
 
             dash_walk_label: '🚶 Today\'s Walk Log',
             dash_walk_hint: 'Tap once to record which spirit you walked with (once per day).',
@@ -5173,15 +5121,6 @@
             footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki 英文版)',
             footer_settings_link: '⚙️ 設定・更新資訊・製作名單・隱私權政策',
 
-            today_reco_walk_pre: '☀️ 今天和',
-            today_reco_walk_post: '一起同行吧！',
-            today_reco_pace_pre: '照這個節奏，再過',
-            today_reco_pace_post: '天就能兌換愛心。',
-            today_reco_ready: '現在就能兌換愛心了！',
-            today_reco_all_done: '🎉 4隻精靈都已獲得季節之心，辛苦了！',
-            today_reco_log_btn: '📝 記錄',
-            today_reco_logged_badge: '✅ 已記錄',
-
             dash_walk_label: '🚶 今日同行記錄',
             dash_walk_hint: '點一下即可記錄今天和哪隻精靈同行（每天限一次）',
             dash_walk_logged_pre: '今天已和',
@@ -5593,15 +5532,6 @@
             footer_source_van_gogh_ja: '친애하는 반 고흐에게 (Sky Wiki 일본어판)',
             footer_source_van_gogh_en: 'Dear Van Gogh (Sky Wiki 영어판)',
             footer_settings_link: '⚙️ 설정・업데이트 정보・크레딧・개인정보처리방침',
-
-            today_reco_walk_pre: '☀️ 오늘은 ',
-            today_reco_walk_post: '와(과) 함께 걸어요!',
-            today_reco_pace_pre: '이 페이스라면 앞으로 ',
-            today_reco_pace_post: '일이면 하트와 교환할 수 있어요.',
-            today_reco_ready: '지금 바로 하트와 교환할 수 있는 상태예요!',
-            today_reco_all_done: '🎉 4마리 모두 시즌 하트를 획득했습니다. 수고하셨어요!',
-            today_reco_log_btn: '📝 기록하기',
-            today_reco_logged_badge: '✅ 기록 완료',
 
             dash_walk_label: '🚶 오늘의 동행 기록',
             dash_walk_hint: '오늘 어떤 정령과 걸었는지 한 번의 탭으로 기록할 수 있습니다（하루 1회）',
@@ -6411,20 +6341,6 @@
 
             // 🧭 4体それぞれの最短ハート到達シミュレーション結果（「今日はこの子」の判定に使う）
             const allSpiritsFastestHeartPlans = computed(() => spirits.value.map(s => ({ spirit: s, plan: computeFastestHeartPlanFor(s) })));
-
-            // ☀️ 効率的な進め方の提案を「今日はこの子」に集約する。
-            // まだハートと交換していない精霊のうち、「自分ひとりに集中して連れ歩いた場合の最短到達日数(day)」
-            // が最も大きい＝自身の最速ペースから最も遅れている1体だけを提案する（タブを4つ見比べる必要をなくす）。
-            const todayWalkRecommendation = computed(() => {
-                const candidates = allSpiritsFastestHeartPlans.value.filter(x => !x.plan.alreadyDone);
-                if (!candidates.length) return { allDone: true };
-                const worst = candidates.reduce((worstX, cur) => {
-                    const curDay = cur.plan.unreachable ? Infinity : (cur.plan.day || 0);
-                    const worstDay = worstX.plan.unreachable ? Infinity : (worstX.plan.day || 0);
-                    return curDay > worstDay ? cur : worstX;
-                }, candidates[0]);
-                return { allDone: false, spirit: worst.spirit, plan: worst.plan };
-            });
 
             // 🚶 今日の連れ歩き記録（ダッシュボードのワンタップ記録・簡易履歴ログ）。
             // 実際のゲームでは1日1体としか連れ歩けないため、ガードは精霊単位ではなく「今日という日」単位で行う。
@@ -8181,7 +8097,7 @@
                 totalRemainingCandles, candleDaysNeeded, candleTargetDateText, candleBudgetPct,
                 totalRemainingCandlesExcludingMagic, completionForecast, multiSpiritPlan,
                 CURRENT_SEASON_NAME, SEASON_START_TEXT, SEASON_END_TEXT, seasonStartText, seasonEndText, seasonCountdown, seasonDayInfo, pad2,
-                activeFastestHeartPlan, todayWalkRecommendation,
+                activeFastestHeartPlan,
                 walkLog, showWalkHistory, walkLogDisplay, hasLoggedWalkToday, todayWalkLogSpiritName, logTodayWalk, activeSpiritLoggedWalkDays,
                 currentWalkStreak, longestWalkStreak,
                 showWalkCalendar, walkCalendarLabel, walkCalendarDowLabels, walkCalendarDays, walkCalendarPrevMonth, walkCalendarNextMonth,
