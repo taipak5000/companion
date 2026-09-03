@@ -1931,7 +1931,7 @@
           align-items: flex-end; justify-content: center; padding: 0;
           transition: background-color 0.32s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        .pf-modal-overlay.is-visible { animation: none; }
+        .pf-modal-overlay.is-visible { animation: iosFade 0.32s cubic-bezier(0.25, 1, 0.5, 1); }
         .pf-modal-overlay.is-closing { display: flex; pointer-events: none; }
         .pf-modal-card {
           width: 100%; max-width: 100%; max-height: 88vh; max-height: 88dvh;
@@ -1939,10 +1939,10 @@
           box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25);
           position: relative; overscroll-behavior: contain;
           touch-action: pan-y; will-change: transform;
-          animation: none;
+          animation: sheetSlideUp 0.32s cubic-bezier(0.25, 1, 0.5, 1);
           transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        .pf-modal-card.is-dragging, .pf-modal-card.js-anim { transition: none; cursor: grabbing; user-select: none; }
+        .pf-modal-card.is-dragging, .pf-modal-card.js-anim { transition: none; animation: none; cursor: grabbing; user-select: none; }
         .pf-modal-card::before {
           content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
           width: 36px; height: 5px; border-radius: 3px; background: rgba(60, 60, 67, 0.3);
@@ -1960,6 +1960,7 @@
         }
         @keyframes iosSheetIn { from { opacity: 0; transform: scale(0.94) translateY(8px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
         @keyframes iosFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sheetSlideUp { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
 
         /* ── サイドバー（関連ツールドロワー）のスライドイン ── */
         .sidebar.sidebar-open { animation: iosSlideIn 0.32s cubic-bezier(0.25, 1, 0.5, 1); }
