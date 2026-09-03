@@ -1328,21 +1328,6 @@
         /* 精度に不安がある新機能であることを示す小さな注記（例: 楽譜づくり） */
         .tool-badge-test { font-size: 9px; font-weight: 700; color: var(--text-color); opacity: 0.55; text-transform: uppercase; letter-spacing: 0.3px; }
 
-        .sidebar-toggle-btn {
-            background: var(--stat-box-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
         .sidebar-close-btn {
             background: none;
             border: none;
@@ -1354,13 +1339,6 @@
             flex-shrink: 0;
         }
 
-        @media (min-width: 850px) {
-            /* 「他のツール」ドロワーはデスクトップ幅でもオーバーレイとして開くため、
-               閉じるボタン(×)は常に表示する。ヘッダー内の開閉ハンバーガー
-               (.sidebar-toggle-btn)はボトムドックの「他のツール」と重複するため、
-               デスクトップ幅ではこちらのみ非表示にする。 */
-            .sidebar-toggle-btn { display: none; }
-        }
 
         /* --------------------------------------------------------------------------------- */
         /* 🗂️ プロフィール（記録）の切り替え — 他ツール（share/wings/item/star-candle）と統一したデザイン */
@@ -3470,13 +3448,6 @@
         return Math.floor((untilTime - next) / (1000 * 60 * 60 * 24)) + 1;
     };
 
-    // 🕓 fromTime以降で n 回目のデイリーリセットが発生する日付を返す（n=1は直近の次回リセット）
-    const getNthDailyResetDate = (fromTime, n) => {
-        const target = getNextDailyReset(fromTime);
-        target.setDate(target.getDate() + (n - 1));
-        return target;
-    };
-
     // 🚶 「今日」の連れ歩き記録用の日付文字列（YYYY-MM-DD）を、端末のローカル日付で返す。
     // Date#toISOString()はUTC基準になり日本時間などでは日付がずれるため、タイムゾーンオフセットを
     // 引いてからISO文字列化することでローカルの暦日をそのまま取り出す。
@@ -3856,7 +3827,6 @@
         ja: {
             app_title: '✨ Sky 精霊同行ポイント計算機',
             app_subtitle: '連れ歩き日数とアイテム交換の最適化シミュレーター',
-            sidebar_toggle: '☰ ツール',
             theme_dark: 'ダーク',
             theme_light: 'ライト',
             theme_system: 'システム',
@@ -4242,7 +4212,6 @@
         en: {
             app_title: '✨ Sky Spirit Companion Tracker',
             app_subtitle: 'A simulator for optimizing walk days and item exchanges',
-            sidebar_toggle: '☰ Tools',
             theme_dark: 'Dark',
             theme_light: 'Light',
             theme_system: 'System',
@@ -4628,7 +4597,6 @@
         'zh-TW': {
             app_title: '✨ Sky 精靈同行點數計算機',
             app_subtitle: '同行天數與道具兌換的最佳化模擬器',
-            sidebar_toggle: '☰ 工具',
             theme_dark: '深色',
             theme_light: '淺色',
             theme_system: '系統',
@@ -5014,7 +4982,6 @@
         ko: {
             app_title: '✨ Sky 정령 동행 포인트 계산기',
             app_subtitle: '동행 일수와 아이템 교환을 최적화하는 시뮬레이터',
-            sidebar_toggle: '☰ 도구',
             theme_dark: '다크',
             theme_light: '라이트',
             theme_system: '시스템',
