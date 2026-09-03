@@ -3937,6 +3937,7 @@
             dm_status_invalid_json: 'ファイルの読み込みに失敗しました（JSON形式ではありません）。',
             dm_status_wrong_file: 'このツールで書き出したファイルではないようです。',
             dm_status_imported: 'インポートしました。ページを再読み込みします…',
+            dm_status_imported_partial: '{failed}件のインポートに失敗しました（保存容量の上限などが原因の可能性があります）。{ok}件は復元できました。ページを再読み込みします…',
             dm_status_wiped: '削除しました。ページを再読み込みします…',
             compare_title: '🆚 記録の比較',
             compare_hint: '2つの記録を選んで、進捗を横並びで比較できます。',
@@ -4322,6 +4323,7 @@
             dm_status_invalid_json: 'Failed to read the file (not valid JSON).',
             dm_status_wrong_file: 'This doesn\'t look like a file exported from this tool.',
             dm_status_imported: 'Imported. Reloading the page…',
+            dm_status_imported_partial: 'Failed to import {failed} item(s) (this may be due to a storage limit). {ok} item(s) were restored successfully. Reloading the page…',
             dm_status_wiped: 'Deleted. Reloading the page…',
             compare_title: '🆚 Compare Records',
             compare_hint: 'Pick two records to compare their progress side by side.',
@@ -4707,6 +4709,7 @@
             dm_status_invalid_json: '檔案讀取失敗（不是 JSON 格式）。',
             dm_status_wrong_file: '這似乎不是由本工具匯出的檔案。',
             dm_status_imported: '匯入完成。即將重新載入頁面…',
+            dm_status_imported_partial: '{failed} 筆匯入失敗（可能是儲存空間已達上限等原因）。已成功還原 {ok} 筆。即將重新載入頁面…',
             dm_status_wiped: '刪除完成。即將重新載入頁面…',
             compare_title: '🆚 記錄比較',
             compare_hint: '選擇兩筆記錄，並排比較進度。',
@@ -5092,6 +5095,7 @@
             dm_status_invalid_json: '파일을 읽는 데 실패했습니다(JSON 형식이 아닙니다).',
             dm_status_wrong_file: '이 도구에서 내보낸 파일이 아닌 것 같습니다.',
             dm_status_imported: '가져왔습니다. 페이지를 새로고침합니다…',
+            dm_status_imported_partial: '{failed}개 항목 가져오기에 실패했습니다(저장 용량 한도 등이 원인일 수 있습니다). {ok}개 항목은 복원되었습니다. 페이지를 새로고침합니다…',
             dm_status_wiped: '삭제했습니다. 페이지를 새로고침합니다…',
             compare_title: '🆚 기록 비교',
             compare_hint: '두 개의 기록을 선택해 진행 상황을 나란히 비교할 수 있습니다.',
@@ -7274,13 +7278,25 @@
             };
             const dmConfirmImport = () => {
                 if (!dmPendingImportData) return;
+                let okCount = 0;
+                const failedKeys = [];
                 Object.keys(dmPendingImportData).forEach((key) => {
-                    localStorage.setItem(key, dmPendingImportData[key]);
+                    try {
+                        localStorage.setItem(key, dmPendingImportData[key]);
+                        okCount++;
+                    } catch (e) {
+                        // QuotaExceededError等で1件失敗しても、残りのキーの復元は続行する
+                        failedKeys.push(key);
+                    }
                 });
                 dmPendingImportData = null;
                 dmPendingImportCount.value = null;
-                dmStatus.value = t('dm_status_imported');
-                setTimeout(() => location.reload(), 800);
+                dmStatus.value = failedKeys.length > 0
+                    ? t('dm_status_imported_partial', { ok: okCount, failed: failedKeys.length })
+                    : t('dm_status_imported');
+                if (okCount > 0) {
+                    setTimeout(() => location.reload(), 800);
+                }
             };
             const dmConfirmWipe = () => {
                 localStorage.clear();
