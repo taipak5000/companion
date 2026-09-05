@@ -98,7 +98,10 @@
         .inline-icon.ok { stroke: var(--accent-green); color: var(--accent-green); }
         .icon-chip {
             display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+            background: rgba(175, 82, 222, 0.12);
+            background-image: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0) 60%);
             border-radius: 26%; color: var(--accent-purple);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), inset 0 1px 1px rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.10);
         }
         .icon-chip svg { display: block; stroke: var(--accent-purple); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
         .pf-titles-caret { transition: transform 0.15s ease; }
@@ -2149,7 +2152,7 @@
     <!-- 🎉 「1年前の今日」通知バナー（walkLogに1年前ちょうどの記録があれば1日1回表示） -->
     <div v-if="showOneYearAgoBanner" class="oneyear-banner">
         <span class="oneyear-banner-text">{{ t('oneyear_banner_pre') }}<b>{{ oneYearAgoSpiritName }}</b>{{ t('oneyear_banner_post') }}</span>
-        <button type="button" class="oneyear-banner-close" :title="t('oneyear_dismiss_title')" :aria-label="t('oneyear_dismiss_title')" @click="dismissOneYearAgoBanner"><svg class="inline-icon" width="11" height="11"><use href="#i-close"/></svg></button>
+        <button type="button" class="oneyear-banner-close" :title="t('oneyear_dismiss_title')" :aria-label="t('oneyear_dismiss_title')" @click="dismissOneYearAgoBanner"><span class="icon-chip" style="width:22px; height:22px;"><svg width="16" height="16"><use href="#i-close"/></svg></span></button>
     </div>
 
     <!-- ═══ プロフィール（記録）の切り替え ═══ -->
@@ -2466,9 +2469,9 @@
             <h3>{{ t('settings_title') }}</h3>
 
             <div class="dash-section">
-                <p class="dash-section-label">{{ t('settings_display_label') }}</p>
+                <p class="dash-section-label"><svg class="inline-icon" width="15" height="15"><use href="#i-monitor"/></svg> {{ t('settings_display_label') }}</p>
                 <div class="dash-row" style="align-items:center;">
-                    <span class="dash-row-icon"><svg class="inline-icon" width="14" height="14"><use href="#i-moon"/></svg></span>
+                    <span class="dash-row-icon icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-moon"/></svg></span>
                     <span class="dash-row-text">{{ t('settings_dark_mode_label') }}</span>
                     <button type="button" class="theme-toggle-btn" @click="toggleTheme">
                         <span v-if="themeMode === 'dark'">{{ t('theme_dark') }}</span>
@@ -2479,9 +2482,9 @@
             </div>
 
             <div class="dash-section">
-                <p class="dash-section-label">{{ t('settings_shortcuts_label') }}</p>
+                <p class="dash-section-label"><svg class="inline-icon" width="15" height="15"><use href="#i-keyboard"/></svg> {{ t('settings_shortcuts_label') }}</p>
                 <div class="dash-row" style="align-items:center;">
-                    <span class="dash-row-icon"><svg class="inline-icon" width="14" height="14"><use href="#i-keyboard"/></svg></span>
+                    <span class="dash-row-icon icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-keyboard"/></svg></span>
                     <span class="dash-row-text">{{ t('settings_shortcuts_enable_label') }}</span>
                     <input type="checkbox" v-model="shortcutsEnabled" @change="settingsSaveShortcutsPref" style="width:19px; height:19px; flex-shrink:0; cursor:pointer;">
                 </div>
@@ -2500,14 +2503,15 @@
             </div>
 
             <div class="dash-section">
-                <p class="dash-section-label">{{ t('side_icon_section_label') }}</p>
+                <p class="dash-section-label"><svg class="inline-icon" width="15" height="15"><use href="#i-palette"/></svg> {{ t('side_icon_section_label') }}</p>
                 <button type="button" class="dash-row" style="width:100%; box-sizing:border-box; border:none; cursor:pointer; text-align:left; font:inherit; color:inherit; align-items:center;" @click="settingsCloseModal(); pfIconOpenModal();">
+                    <span class="dash-row-icon icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-palette"/></svg></span>
                     <span class="dash-row-text">{{ t('side_icon_customize_btn') }}</span>
                 </button>
             </div>
 
             <div class="dash-section">
-                <p class="dash-section-label">{{ t('settings_lang_label') }}</p>
+                <p class="dash-section-label"><svg class="inline-icon" width="15" height="15"><use href="#i-globe"/></svg> {{ t('settings_lang_label') }}</p>
                 <div class="preset-group lang-btn-group">
                     <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'ja'}" @click="setLang('ja')">日本語</button>
                     <button type="button" class="btn-sm" :class="{'btn-active': currentLang === 'en'}" @click="setLang('en')">English</button>
@@ -2598,7 +2602,7 @@
     <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('side_related_tools') }}</div>
-            <button class="sidebar-close-btn" @click="showSidebar = false"><svg class="inline-icon" width="16" height="16"><use href="#i-close"/></svg></button>
+            <button class="sidebar-close-btn" @click="showSidebar = false"><span class="icon-chip" style="width:22px; height:22px;"><svg width="16" height="16"><use href="#i-close"/></svg></span></button>
         </div>
         <nav>
                 <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
@@ -3315,22 +3319,22 @@
     <!-- ═══ 📌 サイトドック（クイックアクセスバー。ハンバーガーサイドバーと併設） ═══ -->
     <nav class="site-dock" :aria-label="t('dock_aria_label')">
         <button type="button" @click="pfOpenModal">
-            <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-folder"/></svg></span>
+            <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-folder"/></svg></span></span>
             <span class="site-dock-label">{{ activeRecordName || t('dock_profile') }}</span>
         </button>
         <button type="button" @click="pfDashOpen">
             <span class="site-dock-icon-wrap">
-                <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-calendar"/></svg></span>
+                <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-calendar"/></svg></span></span>
                 <span class="dock-urgent-dot" :class="{ show: dockUrgentEnding }" aria-hidden="true" :title="t('dock_urgent_title')"></span>
             </span>
             <span class="site-dock-label">{{ t('dock_dashboard') }}</span>
         </button>
         <button type="button" @click="showSidebar = true">
-            <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-menu"/></svg></span>
+            <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-menu"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock_tools') }}</span>
         </button>
         <button type="button" @click="settingsOpenModal">
-            <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-settings"/></svg></span>
+            <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-settings"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock_settings') }}</span>
         </button>
     </nav>
