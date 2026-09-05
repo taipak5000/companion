@@ -93,6 +93,21 @@
             --danger-text: #ff453a;
         }
 
+        .inline-icon { stroke: var(--accent-purple); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; color: var(--accent-purple); }
+        .inline-icon.warn { stroke: var(--danger-text); color: var(--danger-text); }
+        .inline-icon.ok { stroke: var(--accent-green); color: var(--accent-green); }
+        .icon-chip {
+            display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+            border-radius: 26%; color: var(--accent-purple);
+        }
+        .icon-chip svg { display: block; stroke: var(--accent-purple); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        .pf-titles-caret { transition: transform 0.15s ease; }
+        .pf-titles-toggle[aria-expanded="true"] .pf-titles-caret { transform: rotate(180deg); }
+        .shard-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; }
+        .pf-spin { animation: pf-icon-spin 0.8s linear infinite; transform-origin: 50% 50%; }
+        @keyframes pf-icon-spin { to { transform: rotate(360deg); } }
+        .priority-step-svg-icon { width: 17px; height: 17px; }
+
         /* 🚫 Vue読み込み完了までテンプレートの生コード（{{ }}など）が一瞬見えてしまう
            「FOUC」を防止する。#app に v-cloak を付与し、マウント完了時にVueが
            自動でこの属性を取り除くまで非表示にしておく。 */
@@ -627,6 +642,7 @@
             opacity: 0;
             animation: confettiFall 2.6s ease-in forwards;
         }
+        .confetti-piece svg { display: block; width: 16px; height: 16px; color: #ffcc00; stroke: #ffcc00; }
         @keyframes confettiFall {
             0% { transform: translateY(-24px) rotate(0deg); opacity: 1; }
             100% { transform: translateY(160px) rotate(360deg); opacity: 0; }
@@ -2015,10 +2031,93 @@
     </defs>
 </svg>
 
+<svg id="pf-icon-sprite" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs>
+    <symbol id="i-folder" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h4l1.6 2H18.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5Z"/></g></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.458) translate(-12 -12)"><path d="M6 6l12 12M18 6L6 18"/></g></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z"/><path d="M21 21l-4.8-4.8"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M4.5 5.5h15a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><path d="M12 4L3 20h18L12 4Z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.149) translate(-11.615 -12.385)"><path d="M4 20l1-4.2L15.6 5.2a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1 0 2.1L8.2 19 4 20Z"/><path d="M13.8 6.8l3.4 3.4"/></g></symbol>
+    <symbol id="i-candle" viewBox="0 0 24 24"><path d="M9.5 21h5a1 1 0 0 0 1-1v-7.5a3 3 0 0 0-3-3h-1a3 3 0 0 0-3 3V20a1 1 0 0 0 1 1Z"/><path d="M12 9.5V5M10.3 5.2C10.3 3.7 12 3.5 12 2c0 1.5 1.7 1.7 1.7 3.2 0 .9-.75 1.3-1.7 1.3s-1.7-.4-1.7-1.3Z"/></symbol>
+    <symbol id="i-star-candle" viewBox="0 0 24 24"><path d="M9.5 21h5a1 1 0 0 0 1-1v-7.5a3 3 0 0 0-3-3h-1a3 3 0 0 0-3 3V20a1 1 0 0 0 1 1Z"/><path d="M12 9.5V5M10.3 5.2C10.3 3.7 12 3.5 12 2c0 1.5 1.7 1.7 1.7 3.2 0 .9-.75 1.3-1.7 1.3s-1.7-.4-1.7-1.3Z"/><path fill="currentColor" stroke="none" d="M18 4.7L18.7 6.3L20.3 7L18.7 7.7L18 9.3L17.3 7.7L15.7 7L17.3 6.3Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.129) translate(-12.25 -12)"><path d="M4.5 12.5l5 5L20 6.5"/></g></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.6 6.1.6-4.6 4.1 1.3 6-5.3-3.2-5.3 3.2 1.3-6-4.6-4.1 6.1-.6Z"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5c-5-3.5-9-7-9-11.2C3 6 5 4 7.7 4c1.7 0 3.3.9 4.3 2.4C13 4.9 14.6 4 16.3 4 19 4 21 6 21 9.3c0 4.2-4 7.7-9 11.2Z"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24"><path d="M6 3l6 9m6-9l-6 9M12 12v9M8.5 14.5h7M8.5 17.5h7"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.3a1.5 1.5 0 0 0 0 3.4V15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.3a1.5 1.5 0 0 0 0-3.4Z"/><path d="M12 7v10" stroke-dasharray="1.5 2"/></g></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.5 11h10L20 8H6"/><path d="M9 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM17 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></g></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 0 0 16c1.2 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.9 1.8-1.9H16a4 4 0 0 0 4-4c0-3.9-3.6-7-8-7Z"/><path d="M9 9v.01M13 7.5v.01M16.5 10v.01M9.5 13.5v.01"/></symbol>
+    <symbol id="i-question" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.167) translate(-12 -12)"><path d="M12 4.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15Z"/><path d="M9.5 9.3a2.5 2.5 0 0 1 4.6 1.3c0 1.7-2.1 1.9-2.1 3.4"/><path d="M12 17v.01"/></g></symbol>
+    <symbol id="i-masks" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z"/><path d="M9 10v.01M15 10v.01"/><path d="M8.5 14.5q3.5 3 7 0"/></g></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6.1-6.5-11A6.5 6.5 0 0 1 18.5 10c0 4.9-6.5 11-6.5 11Z"/><path d="M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.5 6L20 12l-6.5 1.5L12 21l-1.5-6L4 12l6.5-1.5Z"/></symbol>
+    <symbol id="i-wing" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.281) translate(-10.5 -12.83)"><path d="M4 19c2-6 6-11 13-13-1 6-2 9-6 12-3 2-5 2-7 1Z"/><path d="M7 17c3-2 6-5 8-9"/></g></symbol>
+    <symbol id="i-music-note" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.207) translate(-13.75 -10.75)"><path d="M9 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M11.5 15.5V5l7-1.5v9"/><path d="M18.5 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/></g></symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M17 7h-8a4 4 0 0 0-4 4"/><path d="M11 4l-2 3 2 3"/><path d="M7 17h8a4 4 0 0 0 4-4"/><path d="M13 20l2-3-2-3"/></g></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></symbol>
+    <symbol id="i-person" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></g></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M4 7h16M4 12h16M4 17h16"/></g></symbol>
+    <symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-6 6c0 2.5 1.5 4 2.5 5.5.5.7.5 1 .5 1.5h6c0-.5 0-.8.5-1.5C16.5 13 18 11.5 18 9a6 6 0 0 0-6-6Z"/></symbol>
+    <symbol id="i-sheet-music" viewBox="0 0 24 24"><path d="M6 4h9l3 3v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 10h8M8 13h8M8 16h5"/></symbol>
+    <symbol id="i-hanger" viewBox="0 0 24 24"><path d="M12 4.2a1.8 1.8 0 1 0-1.8 1.8"/><path d="M12 6v1.6"/><path d="M3.5 17.5 12 11l8.5 6.5"/><path d="M3.5 17.5h17"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 6.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.049) translate(-11.66 -12.34)"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></g></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><path d="M4 5.5h16a1 1 0 0 1 1 1V16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"/><path d="M9 20.5h6M12 17v3.5"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M4.5 9h15M4.5 15h15"/><path d="M12 4a12 12 0 0 1 0 16"/><path d="M12 4a12 12 0 0 0 0 16"/></g></symbol>
+    <symbol id="i-crown" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M4 10l4 3 4-6 4 6 4-3v7H4Z"/></g></symbol>
+    <symbol id="i-medal" viewBox="0 0 24 24"><path d="M8 3l3 8M16 3l-3 8"/><path d="M12 20a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11Z"/><path d="M10 14.5l2-1.2 2 1.2"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.061) translate(-12 -12.25)"><path d="M8 4h8v6a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5.5A1.5 1.5 0 0 0 4 6.5 3.5 3.5 0 0 0 7.5 10H8"/><path d="M16 5h2.5A1.5 1.5 0 0 1 20 6.5 3.5 3.5 0 0 1 16.5 10H16"/><path d="M12 14v3M9 20.5h6M9.5 17.5h5v3h-5Z"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12.5)"><path d="M4 9h16v3H4Z"/><path d="M5 12h14v8H5Z"/><path d="M12 9v11"/><path d="M9 9c-1.3 0-2.3-.9-2.3-2S7.7 5 9 5c1.3 0 3 1.7 3 4M15 9c1.3 0 2.3-.9 2.3-2S16.3 5 15 5c-1.3 0-3 1.7-3 4"/></g></symbol>
+    <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6.5 9L12 3l5.5 6L12 20Z"/><path d="M6.5 9h11"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.074) translate(-12 -12.15)"><path d="M4 6l6-2 4 2 6-2v14l-6 2-4-2-6 2Z"/><path d="M10 4.3v14M14 6.3v14"/></g></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M14.5 9.5l-1.8 4.2-4.2 1.8 1.8-4.2Z"/></g></symbol>
+    <symbol id="i-flashlight" viewBox="0 0 24 24"><path d="M9 4h6l1.5 2.5v3l-1.5 1.5v9a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-9L7.5 9.5v-3Z"/><path d="M9.5 4V2.5h5V4"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M12 3c-5 2-8 6-8 11a8 8 0 0 0 8 7c5-2 8-6 8-11a8 8 0 0 0-8-7Z"/><path d="M12 21V9"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21c4 0 6-3 6-6.5 0-2-1-3.5-2-5 0 2-1.5 3-2.5 2C14 9 13 6 10 4c1 3-1 5-2.5 7-1 1.3-1.5 2.5-1.5 3.5C6 18 8 21 12 21Z"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 14h5l-1 7 9-12h-5Z"/></symbol>
+    <symbol id="i-hammer" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.389) translate(-11.5 -12.1)"><path d="M14.8 6.2l3 3-2.1 2.1-3-3Z"/><path d="M12.7 8.3l-7.5 7.5v2.2h2.2l7.5-7.5Z"/></g></symbol>
+    <symbol id="i-building" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12.75)"><path d="M4 20.5h16"/><path d="M5.5 20.5V10L12 5l6.5 5v10.5"/><path d="M8 20.5v-6M12 20.5v-6M16 20.5v-6"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.097) translate(-12 -12.475)"><path d="M5 7h14"/><path d="M9 7V5.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7"/><path d="M7 7l1 12.5a1 1 0 0 0 1 .95h6a1 1 0 0 0 1-.95L17 7"/><path d="M10 11v5M14 11v5"/></g></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h11A1.5 1.5 0 0 1 18 7.5V9h1.5A1.5 1.5 0 0 1 21 10.5v7A1.5 1.5 0 0 1 19.5 19h-14A1.5 1.5 0 0 1 4 17.5Z"/><path d="M15.5 14.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M6.5 11h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></g></symbol>
+    <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/><path d="M12 16v5"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-13 -12)"><path d="M5 7a2 2 0 1 1 0 4h1.5"/><path d="M19 17a2 2 0 1 0 0-4h-1.5"/><path d="M6.5 7H17a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H6.5"/><path d="M9 10.5h6M9 13.5h4"/></g></symbol>
+    <symbol id="i-geyser" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.25) translate(-12 -12)"><path d="M5 19h14"/><path d="M8 19c0-3 1.5-5 4-5s4 2 4 5"/><path d="M12 12V5"/><path d="M9.5 8l2.5-3 2.5 3"/></g></symbol>
+    <symbol id="i-bread" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -13.75)"><path d="M4 14a8 5 0 0 1 16 0v2.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 12l1-3M13.5 12l1-3"/></g></symbol>
+    <symbol id="i-turtle" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.389) translate(-12 -12)"><path d="M12 8a6 4.2 0 0 0-6 4.2A6 4.2 0 0 0 12 16.4a6 4.2 0 0 0 6-4.2A6 4.2 0 0 0 12 8Z"/><path d="M12 8V6M8 10.5l-2.3-1.2M16 10.5l2.3-1.2M8.3 14l-2 1.4M15.7 14l2 1.4M10.3 16l-1 2M13.7 16l1 2"/></g></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.458) translate(-12 -12)"><path d="M6 9l6 6-6 6"/></g></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.458) translate(-12 -12)"><path d="M9 6l6 6-6 6"/></g></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.25) translate(-11.5 -12)"><path d="M15 5l-7 7 7 7"/></g></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.25) translate(-12 -12)"><path d="M12 5v14M5 12h14"/></g></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.25) translate(-12 -12)"><path d="M5 12h14"/></g></symbol>
+    <symbol id="i-tap" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12.5 -11)"><path d="M6 3l4.5 15.5 2-6 6-2L6 3Z"/><path d="M14 14l5 5"/></g></symbol>
+    <symbol id="i-shoe" viewBox="0 0 24 24"><path d="M4 18v-3.2c0-.8.5-1.5 1.3-1.8L9 11.5l3-3a2 2 0 0 1 2.6-.2L17 10h2a2 2 0 0 1 2 2v3a3 3 0 0 1-3 3H5a1 1 0 0 1-1-1Z"/><path d="M4 18h17"/></symbol>
+    <symbol id="i-necklace" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M5 4c0 5.5 3 9 7 9s7-3.5 7-9"/><path d="M12 13v2.3"/><circle cx="12" cy="17.7" r="2.3"/></g></symbol>
+    <symbol id="i-scissors" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.207) translate(-12.75 -12)"><circle cx="7.5" cy="8" r="2"/><circle cx="7.5" cy="16" r="2"/><path d="M9 9.5L20 17M9 14.5L20 7"/></g></symbol>
+    <symbol id="i-hat" viewBox="0 0 24 24"><path d="M4 13c0-4.5 3.5-8 8-8s8 3.5 8 8"/><path d="M2.5 13h19"/><path d="M6 13v1.5A2.5 2.5 0 0 0 8.5 17h7a2.5 2.5 0 0 0 2.5-2.5V13"/></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -11.25)"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14a1.5 1.5 0 0 1 1.5-1.5h1A1.5 1.5 0 0 1 8 14v3a1.5 1.5 0 0 1-1.5 1.5h-1A1.5 1.5 0 0 1 4 17Z"/><path d="M16 14a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5Z"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.167) translate(-12.5 -11.5)"><path d="M9 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5V15"/><path d="M14 4h6v6"/><path d="M20 4L10 14"/></g></symbol>
+    <symbol id="i-flower" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><circle cx="12" cy="12" r="2"/><path d="M12 4a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3ZM12 20a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3ZM4 12a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3ZM20 12a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3Z"/></g></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-7.97A5 5 0 0 1 16.2 8.1 4.5 4.5 0 0 1 17.5 18Z"/></symbol>
+    <symbol id="i-peach" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.108) translate(-12 -11.1)"><path d="M12 6c-3 0-5.5 2.5-5.5 6s2 7 5.5 7 5.5-3.5 5.5-7S15 6 12 6Z"/><path d="M12 6c0-1.2.6-2.2 1.8-2.8"/><path d="M8.6 8.3c0-2 .6-3.3 1.8-4.2"/></g></symbol>
+    <symbol id="i-x-logo" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.25) translate(-12 -12)"><path d="M5 5l14 14M19 5L5 19"/></g></symbol>
+    <symbol id="i-ribbon" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.25) translate(-12 -13.5)"><path d="M12 12L5 6.5v3.5c0 1.2 1 2.2 2.2 2.2H12ZM12 12l7-5.5v3.5c0 1.2-1 2.2-2.2 2.2H12Z"/><circle cx="12" cy="12" r="1.6"/><path d="M12 13.6v6.9M9.3 20.5h5.4"/></g></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.167) translate(-12 -12)"><path d="M4.5 4.5h6.5v6.5h-6.5Z"/><path d="M13 4.5h6.5v6.5h-6.5Z"/><path d="M4.5 13h6.5v6.5h-6.5Z"/><path d="M13 13h6.5v6.5h-6.5Z"/></g></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 3.2a1.3 1.3 0 0 0-1.3 1.3v.4C8.6 5.5 7 7.8 7 10.4V14l-1.8 2.8h13.6L17 14v-3.6c0-2.6-1.6-4.9-3.7-5.5v-.4A1.3 1.3 0 0 0 12 3.2Z"/><path d="M9.8 18.3a2.2 2.2 0 0 0 4.4 0"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.167) translate(-12 -12)"><path d="M12 4.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15Z"/><path d="M12 8.2V12.3l3 1.8"/></g></symbol>
+    <symbol id="i-duplicate" viewBox="0 0 24 24"><path d="M8.5 8.5V5.5A1.5 1.5 0 0 1 10 4h8.5A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H15.5"/><path d="M4 9.5A1.5 1.5 0 0 1 5.5 8h8A1.5 1.5 0 0 1 15 9.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 18.5Z"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M4 8.5L12 4l8 4.5v8L12 21l-8-4.5Z"/><path d="M4 8.5L12 12.5l8-4"/><path d="M12 12.5V21"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.167) translate(-12 -12)"><path d="M4.5 4.5h15v15h-15Z"/><path d="M4.5 15.5l4.2-4.5a1 1 0 0 1 1.5 0l2.3 2.5 2.5-3a1 1 0 0 1 1.5 0l3 4.5"/><path d="M9 9.5a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4Z"/></g></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 18H5a1.5 1.5 0 0 1-1.5-1.5Z"/><path d="M6.5 9.5h.01M9.5 9.5h.01M12.5 9.5h.01M15.5 9.5h.01M17.5 9.5h.01M6.5 12.5h.01M9.5 12.5h.01M12.5 12.5h.01M15.5 12.5h.01M17.5 12.5h.01M8 15.5h8"/></symbol>
+    <symbol id="i-footprint" viewBox="0 0 24 24"><path d="M9 4c-2 0-3.2 2-3.2 4.5S7 13 9 13s3.2-2 3.2-4.5S11 4 9 4Z"/><path d="M15.3 10.2c-1.9 0-2.9 1.8-2.9 4s1 4.8 2.9 4.8 2.9-2.6 2.9-4.8-1-4-2.9-4Z"/></symbol>
+</defs></svg>
+
 <div id="app" class="container" v-cloak>
     <header>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h1>{{ t('app_title') }}</h1>
+            <h1><svg class="inline-icon" width="20" height="20" style="vertical-align:-3px;"><use href="#i-sparkle"/></svg> {{ t('app_title') }}</h1>
             <select class="lang-select" :value="currentLang" @change="setLang($event.target.value)" aria-label="Language / 言語 / 語言 / 언어">
                 <option value="ja">日本語</option>
                 <option value="en">English</option>
@@ -2033,7 +2132,7 @@
             <div class="season-day-badge">{{ t('season_day_label', { current: seasonDayInfo.current, total: seasonDayInfo.total }) }}</div>
             <div class="season-countdown" :class="{ 'is-ended': seasonCountdown.ended }">
                 <template v-if="!seasonCountdown.ended">
-                    <span class="season-countdown-label">{{ t('countdown_label') }}</span>
+                    <span class="season-countdown-label"><svg class="inline-icon" width="11" height="11"><use href="#i-clock"/></svg> {{ t('countdown_label') }}</span>
                     <span class="season-countdown-value">
                         <span class="cd-days">{{ seasonCountdown.days }}<i>{{ t('countdown_day_suffix') }}</i></span>
                         <span class="cd-time">{{ pad2(seasonCountdown.hours) }}:{{ pad2(seasonCountdown.minutes) }}:{{ pad2(seasonCountdown.seconds) }}</span>
@@ -2050,13 +2149,13 @@
     <!-- 🎉 「1年前の今日」通知バナー（walkLogに1年前ちょうどの記録があれば1日1回表示） -->
     <div v-if="showOneYearAgoBanner" class="oneyear-banner">
         <span class="oneyear-banner-text">{{ t('oneyear_banner_pre') }}<b>{{ oneYearAgoSpiritName }}</b>{{ t('oneyear_banner_post') }}</span>
-        <button type="button" class="oneyear-banner-close" :title="t('oneyear_dismiss_title')" :aria-label="t('oneyear_dismiss_title')" @click="dismissOneYearAgoBanner">✕</button>
+        <button type="button" class="oneyear-banner-close" :title="t('oneyear_dismiss_title')" :aria-label="t('oneyear_dismiss_title')" @click="dismissOneYearAgoBanner"><svg class="inline-icon" width="11" height="11"><use href="#i-close"/></svg></button>
     </div>
 
     <!-- ═══ プロフィール（記録）の切り替え ═══ -->
     <div class="pf-bar">
         <span class="pf-bar-text" @click="pfOpenModal"><b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</span>
-        <button type="button" class="pf-dash-btn" @click="pfDashOpen" :title="t('dash_btn_title')">🗓️</button>
+        <button type="button" class="pf-dash-btn" @click="pfDashOpen" :title="t('dash_btn_title')"><svg class="inline-icon" width="13" height="13"><use href="#i-calendar"/></svg></button>
     </div>
 
     <div id="pfModalOverlay" class="pf-modal-overlay" :class="{ 'is-visible': showProfileModal }" @click.self="pfCloseModal">
@@ -2085,11 +2184,11 @@
                     </template>
                     <template v-else>
                         <input type="color" class="pf-color-input" :value="rec.color || '#FF9500'" :title="t('record_color_title')" @change="setRecordColor(rec, $event.target.value)">
-                        <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false">{{ rec.id === activeRecordId ? '✅ ' : '' }}{{ rec.name }}</span>
-                        <button v-if="rec.color" type="button" class="pf-icon-btn pf-color-clear-btn" :title="t('record_color_reset_title')" @click="clearRecordColor(rec)">↺</button>
-                        <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false">⧉</button>
-                        <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfStartRename(rec)">✏️</button>
-                        <button v-if="records.length > 1" type="button" class="pf-icon-btn" :title="t('record_delete')" @click="pfStartDelete(rec)">🗑️</button>
+                        <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false"><svg v-if="rec.id === activeRecordId" class="inline-icon ok" width="12" height="12"><use href="#i-check"/></svg> {{ rec.name }}</span>
+                        <button v-if="rec.color" type="button" class="pf-icon-btn pf-color-clear-btn" :title="t('record_color_reset_title')" @click="clearRecordColor(rec)"><svg class="inline-icon" width="13" height="13"><use href="#i-sync"/></svg></button>
+                        <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false"><svg class="inline-icon" width="13" height="13"><use href="#i-duplicate"/></svg></button>
+                        <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfStartRename(rec)"><svg class="inline-icon" width="13" height="13"><use href="#i-edit"/></svg></button>
+                        <button v-if="records.length > 1" type="button" class="pf-icon-btn" :title="t('record_delete')" @click="pfStartDelete(rec)"><svg class="inline-icon warn" width="13" height="13"><use href="#i-trash"/></svg></button>
                     </template>
                 </div>
             </div>
@@ -2105,23 +2204,23 @@
                 </div>
                 <template v-if="pfCurrencyOpen">
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">{{ t('pfcur_candle') }}</span>
+                    <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-candle"/></svg> {{ t('pfcur_candle') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyCandle" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">{{ t('pfcur_heart') }}</span>
+                    <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-heart"/></svg> {{ t('pfcur_heart') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyHeart" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">{{ t('pfcur_ascended') }}</span>
+                    <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-star-candle"/></svg> {{ t('pfcur_ascended') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyCandleHeart">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">{{ t('pfcur_season') }}</span>
+                    <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-candle"/></svg> {{ t('pfcur_season') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="ownedCandles">
                 </div>
                 <div class="pf-currency-row">
-                    <span class="pf-currency-label">{{ t('pfcur_gift_pass') }}</span>
+                    <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-ticket"/></svg> {{ t('pfcur_gift_pass') }}</span>
                     <input type="number" min="0" class="pf-currency-input" v-model.number="currencyGiftPass" @change="saveCurrencyExtra">
                 </div>
                 </template>
@@ -2163,7 +2262,7 @@
         <div class="pf-modal-card" ref="dashModalCardEl" tabindex="-1">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px;">
                 <h3 style="margin:0;">{{ t('dash_title') }}</h3>
-                <button type="button" class="pf-icon-btn" :disabled="dashRefreshing || dashLoading" :title="t('dash_refresh_title')" @click="pfDashRefresh">{{ dashRefreshing ? '⏳' : '🔄' }} {{ t('dash_refresh_btn') }}</button>
+                <button type="button" class="pf-icon-btn" :disabled="dashRefreshing || dashLoading" :title="t('dash_refresh_title')" @click="pfDashRefresh"><svg class="inline-icon" :class="{ 'pf-spin': dashRefreshing }" width="13" height="13"><use href="#i-sync"/></svg> {{ t('dash_refresh_btn') }}</button>
             </div>
             <p v-if="dashLastUpdatedText" style="margin:-8px 0 10px; font-size:11px; color:var(--text-gray);">{{ t('dash_last_updated_prefix') }} {{ dashLastUpdatedText }}</p>
             <p v-if="dashRefreshStatus" class="pf-hint" style="margin-top:0;">{{ dashRefreshStatus }}</p>
@@ -2173,7 +2272,7 @@
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_walk_label') }}</p>
                     <div class="dash-row" v-if="hasLoggedWalkToday" style="background:rgba(52,197,89,0.08); color:var(--success-text);">
-                        <span class="dash-row-icon">✅</span>
+                        <span class="dash-row-icon"><svg class="inline-icon ok" width="13" height="13"><use href="#i-check"/></svg></span>
                         <span class="dash-row-text">{{ t('dash_walk_logged_pre') }}<b>{{ todayWalkLogSpiritName }}</b>{{ t('dash_walk_logged_post') }}</span>
                     </div>
                     <template v-else>
@@ -2221,7 +2320,7 @@
                         <div v-if="showWalkHistory" class="multi-spirit-log">
                             <div v-for="(entry, idx) in walkLogDisplay" :key="idx" class="multi-spirit-log-row">
                                 <span class="msl-day">{{ entry.date }}</span>
-                                <span>👣 {{ entry.spiritNameDisplay }}</span>
+                                <span><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> {{ entry.spiritNameDisplay }}</span>
                             </div>
                         </div>
                     </div>
@@ -2242,57 +2341,57 @@
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_daily_label') }}</p>
                     <div class="dash-row" v-if="dashShard && dashShard.hasShard">
-                        <span class="dash-row-icon">{{ dashShard.isRed ? '🔴' : '⚫' }}</span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix') }}<span class="dash-shard-times"><span v-for="(o, idx) in dashShardOccurrences" :key="idx"><span class="dash-shard-time" :class="{ past: o.past }">{{ o.text }}</span><span v-if="idx < dashShardOccurrences.length - 1"> / </span></span></span> <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
+                        <span class="dash-row-icon"><span class="shard-dot" :style="{ background: dashShard.isRed ? 'var(--danger-text)' : '#8e8e93' }"></span></span><span class="dash-row-text">{{ dashShard.isRed ? t('dash_shard_red') : t('dash_shard_black') }}（<b>{{ dashShardRealmLabel }}</b>）{{ t('dash_shard_erupts_suffix') }}<span class="dash-shard-times"><span v-for="(o, idx) in dashShardOccurrences" :key="idx"><span class="dash-shard-time" :class="{ past: o.past }">{{ o.text }}</span><span v-if="idx < dashShardOccurrences.length - 1"> / </span></span></span> <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashShardCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashShard && !dashShard.hasShard">
-                        <span class="dash-row-icon">🌑</span><span class="dash-row-text">{{ t('dash_shard_none') }} <span class="dash-countdown" v-if="dashNextShardCountdown">{{ t('dash_next_in_prefix') }} {{ dashNextShardCountdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-moon"/></svg></span><span class="dash-row-text">{{ t('dash_shard_none') }} <span class="dash-countdown" v-if="dashNextShardCountdown">{{ t('dash_next_in_prefix') }} {{ dashNextShardCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashCandleRealmLabel">
-                        <span class="dash-row-icon">🕯️</span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b> <span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-candle"/></svg></span><span class="dash-row-text">{{ t('dash_candle_label') }}：<b>{{ dashCandleRealmLabel }}</b> <span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashQuestCandleRealmLabel">
-                        <span class="dash-row-icon">📜</span><span class="dash-row-text">{{ t('dash_quest_candle_label') }}：<b>{{ dashQuestCandleRealmLabel }}</b> <span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-scroll"/></svg></span><span class="dash-row-text">{{ t('dash_quest_candle_label') }}：<b>{{ dashQuestCandleRealmLabel }}</b> <span class="dash-countdown">{{ t('dash_candle_change_prefix') }} {{ dashCandleCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashUniCountdown">
-                        <span class="dash-row-icon">🌋</span><span class="dash-row-text">{{ t('dash_uni_label') }} <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashUniCountdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-geyser"/></svg></span><span class="dash-row-text">{{ t('dash_uni_label') }} <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashUniCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashPanCountdown">
-                        <span class="dash-row-icon">🍞</span><span class="dash-row-text">{{ t('dash_pan_label') }} <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashPanCountdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-bread"/></svg></span><span class="dash-row-text">{{ t('dash_pan_label') }} <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashPanCountdown }}</span></span>
                     </div>
                     <div class="dash-row" v-if="dashKameCountdown">
-                        <span class="dash-row-icon">🐢</span><span class="dash-row-text">{{ t('dash_kame_label') }} <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashKameCountdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-turtle"/></svg></span><span class="dash-row-text">{{ t('dash_kame_label') }} <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashKameCountdown }}</span></span>
                     </div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
-                    <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(dashData.season.name) }}</b> {{ t('dash_event_suffix') }}</span></div>
-                    <div class="dash-row" v-for="(ev, idx) in dashTodayEvents" :key="'te'+idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(dashData.season.name) }}</b> {{ t('dash_event_suffix') }}</span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashTodayEvents" :key="'te'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashTodayRevisits" :key="'rvt'+idx">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
-                    <div class="dash-row" v-if="dashEdenBucket === 'today'"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }} <span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
-                    <div class="dash-row" v-if="dashNextUpdateBucket === 'today'"><span class="dash-row-icon">🔧</span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashEdenBucket === 'today'"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-bolt"/></svg></span><span class="dash-row-text">{{ t('dash_eden_line') }} <span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
+                    <div class="dash-row" v-if="dashNextUpdateBucket === 'today'"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-hammer"/></svg></span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
                     <div class="dash-empty" v-if="!dashTodayHasContent">{{ t('dash_no_events') }}</div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
-                    <div class="dash-row" v-for="(ev, idx) in dashWeekEvents" :key="'we'+idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashWeekEvents" :key="'we'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashWeekRevisits" :key="'rvw'+idx">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
-                    <div class="dash-row" v-if="dashEdenBucket === 'week'"><span class="dash-row-icon">🌩️</span><span class="dash-row-text">{{ t('dash_eden_line') }} <span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
-                    <div class="dash-row" v-if="dashNextUpdateBucket === 'week'"><span class="dash-row-icon">🔧</span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
-                    <div class="dash-row" v-if="dashSeasonBucket === 'week' && dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">{{ t('dash_season_quote_open') }}<b>{{ translateEventName(dashData.season.name) }}</b>{{ t('dash_season_quote_close') }}{{ t('dash_season_end_suffix') }} <span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashEdenBucket === 'week'"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-bolt"/></svg></span><span class="dash-row-text">{{ t('dash_eden_line') }} <span class="dash-countdown">{{ dashEdenCountdown }}</span><span class="dash-note">{{ t('dash_eden_note') }}</span></span></div>
+                    <div class="dash-row" v-if="dashNextUpdateBucket === 'week'"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-hammer"/></svg></span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashSeasonBucket === 'week' && dashData.season && dashData.season.endDate"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-palette"/></svg></span><span class="dash-row-text">{{ t('dash_season_quote_open') }}<b>{{ translateEventName(dashData.season.name) }}</b>{{ t('dash_season_quote_close') }}{{ t('dash_season_end_suffix') }} <span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
                     <div class="dash-empty" v-if="!dashWeekHasContent">{{ t('dash_bucket_empty') }}</div>
                 </div>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
-                    <div class="dash-row" v-for="(ev, idx) in dashMonthEvents" :key="'me'+idx"><span class="dash-row-icon">🌟</span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashMonthEvents" :key="'me'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashMonthRevisits" :key="'rvm'+idx">
-                        <span class="dash-row-icon">🕊️</span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
+                        <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
-                    <div class="dash-row" v-if="dashNextUpdateBucket === 'month'"><span class="dash-row-icon">🔧</span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
-                    <div class="dash-row" v-if="dashSeasonBucket === 'month' && dashData.season && dashData.season.endDate"><span class="dash-row-icon">🎨</span><span class="dash-row-text">{{ t('dash_season_quote_open') }}<b>{{ translateEventName(dashData.season.name) }}</b>{{ t('dash_season_quote_close') }}{{ t('dash_season_end_suffix') }} <span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashNextUpdateBucket === 'month'"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-hammer"/></svg></span><span class="dash-row-text">{{ t('dash_next_update_label') }} <span class="dash-countdown">{{ dashNextUpdateCountdown }}</span></span></div>
+                    <div class="dash-row" v-if="dashSeasonBucket === 'month' && dashData.season && dashData.season.endDate"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-palette"/></svg></span><span class="dash-row-text">{{ t('dash_season_quote_open') }}<b>{{ translateEventName(dashData.season.name) }}</b>{{ t('dash_season_quote_close') }}{{ t('dash_season_end_suffix') }} <span class="dash-countdown">{{ dashSeasonCountdown }}</span></span></div>
                     <div class="dash-empty" v-if="dashData.season && !dashData.season.endDate">{{ t('dash_season_error') }}</div>
                     <div class="dash-empty" v-else-if="!dashMonthHasContent">{{ t('dash_bucket_empty') }}</div>
                 </div>
@@ -2369,7 +2468,7 @@
             <div class="dash-section">
                 <p class="dash-section-label">{{ t('settings_display_label') }}</p>
                 <div class="dash-row" style="align-items:center;">
-                    <span class="dash-row-icon">🌙</span>
+                    <span class="dash-row-icon"><svg class="inline-icon" width="14" height="14"><use href="#i-moon"/></svg></span>
                     <span class="dash-row-text">{{ t('settings_dark_mode_label') }}</span>
                     <button type="button" class="theme-toggle-btn" @click="toggleTheme">
                         <span v-if="themeMode === 'dark'">{{ t('theme_dark') }}</span>
@@ -2382,7 +2481,7 @@
             <div class="dash-section">
                 <p class="dash-section-label">{{ t('settings_shortcuts_label') }}</p>
                 <div class="dash-row" style="align-items:center;">
-                    <span class="dash-row-icon">⌨️</span>
+                    <span class="dash-row-icon"><svg class="inline-icon" width="14" height="14"><use href="#i-keyboard"/></svg></span>
                     <span class="dash-row-text">{{ t('settings_shortcuts_enable_label') }}</span>
                     <input type="checkbox" v-model="shortcutsEnabled" @change="settingsSaveShortcutsPref" style="width:19px; height:19px; flex-shrink:0; cursor:pointer;">
                 </div>
@@ -2450,22 +2549,22 @@
                     <span class="cmp-val" :style="compareSummaryB.color ? { color: compareSummaryB.color } : null">{{ compareSummaryB.name }}</span>
                 </div>
                 <div class="cmp-row">
-                    <span class="cmp-label">{{ t('compare_hearts_label') }}</span>
-                    <span class="cmp-val">♡{{ compareSummaryA.totalHearts }} / 4</span>
-                    <span class="cmp-val">♡{{ compareSummaryB.totalHearts }} / 4</span>
+                    <span class="cmp-label"><svg class="inline-icon" width="11" height="11"><use href="#i-heart"/></svg> {{ t('compare_hearts_label') }}</span>
+                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-heart"/></svg>{{ compareSummaryA.totalHearts }} / 4</span>
+                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-heart"/></svg>{{ compareSummaryB.totalHearts }} / 4</span>
                 </div>
                 <div class="cmp-row" v-for="row in compareSpiritRows" :key="row.id">
                     <span class="cmp-label">{{ row.name }}</span>
-                    <span class="cmp-val">{{ row.aPoints }}/{{ row.aCap }}p<template v-if="row.aHeart"> ♡</template></span>
-                    <span class="cmp-val">{{ row.bPoints }}/{{ row.bCap }}p<template v-if="row.bHeart"> ♡</template></span>
+                    <span class="cmp-val">{{ row.aPoints }}/{{ row.aCap }}p<template v-if="row.aHeart"> <svg class="inline-icon" width="10" height="10"><use href="#i-heart"/></svg></template></span>
+                    <span class="cmp-val">{{ row.bPoints }}/{{ row.bCap }}p<template v-if="row.bHeart"> <svg class="inline-icon" width="10" height="10"><use href="#i-heart"/></svg></template></span>
                 </div>
                 <div class="cmp-row">
-                    <span class="cmp-label">{{ t('compare_candles_label') }}</span>
-                    <span class="cmp-val">🕯️{{ compareSummaryA.ownedCandles }}</span>
-                    <span class="cmp-val">🕯️{{ compareSummaryB.ownedCandles }}</span>
+                    <span class="cmp-label"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg> {{ t('compare_candles_label') }}</span>
+                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ compareSummaryA.ownedCandles }}</span>
+                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ compareSummaryB.ownedCandles }}</span>
                 </div>
                 <div class="cmp-row">
-                    <span class="cmp-label">{{ t('compare_pass_label') }}</span>
+                    <span class="cmp-label"><svg class="inline-icon" width="11" height="11"><use href="#i-ticket"/></svg> {{ t('compare_pass_label') }}</span>
                     <span class="cmp-val">{{ compareSummaryA.hasSeasonPass ? t('compare_pass_yes') : t('compare_pass_no') }}</span>
                     <span class="cmp-val">{{ compareSummaryB.hasSeasonPass ? t('compare_pass_yes') : t('compare_pass_no') }}</span>
                 </div>
@@ -2499,7 +2598,7 @@
     <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('side_related_tools') }}</div>
-            <button class="sidebar-close-btn" @click="showSidebar = false">×</button>
+            <button class="sidebar-close-btn" @click="showSidebar = false"><svg class="inline-icon" width="16" height="16"><use href="#i-close"/></svg></button>
         </div>
         <nav>
                 <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
@@ -2580,7 +2679,7 @@
                                  class="game-node-btn"
                                  :class="{'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded}"
                                  :title="cleanName(getItemLabelForSpirit(item, sf.spirit))">
-                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                <div v-if="!item.noPoints" class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabelForSpirit(item, sf.spirit))" class="node-level">{{ getLevel(getItemLabelForSpirit(item, sf.spirit)) }}</div>
                                 <div class="node-icon">
                                     <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabelForSpirit(item, sf.spirit))" referrerpolicy="no-referrer">
@@ -2595,7 +2694,7 @@
                     <div class="forecast-tier forecast-tier-heart" v-if="sf.heartItem">
                         <div class="game-node-wrapper">
                             <div class="game-node-btn heart-node" :title="translateItemName(sf.heartItem.name)">
-                                <div class="node-candle-badge">🕯️{{ sf.heartItem.candles || 0 }}</div>
+                                <div class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ sf.heartItem.candles || 0 }}</div>
                                 <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
                                 <div class="node-name">{{ cleanName(translateItemName(sf.heartItem.name)) }}</div>
                             </div>
@@ -2607,7 +2706,7 @@
         </template>
 
         <div class="forecast-total-bar">
-            <span>{{ t('fc_grand_total') }}</span>
+            <span><svg class="inline-icon" width="12" height="12"><use href="#i-candle"/></svg> {{ t('fc_grand_total') }}</span>
             <span class="forecast-grand-total">
                 <svg class="forecast-total-icon" viewBox="0 0 100 100"><use href="#ic-candle"></use></svg>{{ grandTotalCandles }}
             </span>
@@ -2616,7 +2715,7 @@
 
     <div class="main-layout">
         <div class="mobile-candle-bar">
-            <span style="font-weight:bold; white-space:nowrap;">{{ t('mobile_owned') }}</span>
+            <span style="font-weight:bold; white-space:nowrap;"><svg class="inline-icon" width="12" height="12"><use href="#i-candle"/></svg> {{ t('mobile_owned') }}</span>
             <input type="number" min="0" v-model.number="ownedCandles">
             <span style="white-space:nowrap;">{{ t('calc_unit') }}</span>
             <button class="btn-sm" style="margin-left:auto;" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">+{{ candlesPerDay }}{{ t('mobile_add_today') }}</button>
@@ -2626,10 +2725,11 @@
             <div class="total-goal-banner" :class="{ 'goal-complete': totalHearts === 4 }">
                 <div v-if="totalHearts === 4" class="confetti-burst" aria-hidden="true">
                     <span v-for="n in 16" :key="n" class="confetti-piece"
-                          :style="{ left: (n * 6.2 + 2) + '%', animationDelay: (n * 0.12) + 's' }">{{ ['🎉','✨','🎊','⭐'][n % 4] }}</span>
+                          :style="{ left: (n * 6.2 + 2) + '%', animationDelay: (n * 0.12) + 's' }"
+                          v-html="'<svg class=inline-icon width=16 height=16><use href=#i-sparkle /></svg>'"></span>
                 </div>
                 <div style="font-size: 22px; font-weight: bold; margin: 0; position: relative;">{{ t('goal_hearts', {n: totalHearts}) }}</div>
-                <div v-if="totalHearts === 4" class="goal-complete-message">{{ t('goal_complete_msg') }}</div>
+                <div v-if="totalHearts === 4" class="goal-complete-message"><svg class="inline-icon ok" width="14" height="14"><use href="#i-check"/></svg> {{ t('goal_complete_msg') }}</div>
                 <button type="button" class="goal-share-btn" :aria-label="t('share_card_btn')" @click="pfShareOpenModal">
                     {{ t('share_card_btn') }}
                 </button>
@@ -2682,7 +2782,7 @@
                         <div v-if="multiSpiritPlan.buyNow.length" style="margin-top: 8px;">
                             {{ t('plan_buy_now_pre') }}{{ ownedCandles || 0 }}{{ t('plan_buy_now_post') }}
                             <div v-for="(b, idx) in multiSpiritPlan.buyNow" :key="idx" style="margin-top: 3px; padding-left: 2px;">
-                                ・{{ b.spiritName }}: {{ b.itemName }}{{ t('plan_item_open') }}🕯️{{ b.candles }}{{ t('plan_item_close') }}
+                                ・{{ b.spiritName }}: {{ b.itemName }}{{ t('plan_item_open') }}<svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ b.candles }}{{ t('plan_item_close') }}
                             </div>
                         </div>
                         <div v-else style="margin-top: 8px; color: var(--text-gray);">
@@ -2708,8 +2808,8 @@
                         <div v-if="showMultiSpiritLog" class="multi-spirit-log">
                             <div v-for="d in multiSpiritPlan.dayLog" :key="d.day" class="multi-spirit-log-row">
                                 <span class="msl-day">{{ t('plan_day_prefix') }}{{ d.day }}{{ t('plan_day_suffix') }}</span>
-                                <span v-if="d.walkName">👣 {{ d.walkName }}</span>
-                                <span v-for="(b, bi) in d.buys" :key="bi">🕯️ {{ b.spiritName }}:{{ b.itemName }}</span>
+                                <span v-if="d.walkName"><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> {{ d.walkName }}</span>
+                                <span v-for="(b, bi) in d.buys" :key="bi"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg> {{ b.spiritName }}:{{ b.itemName }}</span>
                             </div>
                         </div>
                     </div>
@@ -2727,7 +2827,7 @@
                         @click="activeIndex = index">
                     <span class="tab-name">{{ spiritName(spirit) }}</span>
                     <span class="tab-p-sub">
-                        <template v-if="getSpiritPoints(spirit) >= getSpiritTier4Total(spirit)">{{ t('tabs_complete') }}</template>
+                        <template v-if="getSpiritPoints(spirit) >= getSpiritTier4Total(spirit)"><svg class="inline-icon ok" width="11" height="11"><use href="#i-check"/></svg> {{ t('tabs_complete') }}</template>
                         <template v-else>{{ getSpiritPoints(spirit) }} p</template>
                     </span>
                 </button>
@@ -2815,10 +2915,10 @@
                                         <div class="priority-step-num">{{ idx + 1 }}</div>
                                         <div class="priority-step-icon">
                                             <img v-if="step.imageUrl" :src="step.imageUrl" :alt="step.name" style="width: 17px; height: 17px; object-fit: contain; vertical-align: middle;" referrerpolicy="no-referrer">
-                                            <template v-else>{{ step.icon }}</template>
+                                            <svg v-else class="priority-step-svg-icon" viewBox="0 0 100 100"><use :href="'#' + step.icon"></use></svg>
                                         </div>
                                         <div class="priority-step-name">{{ step.name }}</div>
-                                        <div class="priority-step-cost">🕯️{{ step.candles }}</div>
+                                        <div class="priority-step-cost"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ step.candles }}</div>
                                         <div class="priority-step-day">{{ step.day }}{{ t('heart_order_day_suffix') }}</div>
                                     </div>
                                     <div v-if="idx < activeFastestHeartPlan.order.length - 1" class="priority-arrow">→</div>
@@ -2867,7 +2967,7 @@
                     </div>
                     <div class="opt-controls" style="margin-top:8px;">
                         <label style="font-size:12px; color:var(--text-gray); display:flex; align-items:center; gap:7px;">
-                            🕯️ {{ t('opt_daily_label') }}
+                            <svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg> {{ t('opt_daily_label') }}
                             <input type="number" class="opt-daily-input" min="0" max="99" v-model.number="optimizerDaily" @change="save()">
                         </label>
                         <span style="font-size:11px; color:var(--text-gray);">{{ t('opt_owned_note') }} {{ ownedCandles }}</span>
@@ -2879,18 +2979,21 @@
                             <span class="opt-order">{{ idx + 1 }}</span>
                             <div class="opt-info">
                                 <div class="opt-name">{{ row.name }}</div>
-                                <span v-if="row.done" class="opt-when now">✓ {{ t('opt_done') }}</span>
+                                <span v-if="row.done" class="opt-when now"><svg class="inline-icon ok" width="11" height="11"><use href="#i-check"/></svg> {{ t('opt_done') }}</span>
                                 <span v-else-if="row.affordableNow" class="opt-when now">{{ t('opt_now') }}</span>
                                 <span v-else-if="row.unreachable" class="opt-when late">{{ t('opt_unreachable') }}</span>
                                 <span v-else class="opt-when" :class="row.inSeason ? 'ok' : 'late'">
-                                    {{ row.dateText }}{{ t('opt_est_suffix') }}{{ row.inSeason ? ' ✓' + t('opt_within') : ' ⚠' + t('opt_over') }}
+                                    {{ row.dateText }}{{ t('opt_est_suffix') }}
+                                    <svg v-if="row.inSeason" class="inline-icon ok" width="10" height="10"><use href="#i-check"/></svg>
+                                    <svg v-else class="inline-icon warn" width="10" height="10"><use href="#i-warning"/></svg>
+                                    {{ row.inSeason ? t('opt_within') : t('opt_over') }}
                                 </span>
                             </div>
-                            <span class="opt-cost">🕯️{{ row.candles }}<br><small>{{ t('opt_cum') }} {{ row.cumulative }}</small></span>
+                            <span class="opt-cost"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ row.candles }}<br><small>{{ t('opt_cum') }} {{ row.cumulative }}</small></span>
                             <div class="opt-btns">
-                                <button type="button" class="opt-mini-btn" @click="optMove(idx, -1)" :disabled="idx === 0">↑</button>
-                                <button type="button" class="opt-mini-btn" @click="optMove(idx, 1)" :disabled="idx === optimizerRows.length - 1">↓</button>
-                                <button type="button" class="opt-mini-btn danger" @click="optRemove(idx)">✕</button>
+                                <button type="button" class="opt-mini-btn" @click="optMove(idx, -1)" :disabled="idx === 0"><svg class="inline-icon" width="11" height="11" style="transform:rotate(180deg)"><use href="#i-chevron-down"/></svg></button>
+                                <button type="button" class="opt-mini-btn" @click="optMove(idx, 1)" :disabled="idx === optimizerRows.length - 1"><svg class="inline-icon" width="11" height="11"><use href="#i-chevron-down"/></svg></button>
+                                <button type="button" class="opt-mini-btn danger" @click="optRemove(idx)"><svg class="inline-icon warn" width="11" height="11"><use href="#i-close"/></svg></button>
                             </div>
                         </div>
 
@@ -2899,7 +3002,7 @@
                             （{{ t('opt_lack') }} <strong>{{ optimizerSummary.lack }}</strong>{{ t('opt_total_unit') }}）<br>
                             {{ t('opt_reachable_pre') }} <strong>{{ optimizerSummary.reachable }} / {{ optimizerSummary.total }}</strong>{{ t('opt_reachable_post') }}
                             <span v-if="optimizerSummary.reachable < optimizerSummary.total">　{{ t('opt_reorder_hint') }}</span>
-                            <span v-else>　🎉</span>
+                            <span v-else>　<svg class="inline-icon ok" width="12" height="12"><use href="#i-check"/></svg></span>
                         </div>
                         <div class="opt-copy-row">
                             <button type="button" class="pf-icon-btn" @click="optCopyPlan">{{ t('copy_plan_btn') }}</button>
@@ -2936,7 +3039,7 @@
                                     <span style="font-size: 11px; color: var(--text-gray); margin-left: 2px;">{{ t('shared_formula_unit') }}</span>
                                 </template>
                                 <template v-else-if="sharedCalcFormula.trim()">
-                                    <span style="font-size: 12px; color: var(--danger-text); font-weight: bold;">{{ t('shared_formula_error') }}</span>
+                                    <span style="font-size: 12px; color: var(--danger-text); font-weight: bold;"><svg class="inline-icon warn" width="11" height="11"><use href="#i-warning"/></svg> {{ t('shared_formula_error') }}</span>
                                 </template>
                                 <template v-else>
                                     <span style="font-size: 14px; color: var(--text-gray);">{{ t('shared_formula_empty') }}</span>
@@ -2966,7 +3069,7 @@
                     <button v-for="(spirit, index) in spirits" :key="spirit.id"
                             class="mini-tab-btn" :class="{ active: activeIndex === index }"
                             @click="activeIndex = index">
-                        <span class="mini-tab-name">{{ spiritName(spirit) }}</span><span v-if="getSpiritPoints(spirit) >= getSpiritTier4Total(spirit)" class="mini-tab-check">🧡</span>
+                        <span class="mini-tab-name">{{ spiritName(spirit) }}</span><span v-if="getSpiritPoints(spirit) >= getSpiritTier4Total(spirit)" class="mini-tab-check"><svg class="inline-icon ok" width="12" height="12"><use href="#i-check"/></svg></span>
                     </button>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -2994,7 +3097,7 @@
                     <span>{{ t('tree_remaining_pre') }} <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} {{ t('tree_remaining_mid') }} {{ activeDistributedCandles }} {{ t('tree_remaining_unit') }}<template v-if="activeExcludedCandles > 0">{{ t('tree_remaining_excluded') }} {{ activeExcludedCandles }} {{ t('tree_remaining_unit') }}</template>{{ t('tree_remaining_post') }}</span>
                 </div>
                 <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : 'var(--danger-text)' }">
-                    ♡ <b>{{ t('tree_pass_heart_label') }}</b>{{ t('tree_pass_frag1') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('tree_pass_frag2') }}<b>{{ t('tree_pass_adpass_label') }}</b>{{ t('tree_pass_frag3') }}<b>{{ t('tree_pass_holder_label') }}</b>{{ t('tree_pass_frag4') }}{{ hasSeasonPass ? t('tree_pass_note_have') : t('tree_pass_note_none') }}
+                    <svg class="inline-icon" width="12" height="12"><use href="#i-heart"/></svg> <b>{{ t('tree_pass_heart_label') }}</b>{{ t('tree_pass_frag1') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('tree_pass_frag2') }}<b>{{ t('tree_pass_adpass_label') }}</b>{{ t('tree_pass_frag3') }}<b>{{ t('tree_pass_holder_label') }}</b>{{ t('tree_pass_frag4') }}{{ hasSeasonPass ? t('tree_pass_note_have') : t('tree_pass_note_none') }}
                 </div>
 
                 <div class="tree-container">
@@ -3009,7 +3112,7 @@
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': item.requiresSeasonPass && !hasSeasonPass && !item.checked, 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? t('tree_pass_required') : null"
                                  @click="toggleTreeItem(item)">
-                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                <div v-if="!item.noPoints" class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
                                     <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))" referrerpolicy="no-referrer">
@@ -3018,11 +3121,11 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">{{ t('tree_no_points') }}</template>
-                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
+                                    <template v-else><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> +{{ Math.round(item.points) }}p</template>
                                 </div>
                                 <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
                                         :title="item.excluded ? t('tree_exclude_undo') : t('tree_exclude_do')"
-                                        @click.stop="toggleExcluded(item)">✕</button>
+                                        @click.stop="toggleExcluded(item)"><svg class="inline-icon" width="10" height="10"><use href="#i-close"/></svg></button>
                             </div>
                             <div class="node-placeholder"></div>
                         </div>
@@ -3042,7 +3145,7 @@
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? t('tree_pass_required') : null"
                                  @click="toggleTreeItem(item, 40)">
-                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                <div v-if="!item.noPoints" class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
                                     <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))" referrerpolicy="no-referrer">
@@ -3051,11 +3154,11 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">{{ t('tree_no_points') }}</template>
-                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
+                                    <template v-else><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> +{{ Math.round(item.points) }}p</template>
                                 </div>
                                 <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
                                         :title="item.excluded ? t('tree_exclude_undo') : t('tree_exclude_do')"
-                                        @click.stop="toggleExcluded(item)">✕</button>
+                                        @click.stop="toggleExcluded(item)"><svg class="inline-icon" width="10" height="10"><use href="#i-close"/></svg></button>
                             </div>
                         </div>
                         <!-- 🔽 下段: 3列固定（左・中＝通常アイテムを左詰め、右＝アドパスボーナス固定）。
@@ -3068,7 +3171,7 @@
                                      :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < 40 && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                      :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? t('tree_pass_required') : null"
                                      @click="toggleTreeItem(item, 40)">
-                                    <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                    <div v-if="!item.noPoints" class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ item.candles || 0 }}</div>
                                     <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                     <div class="node-icon">
                                         <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))" referrerpolicy="no-referrer">
@@ -3077,11 +3180,11 @@
                                     <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                     <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                         <template v-if="item.noPoints">{{ t('tree_no_points') }}</template>
-                                        <template v-else>👣 +{{ Math.round(item.points) }}p</template>
+                                        <template v-else><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> +{{ Math.round(item.points) }}p</template>
                                     </div>
                                     <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
                                             :title="item.excluded ? t('tree_exclude_undo') : t('tree_exclude_do')"
-                                            @click.stop="toggleExcluded(item)">✕</button>
+                                            @click.stop="toggleExcluded(item)"><svg class="inline-icon" width="10" height="10"><use href="#i-close"/></svg></button>
                                 </div>
                             </template>
                         </div>
@@ -3098,7 +3201,7 @@
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': (activePoints < activeTier2Total && !item.checked) || (item.requiresSeasonPass && !hasSeasonPass && !item.checked), 'node-pass-locked': item.requiresSeasonPass && !hasSeasonPass && !item.checked}"
                                  :title="(item.requiresSeasonPass && !hasSeasonPass && !item.checked) ? t('tree_pass_required') : null"
                                  @click="toggleTreeItem(item, activeTier2Total)">
-                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                <div v-if="!item.noPoints" class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
                                     <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))" referrerpolicy="no-referrer">
@@ -3107,11 +3210,11 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">{{ t('tree_no_points') }}</template>
-                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
+                                    <template v-else><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> +{{ Math.round(item.points) }}p</template>
                                 </div>
                                 <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
                                         :title="item.excluded ? t('tree_exclude_undo') : t('tree_exclude_do')"
-                                        @click.stop="toggleExcluded(item)">✕</button>
+                                        @click.stop="toggleExcluded(item)"><svg class="inline-icon" width="10" height="10"><use href="#i-close"/></svg></button>
                             </div>
                         </div>
                     </div>
@@ -3129,7 +3232,7 @@
                                  class="game-node-btn"
                                  :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < activeTier3Total && !item.checked}"
                                  @click="toggleTreeItem(item, activeTier3Total)">
-                                <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                <div v-if="!item.noPoints" class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ item.candles || 0 }}</div>
                                 <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                 <div class="node-icon">
                                     <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))" referrerpolicy="no-referrer">
@@ -3138,11 +3241,11 @@
                                 <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                 <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                     <template v-if="item.noPoints">{{ t('tree_no_points') }}</template>
-                                    <template v-else>👣 +{{ Math.round(item.points) }}p</template>
+                                    <template v-else><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> +{{ Math.round(item.points) }}p</template>
                                 </div>
                                 <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
                                         :title="item.excluded ? t('tree_exclude_undo') : t('tree_exclude_do')"
-                                        @click.stop="toggleExcluded(item)">✕</button>
+                                        @click.stop="toggleExcluded(item)"><svg class="inline-icon" width="10" height="10"><use href="#i-close"/></svg></button>
                             </div>
                         </div>
                         <!-- 🔽 下段: 通常アイテム（季節/魔法・魔法④・アドパスエモートLv4など）。
@@ -3154,7 +3257,7 @@
                                      class="game-node-btn" 
                                      :class="{'node-checked': item.checked, 'no-points-node': item.noPoints, 'first-bonus-node': item.firstBonus, 'node-excluded': item.excluded, 'node-disabled': activePoints < activeTier3Total && !item.checked}"
                                      @click="toggleTreeItem(item, activeTier3Total)">
-                                    <div v-if="!item.noPoints" class="node-candle-badge">🕯️{{ item.candles || 0 }}</div>
+                                    <div v-if="!item.noPoints" class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ item.candles || 0 }}</div>
                                     <div v-if="getLevel(getItemLabel(item))" class="node-level">{{ getLevel(getItemLabel(item)) }}</div>
                                     <div class="node-icon">
                                         <img v-if="getItemImageUrl(item)" class="node-svg-icon" :src="getItemImageUrl(item)" :alt="cleanName(getItemLabel(item))" referrerpolicy="no-referrer">
@@ -3163,11 +3266,11 @@
                                     <div class="node-name">{{ cleanName(getItemLabel(item)) }}</div>
                                     <div class="node-cost" :class="{'no-points-cost': item.noPoints}">
                                         <template v-if="item.noPoints">{{ t('tree_no_points') }}</template>
-                                        <template v-else>👣 +{{ Math.round(item.points) }}p</template>
+                                        <template v-else><svg class="inline-icon" width="11" height="11"><use href="#i-footprint"/></svg> +{{ Math.round(item.points) }}p</template>
                                     </div>
                                     <button type="button" class="node-exclude-toggle" :class="{active: item.excluded}"
                                             :title="item.excluded ? t('tree_exclude_undo') : t('tree_exclude_do')"
-                                            @click.stop="toggleExcluded(item)">✕</button>
+                                            @click.stop="toggleExcluded(item)"><svg class="inline-icon" width="10" height="10"><use href="#i-close"/></svg></button>
                                 </div>
                             </template>
                         </div>
@@ -3178,7 +3281,7 @@
                              :class="{'node-checked': activeSpirit.treeData.tier4[2].checked, 'node-disabled': (activePoints < activeTier4Total && !activeSpirit.treeData.tier4[2].checked) || (!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked), 'node-pass-locked': !hasSeasonPass && !activeSpirit.treeData.tier4[2].checked}"
                              :title="(!hasSeasonPass && !activeSpirit.treeData.tier4[2].checked) ? t('tree_pass_required') : null"
                              @click="toggleTreeItem(activeSpirit.treeData.tier4[2], activeTier4Total)">
-                            <div class="node-candle-badge">🕯️{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
+                            <div class="node-candle-badge"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ activeSpirit.treeData.tier4[2].candles || 0 }}</div>
                             <div class="node-level" style="color: #ff2d55;">MAX</div>
                             <div class="node-icon"><svg class="node-svg-icon" viewBox="0 0 100 100"><use href="#ic-heart"></use></svg></div>
                             <div class="node-name" style="font-size: 10px; color: inherit; opacity: 0.8;">{{ t('heart_node_name') }}</div>
@@ -3212,22 +3315,22 @@
     <!-- ═══ 📌 サイトドック（クイックアクセスバー。ハンバーガーサイドバーと併設） ═══ -->
     <nav class="site-dock" :aria-label="t('dock_aria_label')">
         <button type="button" @click="pfOpenModal">
-            <span class="site-dock-icon">🗂️</span>
+            <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-folder"/></svg></span>
             <span class="site-dock-label">{{ activeRecordName || t('dock_profile') }}</span>
         </button>
         <button type="button" @click="pfDashOpen">
             <span class="site-dock-icon-wrap">
-                <span class="site-dock-icon">🗓️</span>
+                <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-calendar"/></svg></span>
                 <span class="dock-urgent-dot" :class="{ show: dockUrgentEnding }" aria-hidden="true" :title="t('dock_urgent_title')"></span>
             </span>
             <span class="site-dock-label">{{ t('dock_dashboard') }}</span>
         </button>
         <button type="button" @click="showSidebar = true">
-            <span class="site-dock-icon">☰</span>
+            <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-menu"/></svg></span>
             <span class="site-dock-label">{{ t('dock_tools') }}</span>
         </button>
         <button type="button" @click="settingsOpenModal">
-            <span class="site-dock-icon">⚙️</span>
+            <span class="site-dock-icon"><svg class="inline-icon" width="19" height="19"><use href="#i-settings"/></svg></span>
             <span class="site-dock-label">{{ t('dock_settings') }}</span>
         </button>
     </nav>
@@ -3871,12 +3974,12 @@
     // 🌐 UI文言辞書。キーは機能の頭文字＋連番的に区切って管理（例: calc_ = キャンドル計算機）
     const UI_TEXT = {
         ja: {
-            app_title: '✨ Sky 精霊同行ポイント計算機',
+            app_title: 'Sky 精霊同行ポイント計算機',
             app_subtitle: '連れ歩き日数とアイテム交換の最適化シミュレーター',
             theme_dark: 'ダーク',
             theme_light: 'ライト',
             theme_system: 'システム',
-            countdown_label: '⏳ 残り',
+            countdown_label: '残り',
             countdown_day_suffix: '日',
             countdown_ended: 'シーズン終了しました',
             countdown_jst_note: '※ 日本時間（JST）で表示しています',
@@ -3907,7 +4010,7 @@
             settings_lang_label: '言語',
             settings_display_label: '表示',
             settings_dark_mode_label: 'ダークモード',
-            settings_shortcuts_label: '⌨️ キーボードショートカット',
+            settings_shortcuts_label: 'キーボードショートカット',
             settings_shortcuts_enable_label: 'ショートカットを有効にする',
             settings_shortcut_open: 'この設定を開く',
             settings_shortcut_theme: 'ダークモード切替',
@@ -3930,15 +4033,15 @@
             record_color_reset_title: 'カラーを初期値に戻す',
 
             pfcur_label: '所持通貨',
-            pfcur_toggle_open: '開く ▼',
-            pfcur_toggle_close: '閉じる ▲',
-            pfcur_candle: '🕯️ キャンドル',
-            pfcur_heart: '💗 ハート',
-            pfcur_ascended: '🕯️ 星のキャンドル',
-            pfcur_season: '🕯️ シーズンキャンドル',
-            pfcur_gift_pass: '🎟️ ギフトパス',
+            pfcur_toggle_open: '開く',
+            pfcur_toggle_close: '閉じる',
+            pfcur_candle: 'キャンドル',
+            pfcur_heart: 'ハート',
+            pfcur_ascended: '星のキャンドル',
+            pfcur_season: 'シーズンキャンドル',
+            pfcur_gift_pass: 'ギフトパス',
 
-            record_compare_btn: '🆚 記録を比較',
+            record_compare_btn: '記録を比較',
             dm_open_btn: 'データのバックアップ・復元・削除',
             dm_title: 'データのバックアップ・復元・削除',
             dm_hint: 'このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。',
@@ -3955,13 +4058,13 @@
             dm_status_imported: 'インポートしました。ページを再読み込みします…',
             dm_status_imported_partial: '{failed}件のインポートに失敗しました（保存容量の上限などが原因の可能性があります）。{ok}件は復元できました。ページを再読み込みします…',
             dm_status_wiped: '削除しました。ページを再読み込みします…',
-            compare_title: '🆚 記録の比較',
+            compare_title: '記録の比較',
             compare_hint: '2つの記録を選んで、進捗を横並びで比較できます。',
             compare_select_a_label: '記録A',
             compare_select_b_label: '記録B',
-            compare_hearts_label: '❤️ 獲得ハート数',
-            compare_candles_label: '🕯️ 所持キャンドル',
-            compare_pass_label: '🎫 アドパス',
+            compare_hearts_label: '獲得ハート数',
+            compare_candles_label: '所持キャンドル',
+            compare_pass_label: 'アドパス',
             compare_pass_yes: 'あり',
             compare_pass_no: 'なし',
 
@@ -4035,8 +4138,8 @@
             pficon_status_reset: 'デフォルトのアイコンに戻しました',
 
             fc_title: '精霊ツリー（4体横並び比較）',
-            fc_close: '閉じる ▲',
-            fc_open: '比較表を見る ▼',
+            fc_close: '閉じる',
+            fc_open: '比較表を見る',
             fc_desc: '公開されたツリー画像をもとにした一覧表示です。数値は下の個別ツリーと連動しています。',
             fc_legend_magic: '魔法',
             fc_legend_walk: 'エモート',
@@ -4045,17 +4148,17 @@
             fc_legend_adpass: 'アドパス',
             fc_legend_heart: 'ハートと交換',
             fc_no_slot: '枠なし',
-            fc_grand_total: '🕯️ 4体合計',
+            fc_grand_total: '4体合計',
             fc_eta_done: '交換済み',
-            fc_eta_ready: '✅ 今すぐ交換可能',
-            fc_eta_days: '♡ あと{n}日',
-            fc_eta_unreachable: '⚠️ 算出不可',
+            fc_eta_ready: '今すぐ交換可能',
+            fc_eta_days: 'あと{n}日',
+            fc_eta_unreachable: '算出不可',
 
-            mobile_owned: '🕯️ 所持',
+            mobile_owned: '所持',
             mobile_add_today: '（今日の分）',
 
             goal_hearts: 'シーズンハート獲得: {n} / 4 個',
-            goal_complete_msg: '🎉 おめでとうございます！全精霊のシーズンハートを獲得しました！',
+            goal_complete_msg: 'おめでとうございます！全精霊のシーズンハートを獲得しました！',
 
             calc_adpass_label: 'アドパス',
             calc_pass_yes: 'あり（1日6本）',
@@ -4065,16 +4168,16 @@
             calc_day_unit: '日',
 
             plan_title: '効率的な進め方のおすすめ（4体分・魔法除く）',
-            plan_close: '閉じる ▲',
-            plan_open: '開く ▼',
+            plan_close: '閉じる',
+            plan_open: '開く',
             plan_all_done: '魔法以外のアイテムは4体ともすべて完了しています！',
             plan_today_reco: '今日のおすすめ',
             plan_walk_pre: '連れ歩き:',
             plan_walk_post: '（4体の中で最もポイントが低いため優先）',
             plan_walk_none: '連れ歩き: 対象精霊は全員280p到達済みです',
-            plan_buy_now_pre: '🕯️ 今の所持数（',
+            plan_buy_now_pre: '今の所持数（',
             plan_buy_now_post: '本）で交換できるアイテム:',
-            plan_buy_none: '🕯️ 今すぐ交換できるアイテムはありません（候補は未解放か、キャンドル不足です）',
+            plan_buy_none: '今すぐ交換できるアイテムはありません（候補は未解放か、キャンドル不足です）',
             plan_item_open: '（',
             plan_item_close: '）',
             plan_overall_title: '4体全体の完了見込み',
@@ -4082,13 +4185,13 @@
             plan_total_pre: 'このペースなら、あと',
             plan_total_post: '日で4体すべて完了する見込みです。',
             plan_log_toggle: '日別プランを見る（{n}日分）',
-            plan_log_close: '閉じる ▲',
-            plan_log_open: '開く ▼',
+            plan_log_close: '閉じる',
+            plan_log_open: '開く',
             plan_day_prefix: '',
             plan_day_suffix: '日目',
             plan_note: '※ 連れ歩きは「4体の中で最もポイントが低い精霊」を、交換は「ポイント効率の良いアイテム」を毎日優先する想定のシミュレーションです。アドパスアイテムは好きなタイミングで取得できるためプラン対象外です。実際の進め方の参考としてご利用ください。',
 
-            tabs_complete: '🧡 完了',
+            tabs_complete: '完了',
 
             pts_progress_suffix: 'の進行度',
             pts_current_status: '現在の状態',
@@ -4099,24 +4202,24 @@
             pts_advice_pre: 'あと',
             pts_advice_day_unit: '日',
             pts_advice_post: '連れ歩けば、{n}pに到達します！',
-            pts_advice_warn: '⚠️ 注意: 季節の残り日数を超えてしまうため、魔法などの追加交換が必要です。',
+            pts_advice_warn: '注意: 季節の残り日数を超えてしまうため、魔法などの追加交換が必要です。',
 
             heart_title: '最短ハート交換シミュレーション',
             heart_done: 'すでにハートと交換済みです！',
-            heart_unreachable: '⚠️ 現在の設定では見込みを計算できませんでした。連れ歩き日数やキャンドル所持数を確認してください。',
+            heart_unreachable: '現在の設定では見込みを計算できませんでした。連れ歩き日数やキャンドル所持数を確認してください。',
             heart_ready: 'ポイント・キャンドルともに、ハート交換の条件をすでに満たしています！',
             heart_plan_pre: '連れ歩き（毎日この精霊を選択）とキャンドル購入をこの精霊に集中させた場合、最短',
             heart_plan_day_unit: '日後',
             heart_plan_post: 'にハートと交換できる見込みです。',
-            heart_total_cost_pre: '🕯️ ここから必要なキャンドル合計:',
+            heart_total_cost_pre: 'ここから必要なキャンドル合計:',
             heart_total_cost_unit: '本',
-            heart_total_cost_note_pre: '（ハート交換分 🕯️',
+            heart_total_cost_note_pre: '（ハート交換分',
             heart_total_cost_note_mid: 'を含む／現在の所持数',
             heart_total_cost_note_post: '本は別）',
-            heart_pass_needed: '⚠️ ハートとの交換にはアドパスが必要です（現在: 未保有）。',
+            heart_pass_needed: 'ハートとの交換にはアドパスが必要です（現在: 未保有）。',
             heart_order_toggle: '交換の優先順位（ハート到達に必要な分のみ）',
-            heart_order_close: '閉じる ▲',
-            heart_order_open: '見る ▼',
+            heart_order_close: '閉じる',
+            heart_order_open: '見る',
             heart_order_day_suffix: '日目',
             heart_order_note: '※ 280p到達に不要なアイテム（例: 季節アイテム②など）は最短ルートでは省略されます。見た目も揃えたい場合は、そのアイテムも追加で交換してください。',
             heart_note: '※ 連れ歩きは1日1体までのため、他の精霊とも連れ歩きを分け合う場合はこの日数より遅くなります。キャンドルも他の精霊に使わずこの精霊に全て使った想定の最短見込みです。',
@@ -4150,13 +4253,13 @@
             copy_success: 'コピーしました',
             copy_failed: 'コピーに失敗しました',
             shared_title: '全精霊共通のメモ・計算',
-            shared_close: '閉じる ▲',
-            shared_open: '開く ▼',
+            shared_close: '閉じる',
+            shared_open: '開く',
             shared_formula_label: '計算式',
             shared_formula_note: '（＋ － × ÷ と半角記号・カッコが使えます）',
             shared_formula_placeholder: '例: 100+30+20　や　(15+7)×4÷2',
             shared_formula_unit: '本',
-            shared_formula_error: '⚠️ 式エラー',
+            shared_formula_error: '式エラー',
             shared_formula_empty: '＝ —',
             shared_notes_label: 'シーズン全体のメモ・目標',
             shared_notes_placeholder: '例: アドパス購入済み。毎日連れ歩き忘れずに！残り必要キャンドルなど自由記入...',
@@ -4168,13 +4271,13 @@
             tree_title_pre: '',
             tree_title_post: 'のツリー',
             tree_right_col_note: '右列はポイント外',
-            tree_remaining_pre: '🕯️ このツリーの残り:',
+            tree_remaining_pre: 'このツリーの残り:',
             tree_remaining_mid: '本（配った:',
             tree_remaining_excluded: '・除外:',
             tree_remaining_unit: '本',
             tree_remaining_post: '）',
             tree_pass_heart_label: 'ハートとの交換',
-            tree_pass_frag1: '（🕯️',
+            tree_pass_frag1: '（',
             tree_pass_frag2: '）と、各層右列の',
             tree_pass_adpass_label: 'アドパスアイテム',
             tree_pass_frag3: 'は',
@@ -4221,8 +4324,8 @@
             dash_walk_logged_pre: '今日は',
             dash_walk_logged_post: 'と記録しました',
             dash_walk_history_toggle: '最近の記録（{n}件）',
-            dash_walk_history_close: '閉じる ▲',
-            dash_walk_history_open: '開く ▼',
+            dash_walk_history_close: '閉じる',
+            dash_walk_history_open: '開く',
             dash_walk_streak_current: '現在の連続記録',
             dash_walk_streak_longest: '最長連続記録',
             dash_walk_cal_toggle: '今月のカレンダー',
@@ -4256,12 +4359,12 @@
             pts_actual_compare: '実績: 記録した連れ歩き日数 {logged}日 ／ 現在のカウンター {counter}日'
         },
         en: {
-            app_title: '✨ Sky Spirit Companion Tracker',
+            app_title: 'Sky Spirit Companion Tracker',
             app_subtitle: 'A simulator for optimizing walk days and item exchanges',
             theme_dark: 'Dark',
             theme_light: 'Light',
             theme_system: 'System',
-            countdown_label: '⏳ Remaining',
+            countdown_label: 'Remaining',
             countdown_day_suffix: 'd',
             countdown_ended: 'Season has ended',
             countdown_jst_note: '※ Times shown are in Japan Standard Time (JST)',
@@ -4292,7 +4395,7 @@
             settings_lang_label: 'Language',
             settings_display_label: 'Display',
             settings_dark_mode_label: 'Dark Mode',
-            settings_shortcuts_label: '⌨️ Keyboard Shortcuts',
+            settings_shortcuts_label: 'Keyboard Shortcuts',
             settings_shortcuts_enable_label: 'Enable keyboard shortcuts',
             settings_shortcut_open: 'Open this settings panel',
             settings_shortcut_theme: 'Toggle dark mode',
@@ -4315,15 +4418,15 @@
             record_color_reset_title: 'Reset color to default',
 
             pfcur_label: 'Currency Owned',
-            pfcur_toggle_open: 'Open ▼',
-            pfcur_toggle_close: 'Close ▲',
-            pfcur_candle: '🕯️ Candles',
-            pfcur_heart: '💗 Hearts',
-            pfcur_ascended: '🕯️ Star Candles',
-            pfcur_season: '🕯️ Season Candles',
-            pfcur_gift_pass: '🎟️ Gift Pass',
+            pfcur_toggle_open: 'Open',
+            pfcur_toggle_close: 'Close',
+            pfcur_candle: 'Candles',
+            pfcur_heart: 'Hearts',
+            pfcur_ascended: 'Star Candles',
+            pfcur_season: 'Season Candles',
+            pfcur_gift_pass: 'Gift Pass',
 
-            record_compare_btn: '🆚 Compare Records',
+            record_compare_btn: 'Compare Records',
             dm_open_btn: 'Data Backup / Restore / Delete',
             dm_title: 'Data Backup / Restore / Delete',
             dm_hint: 'Export, import, or delete data saved in this browser for the taipak5000.github.io family of tools (item, wings, companion, etc.) all at once. This applies to all profiles together.',
@@ -4340,13 +4443,13 @@
             dm_status_imported: 'Imported. Reloading the page…',
             dm_status_imported_partial: 'Failed to import {failed} item(s) (this may be due to a storage limit). {ok} item(s) were restored successfully. Reloading the page…',
             dm_status_wiped: 'Deleted. Reloading the page…',
-            compare_title: '🆚 Compare Records',
+            compare_title: 'Compare Records',
             compare_hint: 'Pick two records to compare their progress side by side.',
             compare_select_a_label: 'Record A',
             compare_select_b_label: 'Record B',
-            compare_hearts_label: '❤️ Hearts earned',
-            compare_candles_label: '🕯️ Candles owned',
-            compare_pass_label: '🎫 Season Pass',
+            compare_hearts_label: 'Hearts earned',
+            compare_candles_label: 'Candles owned',
+            compare_pass_label: 'Season Pass',
             compare_pass_yes: 'Yes',
             compare_pass_no: 'No',
 
@@ -4420,8 +4523,8 @@
             pficon_status_reset: 'Reset to the default icon',
 
             fc_title: 'Spirit Trees (4-way comparison)',
-            fc_close: 'Close ▲',
-            fc_open: 'View comparison ▼',
+            fc_close: 'Close',
+            fc_open: 'View comparison',
             fc_desc: 'A reference list based on published tree images. Values are linked to the individual tree below.',
             fc_legend_magic: 'Spell',
             fc_legend_walk: 'Emote',
@@ -4430,17 +4533,17 @@
             fc_legend_adpass: 'Season Pass',
             fc_legend_heart: 'Trade for Heart',
             fc_no_slot: 'No slot',
-            fc_grand_total: '🕯️ Total (all 4)',
+            fc_grand_total: 'Total (all 4)',
             fc_eta_done: 'Done',
-            fc_eta_ready: '✅ Ready now',
-            fc_eta_days: '♡ {n}d to go',
-            fc_eta_unreachable: '⚠️ N/A',
+            fc_eta_ready: 'Ready now',
+            fc_eta_days: '{n}d to go',
+            fc_eta_unreachable: 'N/A',
 
-            mobile_owned: '🕯️ Owned',
+            mobile_owned: 'Owned',
             mobile_add_today: " (today's)",
 
             goal_hearts: 'Season Hearts Earned: {n} / 4',
-            goal_complete_msg: '🎉 Congratulations! You\'ve earned every spirit\'s Season Heart!',
+            goal_complete_msg: 'Congratulations! You\'ve earned every spirit\'s Season Heart!',
 
             calc_adpass_label: 'Season Pass',
             calc_pass_yes: 'Yes (6/day)',
@@ -4450,16 +4553,16 @@
             calc_day_unit: 'd',
 
             plan_title: 'Recommended efficient route (all 4 spirits, excluding Spells)',
-            plan_close: 'Close ▲',
-            plan_open: 'Open ▼',
+            plan_close: 'Close',
+            plan_open: 'Open',
             plan_all_done: 'Every non-Spell item is already complete for all 4 spirits!',
             plan_today_reco: "Today's recommendation",
             plan_walk_pre: 'Walk with:',
             plan_walk_post: ' (prioritized as the lowest-point spirit of the 4)',
             plan_walk_none: 'Walk: every spirit has already reached 280p',
-            plan_buy_now_pre: '🕯️ Items you can trade for with your current candles (',
+            plan_buy_now_pre: 'Items you can trade for with your current candles (',
             plan_buy_now_post: '):',
-            plan_buy_none: '🕯️ No items can be traded for right now (candidates are either locked or you don\'t have enough candles)',
+            plan_buy_none: 'No items can be traded for right now (candidates are either locked or you don\'t have enough candles)',
             plan_item_open: ' (',
             plan_item_close: ')',
             plan_overall_title: 'Overall completion estimate (all 4)',
@@ -4467,13 +4570,13 @@
             plan_total_pre: 'At this pace, all 4 spirits should be complete in about ',
             plan_total_post: ' more day(s).',
             plan_log_toggle: 'View day-by-day plan ({n} day(s))',
-            plan_log_close: 'Close ▲',
-            plan_log_open: 'Open ▼',
+            plan_log_close: 'Close',
+            plan_log_open: 'Open',
             plan_day_prefix: 'Day ',
             plan_day_suffix: '',
             plan_note: '※ This simulation assumes you walk each day with whichever of the 4 spirits has the lowest points, and trade for the most point-efficient item available. Season Pass items can be collected anytime, so they\'re excluded from this plan. Use this as a rough guide.',
 
-            tabs_complete: '🧡 Done',
+            tabs_complete: 'Done',
 
             pts_progress_suffix: "'s Progress",
             pts_current_status: 'Current Status',
@@ -4484,24 +4587,24 @@
             pts_advice_pre: 'Walk together for',
             pts_advice_day_unit: 'more day(s)',
             pts_advice_post: 'to reach {n}p!',
-            pts_advice_warn: '⚠️ Note: this would exceed the days left in the season, so you\'ll need extra exchanges like Spells too.',
+            pts_advice_warn: 'Note: this would exceed the days left in the season, so you\'ll need extra exchanges like Spells too.',
 
             heart_title: 'Fastest Heart Exchange Simulation',
             heart_done: 'Already traded for the Heart!',
-            heart_unreachable: '⚠️ Couldn\'t calculate an estimate with the current settings. Please check your walk days and candle count.',
+            heart_unreachable: 'Couldn\'t calculate an estimate with the current settings. Please check your walk days and candle count.',
             heart_ready: 'You already meet both the points and candles needed to trade for the Heart!',
             heart_plan_pre: 'If you focus all walking (choosing this spirit every day) and candle purchases on this spirit, you could trade for the Heart in as few as',
             heart_plan_day_unit: ' day(s)',
             heart_plan_post: '.',
-            heart_total_cost_pre: '🕯️ Total candles needed from here:',
+            heart_total_cost_pre: 'Total candles needed from here:',
             heart_total_cost_unit: '',
-            heart_total_cost_note_pre: ' (includes 🕯️',
+            heart_total_cost_note_pre: ' (includes',
             heart_total_cost_note_mid: ' for the Heart trade itself; your current',
             heart_total_cost_note_post: ' candles are separate)',
-            heart_pass_needed: '⚠️ Trading for the Heart requires the Season Pass (currently: not owned).',
+            heart_pass_needed: 'Trading for the Heart requires the Season Pass (currently: not owned).',
             heart_order_toggle: 'Exchange priority order (only what\'s needed to reach the Heart)',
-            heart_order_close: 'Close ▲',
-            heart_order_open: 'View ▼',
+            heart_order_close: 'Close',
+            heart_order_open: 'View',
             heart_order_day_suffix: 'd',
             heart_order_note: '※ Items not needed to reach 280p (e.g. Seasonal Item ② etc.) are skipped on the fastest route. If you also want to collect those for completeness, trade for them separately.',
             heart_note: '※ Since you can only walk with one spirit per day, this will take longer if you split walking time with other spirits too. This is the fastest-case estimate assuming all candles go to this spirit as well.',
@@ -4535,13 +4638,13 @@
             copy_success: 'Copied',
             copy_failed: 'Copy failed',
             shared_title: 'Shared notes & calculator (all spirits)',
-            shared_close: 'Close ▲',
-            shared_open: 'Open ▼',
+            shared_close: 'Close',
+            shared_open: 'Open',
             shared_formula_label: 'Formula',
             shared_formula_note: '(+ − × ÷ and half-width parentheses are supported)',
             shared_formula_placeholder: 'e.g. 100+30+20 or (15+7)×4÷2',
             shared_formula_unit: '',
-            shared_formula_error: '⚠️ Formula error',
+            shared_formula_error: 'Formula error',
             shared_formula_empty: '= —',
             shared_notes_label: 'Notes & goals for the season',
             shared_notes_placeholder: 'e.g. Season Pass purchased. Don\'t forget to walk daily! Feel free to jot down remaining candles needed, etc...',
@@ -4553,13 +4656,13 @@
             tree_title_pre: '',
             tree_title_post: "'s Tree",
             tree_right_col_note: 'Right column is outside points',
-            tree_remaining_pre: '🕯️ Remaining in this tree:',
+            tree_remaining_pre: 'Remaining in this tree:',
             tree_remaining_mid: '(spent:',
             tree_remaining_excluded: '· excluded:',
             tree_remaining_unit: '',
             tree_remaining_post: 'candles)',
             tree_pass_heart_label: 'Trading for the Heart',
-            tree_pass_frag1: ' (🕯️',
+            tree_pass_frag1: ' (',
             tree_pass_frag2: ') and each tier\'s right-column ',
             tree_pass_adpass_label: 'Season Pass item',
             tree_pass_frag3: ' are only available to ',
@@ -4606,8 +4709,8 @@
             dash_walk_logged_pre: 'Logged a walk with ',
             dash_walk_logged_post: ' today',
             dash_walk_history_toggle: 'Recent entries ({n})',
-            dash_walk_history_close: 'Close ▲',
-            dash_walk_history_open: 'Open ▼',
+            dash_walk_history_close: 'Close',
+            dash_walk_history_open: 'Open',
             dash_walk_streak_current: 'Current Streak',
             dash_walk_streak_longest: 'Longest Streak',
             dash_walk_cal_toggle: 'This Month\'s Calendar',
@@ -4641,12 +4744,12 @@
             pts_actual_compare: 'Actual: {logged} day(s) logged / current counter {counter} day(s)'
         },
         'zh-TW': {
-            app_title: '✨ Sky 精靈同行點數計算機',
+            app_title: 'Sky 精靈同行點數計算機',
             app_subtitle: '同行天數與道具兌換的最佳化模擬器',
             theme_dark: '深色',
             theme_light: '淺色',
             theme_system: '系統',
-            countdown_label: '⏳ 剩餘',
+            countdown_label: '剩餘',
             countdown_day_suffix: '天',
             countdown_ended: '本季已結束',
             countdown_jst_note: '※ 顯示時間為日本標準時間（JST）',
@@ -4677,7 +4780,7 @@
             settings_lang_label: '語言',
             settings_display_label: '顯示',
             settings_dark_mode_label: '深色模式',
-            settings_shortcuts_label: '⌨️ 鍵盤快速鍵',
+            settings_shortcuts_label: '鍵盤快速鍵',
             settings_shortcuts_enable_label: '啟用鍵盤快速鍵',
             settings_shortcut_open: '開啟此設定面板',
             settings_shortcut_theme: '切換深色模式',
@@ -4700,15 +4803,15 @@
             record_color_reset_title: '將顏色重設為預設值',
 
             pfcur_label: '持有貨幣',
-            pfcur_toggle_open: '開啟 ▼',
-            pfcur_toggle_close: '關閉 ▲',
-            pfcur_candle: '🕯️ 蠟燭',
-            pfcur_heart: '💗 心',
-            pfcur_ascended: '🕯️ 星之蠟燭',
-            pfcur_season: '🕯️ 季節蠟燭',
-            pfcur_gift_pass: '🎟️ 禮物通行證',
+            pfcur_toggle_open: '開啟',
+            pfcur_toggle_close: '關閉',
+            pfcur_candle: '蠟燭',
+            pfcur_heart: '心',
+            pfcur_ascended: '星之蠟燭',
+            pfcur_season: '季節蠟燭',
+            pfcur_gift_pass: '禮物通行證',
 
-            record_compare_btn: '🆚 比較記錄',
+            record_compare_btn: '比較記錄',
             dm_open_btn: '資料備份・還原・刪除',
             dm_title: '資料備份・還原・刪除',
             dm_hint: '可以將這個瀏覽器中儲存的 taipak5000.github.io 系列工具（item・wings・companion 等）的資料一次匯出・匯入・刪除。所有記錄都會一併處理。',
@@ -4725,13 +4828,13 @@
             dm_status_imported: '匯入完成。即將重新載入頁面…',
             dm_status_imported_partial: '{failed} 筆匯入失敗（可能是儲存空間已達上限等原因）。已成功還原 {ok} 筆。即將重新載入頁面…',
             dm_status_wiped: '刪除完成。即將重新載入頁面…',
-            compare_title: '🆚 記錄比較',
+            compare_title: '記錄比較',
             compare_hint: '選擇兩筆記錄，並排比較進度。',
             compare_select_a_label: '記錄A',
             compare_select_b_label: '記錄B',
-            compare_hearts_label: '❤️ 已獲得心',
-            compare_candles_label: '🕯️ 持有蠟燭',
-            compare_pass_label: '🎫 季節通行證',
+            compare_hearts_label: '已獲得心',
+            compare_candles_label: '持有蠟燭',
+            compare_pass_label: '季節通行證',
             compare_pass_yes: '有',
             compare_pass_no: '沒有',
 
@@ -4805,8 +4908,8 @@
             pficon_status_reset: '已重設為預設圖示',
 
             fc_title: '精靈樹（4隻並排比較）',
-            fc_close: '關閉 ▲',
-            fc_open: '查看比較表 ▼',
+            fc_close: '關閉',
+            fc_open: '查看比較表',
             fc_desc: '此列表根據公開的樹狀圖製作，數值會與下方個別的樹連動。',
             fc_legend_magic: '法術',
             fc_legend_walk: '動作',
@@ -4815,17 +4918,17 @@
             fc_legend_adpass: '季節通行證',
             fc_legend_heart: '兌換心',
             fc_no_slot: '無此欄位',
-            fc_grand_total: '🕯️ 4隻合計',
+            fc_grand_total: '4隻合計',
             fc_eta_done: '已交換',
-            fc_eta_ready: '✅ 現在可交換',
-            fc_eta_days: '♡ 還剩{n}天',
-            fc_eta_unreachable: '⚠️ 無法計算',
+            fc_eta_ready: '現在可交換',
+            fc_eta_days: '還剩{n}天',
+            fc_eta_unreachable: '無法計算',
 
-            mobile_owned: '🕯️ 持有',
+            mobile_owned: '持有',
             mobile_add_today: '（今日份）',
 
             goal_hearts: '獲得季節之心：{n} / 4 個',
-            goal_complete_msg: '🎉 恭喜！你已獲得所有精靈的季節之心！',
+            goal_complete_msg: '恭喜！你已獲得所有精靈的季節之心！',
 
             calc_adpass_label: '季節通行證',
             calc_pass_yes: '有（每日6根）',
@@ -4835,16 +4938,16 @@
             calc_day_unit: '天',
 
             plan_title: '高效進行方式建議（4隻・不含法術）',
-            plan_close: '關閉 ▲',
-            plan_open: '開啟 ▼',
+            plan_close: '關閉',
+            plan_open: '開啟',
             plan_all_done: '除法術外的道具，4隻皆已全部完成！',
             plan_today_reco: '今日建議',
             plan_walk_pre: '同行對象:',
             plan_walk_post: '（因4隻中點數最低而優先）',
             plan_walk_none: '同行: 對象精靈全員已達280p',
-            plan_buy_now_pre: '🕯️ 以目前持有數（',
+            plan_buy_now_pre: '以目前持有數（',
             plan_buy_now_post: '根）可兌換的道具:',
-            plan_buy_none: '🕯️ 目前沒有可兌換的道具（候補尚未解鎖，或蠟燭不足）',
+            plan_buy_none: '目前沒有可兌換的道具（候補尚未解鎖，或蠟燭不足）',
             plan_item_open: '（',
             plan_item_close: '）',
             plan_overall_title: '4隻整體完成預估',
@@ -4852,13 +4955,13 @@
             plan_total_pre: '照這個節奏，預計再過',
             plan_total_post: '天4隻就能全部完成。',
             plan_log_toggle: '查看每日計畫（{n}天份）',
-            plan_log_close: '關閉 ▲',
-            plan_log_open: '開啟 ▼',
+            plan_log_close: '關閉',
+            plan_log_open: '開啟',
             plan_day_prefix: '第',
             plan_day_suffix: '天',
             plan_note: '※ 此模擬假設同行對象每天優先選擇「4隻中點數最低的精靈」，兌換則優先選擇「點數效率較好的道具」。季節通行證道具可隨時取得，因此不列入此計畫。請作為實際進行方式的參考。',
 
-            tabs_complete: '🧡 完成',
+            tabs_complete: '完成',
 
             pts_progress_suffix: '的進度',
             pts_current_status: '目前狀態',
@@ -4869,24 +4972,24 @@
             pts_advice_pre: '再',
             pts_advice_day_unit: '天',
             pts_advice_post: '同行即可達到{n}p！',
-            pts_advice_warn: '⚠️ 注意: 這會超過本季剩餘天數，因此還需要法術等額外的兌換方式。',
+            pts_advice_warn: '注意: 這會超過本季剩餘天數，因此還需要法術等額外的兌換方式。',
 
             heart_title: '最快兌換心模擬',
             heart_done: '已經兌換過心了！',
-            heart_unreachable: '⚠️ 目前的設定無法計算預估結果，請確認同行天數與蠟燭持有數。',
+            heart_unreachable: '目前的設定無法計算預估結果，請確認同行天數與蠟燭持有數。',
             heart_ready: '點數與蠟燭皆已滿足兌換心的條件！',
             heart_plan_pre: '若將同行（每天皆選擇此精靈）與蠟燭購買都集中在此精靈身上，最快預計',
             heart_plan_day_unit: '天後',
             heart_plan_post: '即可兌換心。',
-            heart_total_cost_pre: '🕯️ 從現在起所需蠟燭合計:',
+            heart_total_cost_pre: '從現在起所需蠟燭合計:',
             heart_total_cost_unit: '',
-            heart_total_cost_note_pre: '（含兌換心所需 🕯️',
+            heart_total_cost_note_pre: '（含兌換心所需',
             heart_total_cost_note_mid: '，不含目前持有數',
             heart_total_cost_note_post: '根）',
-            heart_pass_needed: '⚠️ 兌換心需要季節通行證（目前: 未持有）。',
+            heart_pass_needed: '兌換心需要季節通行證（目前: 未持有）。',
             heart_order_toggle: '兌換優先順序（僅列出到達心所需的部分）',
-            heart_order_close: '關閉 ▲',
-            heart_order_open: '查看 ▼',
+            heart_order_close: '關閉',
+            heart_order_open: '查看',
             heart_order_day_suffix: '天',
             heart_order_note: '※ 未達280p所需的道具（例如季節道具②等）在最快路線中會被省略。若也想收集這些道具，請另外兌換。',
             heart_note: '※ 同行每天限一隻，若與其他精靈分配同行天數，會比此天數更慢。此為假設所有蠟燭皆用於此精靈的最快預估。',
@@ -4920,13 +5023,13 @@
             copy_success: '已複製',
             copy_failed: '複製失敗',
             shared_title: '全精靈共用備忘錄・計算',
-            shared_close: '關閉 ▲',
-            shared_open: '開啟 ▼',
+            shared_close: '關閉',
+            shared_open: '開啟',
             shared_formula_label: '計算式',
             shared_formula_note: '（可使用 ＋ － × ÷ 及半形符號、括號）',
             shared_formula_placeholder: '例: 100+30+20 或 (15+7)×4÷2',
             shared_formula_unit: '',
-            shared_formula_error: '⚠️ 算式錯誤',
+            shared_formula_error: '算式錯誤',
             shared_formula_empty: '＝ —',
             shared_notes_label: '整季備忘錄・目標',
             shared_notes_placeholder: '例: 已購買季節通行證。別忘記每天同行！也可自由記錄剩餘所需蠟燭數等...',
@@ -4938,13 +5041,13 @@
             tree_title_pre: '',
             tree_title_post: '的樹',
             tree_right_col_note: '右側欄位不計入點數',
-            tree_remaining_pre: '🕯️ 此樹剩餘:',
+            tree_remaining_pre: '此樹剩餘:',
             tree_remaining_mid: '根（已分配:',
             tree_remaining_excluded: '・已排除:',
             tree_remaining_unit: '',
             tree_remaining_post: '根）',
             tree_pass_heart_label: '兌換心',
-            tree_pass_frag1: '（🕯️',
+            tree_pass_frag1: '（',
             tree_pass_frag2: '）與各層右側欄位的',
             tree_pass_adpass_label: '季節通行證道具',
             tree_pass_frag3: '僅限',
@@ -4991,8 +5094,8 @@
             dash_walk_logged_pre: '今天已和',
             dash_walk_logged_post: '記錄同行',
             dash_walk_history_toggle: '最近的記錄（{n}筆）',
-            dash_walk_history_close: '關閉 ▲',
-            dash_walk_history_open: '展開 ▼',
+            dash_walk_history_close: '關閉',
+            dash_walk_history_open: '展開',
             dash_walk_streak_current: '目前連續天數',
             dash_walk_streak_longest: '最長連續紀錄',
             dash_walk_cal_toggle: '本月行事曆',
@@ -5026,12 +5129,12 @@
             pts_actual_compare: '實績: 已記錄同行天數 {logged}天 ／ 目前計數器 {counter}天'
         },
         ko: {
-            app_title: '✨ Sky 정령 동행 포인트 계산기',
+            app_title: 'Sky 정령 동행 포인트 계산기',
             app_subtitle: '동행 일수와 아이템 교환을 최적화하는 시뮬레이터',
             theme_dark: '다크',
             theme_light: '라이트',
             theme_system: '시스템',
-            countdown_label: '⏳ 남은 시간',
+            countdown_label: '남은 시간',
             countdown_day_suffix: '일',
             countdown_ended: '시즌이 종료되었습니다',
             countdown_jst_note: '※ 표시된 시간은 일본 표준시(JST) 기준입니다',
@@ -5062,7 +5165,7 @@
             settings_lang_label: '언어',
             settings_display_label: '화면',
             settings_dark_mode_label: '다크 모드',
-            settings_shortcuts_label: '⌨️ 키보드 단축키',
+            settings_shortcuts_label: '키보드 단축키',
             settings_shortcuts_enable_label: '키보드 단축키 사용',
             settings_shortcut_open: '이 설정 패널 열기',
             settings_shortcut_theme: '다크 모드 전환',
@@ -5085,15 +5188,15 @@
             record_color_reset_title: '색상을 기본값으로 되돌리기',
 
             pfcur_label: '보유 재화',
-            pfcur_toggle_open: '열기 ▼',
-            pfcur_toggle_close: '닫기 ▲',
-            pfcur_candle: '🕯️ 초',
-            pfcur_heart: '💗 하트',
-            pfcur_ascended: '🕯️ 별의 초',
-            pfcur_season: '🕯️ 시즌 초',
-            pfcur_gift_pass: '🎟️ 기프트 패스',
+            pfcur_toggle_open: '열기',
+            pfcur_toggle_close: '닫기',
+            pfcur_candle: '초',
+            pfcur_heart: '하트',
+            pfcur_ascended: '별의 초',
+            pfcur_season: '시즌 초',
+            pfcur_gift_pass: '기프트 패스',
 
-            record_compare_btn: '🆚 기록 비교',
+            record_compare_btn: '기록 비교',
             dm_open_btn: '데이터 백업・복원・삭제',
             dm_title: '데이터 백업・복원・삭제',
             dm_hint: '이 브라우저에 저장된 taipak5000.github.io 계열 도구(item・wings・companion 등)의 데이터를 한꺼번에 내보내기・가져오기・삭제할 수 있습니다. 모든 기록이 함께 적용됩니다.',
@@ -5110,13 +5213,13 @@
             dm_status_imported: '가져왔습니다. 페이지를 새로고침합니다…',
             dm_status_imported_partial: '{failed}개 항목 가져오기에 실패했습니다(저장 용량 한도 등이 원인일 수 있습니다). {ok}개 항목은 복원되었습니다. 페이지를 새로고침합니다…',
             dm_status_wiped: '삭제했습니다. 페이지를 새로고침합니다…',
-            compare_title: '🆚 기록 비교',
+            compare_title: '기록 비교',
             compare_hint: '두 개의 기록을 선택해 진행 상황을 나란히 비교할 수 있습니다.',
             compare_select_a_label: '기록 A',
             compare_select_b_label: '기록 B',
-            compare_hearts_label: '❤️ 획득한 하트 수',
-            compare_candles_label: '🕯️ 보유 초',
-            compare_pass_label: '🎫 시즌 패스',
+            compare_hearts_label: '획득한 하트 수',
+            compare_candles_label: '보유 초',
+            compare_pass_label: '시즌 패스',
             compare_pass_yes: '있음',
             compare_pass_no: '없음',
 
@@ -5190,8 +5293,8 @@
             pficon_status_reset: '기본 아이콘으로 되돌렸습니다',
 
             fc_title: '정령 트리 (4마리 비교)',
-            fc_close: '닫기 ▲',
-            fc_open: '비교표 보기 ▼',
+            fc_close: '닫기',
+            fc_open: '비교표 보기',
             fc_desc: '공개된 트리 이미지를 바탕으로 한 목록입니다. 수치는 아래 개별 트리와 연동됩니다.',
             fc_legend_magic: '마법',
             fc_legend_walk: '감정표현',
@@ -5200,17 +5303,17 @@
             fc_legend_adpass: '시즌 패스',
             fc_legend_heart: '하트 교환',
             fc_no_slot: '슬롯 없음',
-            fc_grand_total: '🕯️ 4마리 합계',
+            fc_grand_total: '4마리 합계',
             fc_eta_done: '교환 완료',
-            fc_eta_ready: '✅ 지금 교환 가능',
-            fc_eta_days: '♡ {n}일 남음',
-            fc_eta_unreachable: '⚠️ 계산 불가',
+            fc_eta_ready: '지금 교환 가능',
+            fc_eta_days: '{n}일 남음',
+            fc_eta_unreachable: '계산 불가',
 
-            mobile_owned: '🕯️ 보유',
+            mobile_owned: '보유',
             mobile_add_today: ' (오늘 분)',
 
             goal_hearts: '시즌 하트 획득: {n} / 4개',
-            goal_complete_msg: '🎉 축하합니다! 모든 정령의 시즌 하트를 획득했습니다!',
+            goal_complete_msg: '축하합니다! 모든 정령의 시즌 하트를 획득했습니다!',
 
             calc_adpass_label: '시즌 패스',
             calc_pass_yes: '있음 (하루 6개)',
@@ -5220,16 +5323,16 @@
             calc_day_unit: '일',
 
             plan_title: '효율적인 진행 추천 (4마리・마법 제외)',
-            plan_close: '닫기 ▲',
-            plan_open: '열기 ▼',
+            plan_close: '닫기',
+            plan_open: '열기',
             plan_all_done: '마법을 제외한 아이템은 4마리 모두 완료했습니다!',
             plan_today_reco: '오늘의 추천',
             plan_walk_pre: '동행 상대:',
             plan_walk_post: ' (4마리 중 포인트가 가장 낮아 우선)',
             plan_walk_none: '동행: 대상 정령 모두 280p에 도달했습니다',
-            plan_buy_now_pre: '🕯️ 현재 보유 수량 (',
+            plan_buy_now_pre: '현재 보유 수량 (',
             plan_buy_now_post: '개)으로 교환 가능한 아이템:',
-            plan_buy_none: '🕯️ 지금 바로 교환 가능한 아이템이 없습니다 (후보가 잠겨 있거나 초가 부족합니다)',
+            plan_buy_none: '지금 바로 교환 가능한 아이템이 없습니다 (후보가 잠겨 있거나 초가 부족합니다)',
             plan_item_open: ' (',
             plan_item_close: ')',
             plan_overall_title: '4마리 전체 완료 예상',
@@ -5237,13 +5340,13 @@
             plan_total_pre: '이 페이스라면 앞으로 ',
             plan_total_post: '일이면 4마리 모두 완료될 것으로 예상됩니다.',
             plan_log_toggle: '일별 계획 보기 ({n}일)',
-            plan_log_close: '닫기 ▲',
-            plan_log_open: '열기 ▼',
+            plan_log_close: '닫기',
+            plan_log_open: '열기',
             plan_day_prefix: '',
             plan_day_suffix: '일차',
             plan_note: '※ 이 시뮬레이션은 매일 "4마리 중 포인트가 가장 낮은 정령"과 동행하고, "포인트 효율이 좋은 아이템"을 우선 교환한다는 가정하에 진행됩니다. 시즌 패스 아이템은 원하는 때에 얻을 수 있으므로 계획 대상에서 제외됩니다. 실제 진행 시 참고용으로 활용해 주세요.',
 
-            tabs_complete: '🧡 완료',
+            tabs_complete: '완료',
 
             pts_progress_suffix: '의 진행도',
             pts_current_status: '현재 상태',
@@ -5254,24 +5357,24 @@
             pts_advice_pre: '앞으로',
             pts_advice_day_unit: '일',
             pts_advice_post: '동행하면 {n}p에 도달합니다!',
-            pts_advice_warn: '⚠️ 주의: 시즌 남은 일수를 초과하게 되므로, 마법 등 추가 교환 수단이 필요합니다.',
+            pts_advice_warn: '주의: 시즌 남은 일수를 초과하게 되므로, 마법 등 추가 교환 수단이 필요합니다.',
 
             heart_title: '최단 하트 교환 시뮬레이션',
             heart_done: '이미 하트로 교환했습니다!',
-            heart_unreachable: '⚠️ 현재 설정으로는 예상치를 계산할 수 없었습니다. 동행 일수와 초 보유 수량을 확인해 주세요.',
+            heart_unreachable: '현재 설정으로는 예상치를 계산할 수 없었습니다. 동행 일수와 초 보유 수량을 확인해 주세요.',
             heart_ready: '포인트와 초 모두 하트 교환 조건을 이미 충족했습니다!',
             heart_plan_pre: '동행(매일 이 정령을 선택)과 초 구매를 이 정령에 집중하면, 최단',
             heart_plan_day_unit: '일 후',
             heart_plan_post: ' 하트로 교환할 수 있을 것으로 예상됩니다.',
-            heart_total_cost_pre: '🕯️ 지금부터 필요한 초 합계:',
+            heart_total_cost_pre: '지금부터 필요한 초 합계:',
             heart_total_cost_unit: '',
-            heart_total_cost_note_pre: ' (하트 교환분 🕯️',
+            heart_total_cost_note_pre: ' (하트 교환분',
             heart_total_cost_note_mid: ' 포함 / 현재 보유 수량',
             heart_total_cost_note_post: '개는 별도)',
-            heart_pass_needed: '⚠️ 하트 교환에는 시즌 패스가 필요합니다 (현재: 미보유).',
+            heart_pass_needed: '하트 교환에는 시즌 패스가 필요합니다 (현재: 미보유).',
             heart_order_toggle: '교환 우선순위 (하트 도달에 필요한 것만)',
-            heart_order_close: '닫기 ▲',
-            heart_order_open: '보기 ▼',
+            heart_order_close: '닫기',
+            heart_order_open: '보기',
             heart_order_day_suffix: '일',
             heart_order_note: '※ 280p 도달에 불필요한 아이템(예: 시즌 아이템② 등)은 최단 루트에서 생략됩니다. 완성도를 위해 수집하고 싶다면 별도로 교환해 주세요.',
             heart_note: '※ 동행은 하루 1마리까지만 가능하므로, 다른 정령과 동행 시간을 나누면 이 일수보다 늦어집니다. 이는 초도 모두 이 정령에게만 사용한다고 가정한 최단 예상치입니다.',
@@ -5305,13 +5408,13 @@
             copy_success: '복사했습니다',
             copy_failed: '복사에 실패했습니다',
             shared_title: '전체 정령 공통 메모・계산',
-            shared_close: '닫기 ▲',
-            shared_open: '열기 ▼',
+            shared_close: '닫기',
+            shared_open: '열기',
             shared_formula_label: '계산식',
             shared_formula_note: '(+ − × ÷ 및 반각 기호・괄호 사용 가능)',
             shared_formula_placeholder: '예: 100+30+20 또는 (15+7)×4÷2',
             shared_formula_unit: '',
-            shared_formula_error: '⚠️ 수식 오류',
+            shared_formula_error: '수식 오류',
             shared_formula_empty: '= —',
             shared_notes_label: '시즌 전체 메모・목표',
             shared_notes_placeholder: '예: 시즌 패스 구매 완료. 매일 동행 잊지 마세요! 남은 필요 초 개수 등 자유롭게 메모하세요...',
@@ -5323,13 +5426,13 @@
             tree_title_pre: '',
             tree_title_post: '의 트리',
             tree_right_col_note: '오른쪽 열은 포인트 대상 외',
-            tree_remaining_pre: '🕯️ 이 트리의 남은 양:',
+            tree_remaining_pre: '이 트리의 남은 양:',
             tree_remaining_mid: '개 (사용:',
             tree_remaining_excluded: '・제외:',
             tree_remaining_unit: '',
             tree_remaining_post: '개)',
             tree_pass_heart_label: '하트 교환',
-            tree_pass_frag1: ' (🕯️',
+            tree_pass_frag1: ' (',
             tree_pass_frag2: ') 및 각 티어 오른쪽 열의 ',
             tree_pass_adpass_label: '시즌 패스 아이템',
             tree_pass_frag3: '은(는) ',
@@ -5376,8 +5479,8 @@
             dash_walk_logged_pre: '오늘은 ',
             dash_walk_logged_post: '와(과) 기록했습니다',
             dash_walk_history_toggle: '최근 기록（{n}건）',
-            dash_walk_history_close: '닫기 ▲',
-            dash_walk_history_open: '열기 ▼',
+            dash_walk_history_close: '닫기',
+            dash_walk_history_open: '열기',
             dash_walk_streak_current: '현재 연속 기록',
             dash_walk_streak_longest: '최장 연속 기록',
             dash_walk_cal_toggle: '이번 달 캘린더',
@@ -6108,7 +6211,7 @@
                     }
 
                     if (points >= goalPoints && candlePool >= heartCost) {
-                        order.push({ name: heartName, icon: '♡', imageUrl: null, candles: heartCost, points: 0, day, isHeart: true });
+                        order.push({ name: heartName, icon: 'ic-heart', imageUrl: null, candles: heartCost, points: 0, day, isHeart: true });
                         const totalCost = order.reduce((sum, o) => sum + (o.candles || 0), 0);
                         return { day, candlePool, passOk: hasSeasonPass.value, readyExceptPass: !hasSeasonPass.value, order, totalCost };
                     }
@@ -6349,7 +6452,7 @@
             // 🔁 アイテムの種別（type）ごとのアイコン対応表。
             // 「魔法③」の枠が精霊によっては季節アイテムや染料になることがあるため、
             // アイコンは name の絵文字ではなく item.type から決定する。
-            const TYPE_ICONS = { walk: '💨', seasonal: '✨', dye: '🎨', magic: '🪄' };
+            const TYPE_ICONS = { walk: 'ic-emote', seasonal: 'ic-bloom', dye: 'ic-dye', magic: 'ic-magic' };
             const TYPE_LABELS = { walk: 'エモート', magic: '魔法', seasonal: '季節アイテム', dye: '染料' };
 
             const getIcon = (item) => {
@@ -6357,12 +6460,12 @@
                 if (obj.type && TYPE_ICONS[obj.type]) return TYPE_ICONS[obj.type];
                 const name = obj.name || '';
                 // 旧データ（type未設定で保存されたアイテム）向けのフォールバック
-                if (name.includes('💨')) return '💨';
-                if (name.includes('🪄')) return '🪄';
-                if (name.includes('✨')) return '✨';
-                if (name.includes('🎨')) return '🎨';
-                if (name.includes('♡')) return '♡';
-                return '🎁';
+                if (name.includes('💨')) return 'ic-emote';
+                if (name.includes('🪄')) return 'ic-magic';
+                if (name.includes('✨')) return 'ic-sparkle';
+                if (name.includes('🎨')) return 'ic-dye';
+                if (name.includes('♡')) return 'ic-heart';
+                return 'ic-sparkle';
             };
 
             // 🖼️ 種別ごとのカスタム画像（準備中）。
