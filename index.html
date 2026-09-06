@@ -1712,7 +1712,7 @@
         .cmp-row:last-child { border-bottom: none; }
         .cmp-row-head { font-weight: 700; font-size: 12px; padding-top: 2px; }
         .cmp-label { flex: 1.15; min-width: 0; color: var(--text-gray); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cmp-val { flex: 1; min-width: 0; text-align: center; font-weight: 600; color: var(--text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cmp-val { flex: 1; min-width: 0; text-align: right; font-weight: 600; color: var(--text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
         .forecast-head { margin-bottom: 10px; }
         .forecast-title { font-size: 15px; font-weight: bold; }
@@ -2875,7 +2875,7 @@
                         <strong>{{ t('pts_congrats_label') }}</strong> {{ t('pts_congrats_rest') }}
                     </div>
                     <div v-else>
-                        <strong>{{ t('pts_advice_label') }}</strong> {{ t('pts_advice_pre') }} <strong>{{ activeRemainingDays }} {{ t('pts_advice_day_unit') }}</strong> {{ t('pts_advice_post', {n: activeTier4Total}) }}
+                        {{ t('pts_advice_label') }} {{ t('pts_advice_pre') }} <strong>{{ activeRemainingDays }}</strong><span style="font-size: 11px; font-weight: normal; color: var(--text-gray);"> {{ t('pts_advice_day_unit') }}</span> {{ t('pts_advice_post', {n: activeTier4Total}) }}
                         <span v-if="activeSpirit.walkDays + activeRemainingDays > 77" style="color: var(--danger-text); display: block; margin-top: 4px; font-weight: bold;">
                             {{ t('pts_advice_warn') }}
                         </span>
@@ -2905,9 +2905,9 @@
                         </template>
                         <template v-else>
                             {{ t('heart_plan_pre') }}
-                            <strong>{{ activeFastestHeartPlan.day }}{{ t('heart_plan_day_unit') }}</strong>{{ t('heart_plan_post') }}
+                            <strong>{{ activeFastestHeartPlan.day }}</strong><span style="font-size: 11px; font-weight: normal; color: var(--text-gray);">{{ t('heart_plan_day_unit') }}</span>{{ t('heart_plan_post') }}
                             <div style="margin-top: 6px;">
-                                {{ t('heart_total_cost_pre') }} <strong style="color: var(--accent-orange); font-size: 14px;">{{ activeFastestHeartPlan.totalCost }}{{ t('heart_total_cost_unit') }}</strong>
+                                {{ t('heart_total_cost_pre') }} <strong style="color: var(--accent-orange); font-size: 14px;">{{ activeFastestHeartPlan.totalCost }}</strong><span style="color: var(--text-gray); font-size: 11px;">{{ t('heart_total_cost_unit') }}</span>
                                 <span style="color: var(--text-gray); font-size: 10.5px;">{{ t('heart_total_cost_note_pre') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('heart_total_cost_note_mid') }} {{ ownedCandles }}{{ t('heart_total_cost_note_post') }}</span>
                             </div>
                         </template>
@@ -3109,7 +3109,7 @@
                     <span>{{ t('tree_remaining_pre') }} <b>{{ activeRemainingCandles }}</b> / {{ activeTotalCandles }} {{ t('tree_remaining_mid') }} {{ activeDistributedCandles }} {{ t('tree_remaining_unit') }}<template v-if="activeExcludedCandles > 0">{{ t('tree_remaining_excluded') }} {{ activeExcludedCandles }} {{ t('tree_remaining_unit') }}</template>{{ t('tree_remaining_post') }}</span>
                 </div>
                 <div style="font-size: 10.5px; margin-top: 6px; line-height: 1.4;" :style="{ color: hasSeasonPass ? 'var(--text-gray)' : 'var(--danger-text)' }">
-                    <svg class="inline-icon" width="12" height="12"><use href="#i-heart"/></svg> <b>{{ t('tree_pass_heart_label') }}</b>{{ t('tree_pass_frag1') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('tree_pass_frag2') }}<b>{{ t('tree_pass_adpass_label') }}</b>{{ t('tree_pass_frag3') }}<b>{{ t('tree_pass_holder_label') }}</b>{{ t('tree_pass_frag4') }}{{ hasSeasonPass ? t('tree_pass_note_have') : t('tree_pass_note_none') }}
+                    <svg class="inline-icon" width="12" height="12"><use href="#i-heart"/></svg> {{ t('tree_pass_heart_label') }}{{ t('tree_pass_frag1') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('tree_pass_frag2') }}{{ t('tree_pass_adpass_label') }}{{ t('tree_pass_frag3') }}<b>{{ t('tree_pass_holder_label') }}</b>{{ t('tree_pass_frag4') }}{{ hasSeasonPass ? t('tree_pass_note_have') : t('tree_pass_note_none') }}
                 </div>
 
                 <div class="tree-container">
@@ -3312,9 +3312,9 @@
         {{ t('info_3') }}
     </div>
 
-    <footer style="text-align: center; padding: 24px 16px; color: var(--text-gray); font-size: 13px; line-height: 1.6; border-top: 1px solid var(--border-color); margin-top: 40px;">
+    <footer style="text-align: left; padding: 24px 16px; color: var(--text-gray); font-size: 13px; line-height: 1.6; border-top: 1px solid var(--border-color); margin-top: 40px;">
         {{ t('footer_disclaimer') }}<br>
-        {{ t('footer_credit_pre') }} <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a>
+        {{ t('footer_credit_pre') }} <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline; font-weight: bold;">@Skyzztai</a>
         <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
             {{ t('footer_sources') }}
             <a href="https://sky-children-of-the-light.fandom.com/ja/wiki/%E5%AD%A3%E7%AF%80%E7%B2%BE%E9%9C%8A#%E7%B2%BE%E9%9C%8A%E5%8F%8B%E6%83%85%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_source_season_spirit') }}</a>・<a href="https://sky-children-of-the-light.fandom.com/ja/wiki/Dear_Van_Gogh_%E8%A6%AA%E6%84%9B%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A1%E3%83%B3%E3%83%BB%E3%82%B4%E3%83%83%E3%83%9B%E3%81%B8" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_source_van_gogh_ja') }}</a>・<a href="https://sky-children-of-the-light.fandom.com/wiki/Dear_Van_Gogh" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">{{ t('footer_source_van_gogh_en') }}</a>
