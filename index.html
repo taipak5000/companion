@@ -2185,13 +2185,13 @@
                         <button type="button" class="pf-icon-btn" @click="pfCancelRowState">{{ t('record_cancel') }}</button>
                     </template>
                     <template v-else-if="pfDeletingId === rec.id">
-                        <span class="pf-row-confirm-text">{{ t('record_delete_confirm', { name: rec.name }) }}</span>
+                        <span class="pf-row-confirm-text">{{ t('record_delete_confirm', { name: recordDisplayName(rec) }) }}</span>
                         <button type="button" class="pf-icon-btn pf-row-btn-danger" @click="pfConfirmDeleteInline(rec)">{{ t('record_delete_short') }}</button>
                         <button type="button" class="pf-icon-btn" @click="pfCancelRowState">{{ t('record_cancel') }}</button>
                     </template>
                     <template v-else>
                         <input type="color" class="pf-color-input" :value="rec.color || '#FF9500'" :title="t('record_color_title')" @change="setRecordColor(rec, $event.target.value)">
-                        <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false"><svg v-if="rec.id === activeRecordId" class="inline-icon ok" width="12" height="12"><use href="#i-check"/></svg> {{ rec.name }}</span>
+                        <span class="pf-row-name" @click="switchRecord(rec.id); showProfileModal = false"><svg v-if="rec.id === activeRecordId" class="inline-icon ok" width="12" height="12"><use href="#i-check"/></svg> {{ recordDisplayName(rec) }}</span>
                         <button v-if="rec.color" type="button" class="pf-icon-btn pf-color-clear-btn" :title="t('record_color_reset_title')" @click="clearRecordColor(rec)"><svg class="inline-icon" width="13" height="13"><use href="#i-sync"/></svg></button>
                         <button v-if="rec.id === activeRecordId" type="button" class="pf-icon-btn" :title="t('record_duplicate')" @click="addRecord(true); showProfileModal = false"><svg class="inline-icon" width="13" height="13"><use href="#i-duplicate"/></svg></button>
                         <button type="button" class="pf-icon-btn" :title="t('record_rename')" @click="pfStartRename(rec)"><svg class="inline-icon" width="13" height="13"><use href="#i-edit"/></svg></button>
@@ -2538,13 +2538,13 @@
                 <div class="cmp-select-col">
                     <label class="cmp-select-label">{{ t('compare_select_a_label') }}</label>
                     <select class="opt-select" v-model="compareIdA" style="width:100%; min-width:0;">
-                        <option v-for="rec in records" :key="rec.id" :value="rec.id">{{ rec.name }}</option>
+                        <option v-for="rec in records" :key="rec.id" :value="rec.id">{{ recordDisplayName(rec) }}</option>
                     </select>
                 </div>
                 <div class="cmp-select-col">
                     <label class="cmp-select-label">{{ t('compare_select_b_label') }}</label>
                     <select class="opt-select" v-model="compareIdB" style="width:100%; min-width:0;">
-                        <option v-for="rec in records" :key="rec.id" :value="rec.id">{{ rec.name }}</option>
+                        <option v-for="rec in records" :key="rec.id" :value="rec.id">{{ recordDisplayName(rec) }}</option>
                     </select>
                 </div>
             </div>
@@ -5695,7 +5695,10 @@
             const pfEditingId = ref(null); // 名前変更中の記録id（null=変更していない）
             const pfEditingName = ref(''); // 名前変更中のテキストボックスの内容
             const pfDeletingId = ref(null); // 削除確認中の記録id（null=確認していない）
-            const activeRecordName = computed(() => (records.value.find(r => r.id === activeRecordId.value) || {}).name || '');
+            // 🏷️ 記録の表示名。共有プロフィール（skyProfiles_v1）由来の名前なしレコードなど、
+            // name が空の場合は汎用ラベル（t('dock_profile')）にフォールバックする（実データは書き換えない）
+            const recordDisplayName = (rec) => (rec && rec.name) || t('dock_profile');
+            const activeRecordName = computed(() => recordDisplayName(records.value.find(r => r.id === activeRecordId.value)));
 
             // 🆚 プロフィール比較（2件を選んで進捗を横並びで確認する）の状態変数
             const showCompareModal = ref(false);
@@ -7254,7 +7257,7 @@
                 }));
                 return {
                     id: rec.id,
-                    name: rec.name,
+                    name: recordDisplayName(rec),
                     color: rec.color || null,
                     totalHearts: snap.spirits.filter(sp => sp.treeData.tier4[2].checked).length,
                     ownedCandles: snap.ownedCandles,
@@ -8026,7 +8029,7 @@
                 heartsHistory, heartsHistoryDisplay,
                 showOneYearAgoBanner, oneYearAgoSpiritName, dismissOneYearAgoBanner,
                 spiritForecasts, grandTotalCandles, getForecastIconId, forecastEtaText,
-                records, activeRecordId, activeRecordName, showProfileModal, newRecordName,
+                records, activeRecordId, activeRecordName, recordDisplayName, showProfileModal, newRecordName,
                 pfEditingId, pfEditingName, pfDeletingId,
                 switchRecord, addRecord, pfAddRecord,
                 pfOpenModal, pfCloseModal, pfStartRename, pfStartDelete, pfCancelRowState,
