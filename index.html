@@ -2572,8 +2572,8 @@
                 </div>
                 <div class="cmp-row">
                     <span class="cmp-label"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg> {{ t('compare_candles_label') }}</span>
-                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ compareSummaryA.ownedCandles }}</span>
-                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ compareSummaryB.ownedCandles }}</span>
+                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ fmtNum(compareSummaryA.ownedCandles) }}</span>
+                    <span class="cmp-val"><svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ fmtNum(compareSummaryB.ownedCandles) }}</span>
                 </div>
                 <div class="cmp-row">
                     <span class="cmp-label"><svg class="inline-icon" width="11" height="11"><use href="#i-ticket"/></svg> {{ t('compare_pass_label') }}</span>
@@ -2792,7 +2792,7 @@
                             {{ t('plan_walk_none') }}
                         </div>
                         <div v-if="multiSpiritPlan.buyNow.length" style="margin-top: 8px;">
-                            {{ t('plan_buy_now_pre') }}{{ ownedCandles || 0 }}{{ t('plan_buy_now_post') }}
+                            {{ t('plan_buy_now_pre') }}{{ fmtNum(ownedCandles || 0) }}{{ t('plan_buy_now_post') }}
                             <div v-for="(b, idx) in multiSpiritPlan.buyNow" :key="idx" style="margin-top: 3px; padding-left: 2px;">
                                 ・{{ b.spiritName }}: {{ b.itemName }}{{ t('plan_item_open') }}<svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg>{{ b.candles }}{{ t('plan_item_close') }}
                             </div>
@@ -2908,7 +2908,7 @@
                             <strong>{{ activeFastestHeartPlan.day }}</strong><span style="font-size: 11px; font-weight: normal; color: var(--text-gray);">{{ t('heart_plan_day_unit') }}</span>{{ t('heart_plan_post') }}
                             <div style="margin-top: 6px;">
                                 {{ t('heart_total_cost_pre') }} <strong style="color: var(--accent-orange); font-size: 14px;">{{ activeFastestHeartPlan.totalCost }}</strong><span style="color: var(--text-gray); font-size: 11px;">{{ t('heart_total_cost_unit') }}</span>
-                                <span style="color: var(--text-gray); font-size: 10.5px;">{{ t('heart_total_cost_note_pre') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('heart_total_cost_note_mid') }} {{ ownedCandles }}{{ t('heart_total_cost_note_post') }}</span>
+                                <span style="color: var(--text-gray); font-size: 10.5px;">{{ t('heart_total_cost_note_pre') }}{{ activeSpirit.treeData.tier4[2].candles }}{{ t('heart_total_cost_note_mid') }} {{ fmtNum(ownedCandles) }}{{ t('heart_total_cost_note_post') }}</span>
                             </div>
                         </template>
                         <div v-if="activeFastestHeartPlan.readyExceptPass" style="color: var(--danger-text); margin-top: 6px; font-weight: bold;">
@@ -2982,7 +2982,7 @@
                             <svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg> {{ t('opt_daily_label') }}
                             <input type="number" class="opt-daily-input" min="0" max="99" v-model.number="optimizerDaily" @change="save()">
                         </label>
-                        <span style="font-size:11px; color:var(--text-gray);">{{ t('opt_owned_note') }} {{ ownedCandles }}</span>
+                        <span style="font-size:11px; color:var(--text-gray);">{{ t('opt_owned_note') }} {{ fmtNum(ownedCandles) }}</span>
                     </div>
 
                     <div v-if="optimizerRows.length === 0" class="opt-empty">{{ t('opt_empty') }}</div>
@@ -5652,6 +5652,14 @@
             // 🕯️ シーズンキャンドル計算機の状態管理変数
             const hasSeasonPass = ref(true);
             const ownedCandles = ref(0);
+            // 🔢 所持本数など自由入力できる値をテンプレートへそのまま出すと、極端に大きい数値を
+            // 入力された際にNumber→文字列変換で"1e+21"のような指数表記になってしまう。
+            // toLocaleStringで桁区切りなしの読める整数表記に変換してから表示する共通ヘルパー。
+            const fmtNum = (n) => {
+                const num = Number(n);
+                if (!Number.isFinite(num)) return '0';
+                return num.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
+            };
             // 🚶 今日の連れ歩き記録（ダッシュボードのワンタップ記録・簡易履歴ログ）。
             // { date: 'YYYY-MM-DD', spiritId }の配列。新しい記録が先頭(index 0)に来るよう常にunshiftする。
             const walkLog = ref([]);
@@ -7840,7 +7848,7 @@
                 y += 26;
                 ctx.font = `400 13px ${fontStack}`;
                 ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.fillText(`${ownedCandles.value || 0} / ${totalRemainingCandles.value} ${t('calc_unit')}`, w / 2, y);
+                ctx.fillText(`${fmtNum(ownedCandles.value || 0)} / ${fmtNum(totalRemainingCandles.value)} ${t('calc_unit')}`, w / 2, y);
 
                 // フッター
                 ctx.font = `400 13px ${fontStack}`;
@@ -8065,7 +8073,8 @@
                 showShareModal, shareCardDataUrl, shareCardCanShare, shareCardFilename,
                 pfShareOpenModal, pfShareCloseModal, pfShareCardShare,
                 pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl, shareModalCardEl,
-                toastMessage, toastVisible
+                toastMessage, toastVisible,
+                fmtNum
             };
         }
     }).mount('#app');
