@@ -3540,6 +3540,13 @@
         // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)。
         //       獲得ポイントは実機確認により季節アイテム・黒染料それぞれ50p（合計100p）に修正
         data[3].treeData.tier1[1].type = 'seasonal';
+        // 🐛 バグ修正: 第2層の季節アイテム①(tier2[0])は枠が存在しない（コスト0=isPhantomItem扱い）のに、
+        // pointsがcreateInitialTreeの初期値30のまま残っていた。他精霊の「枠が存在しない」魔法④(extra4)は
+        // テンプレート側で最初からpoints:0なのに対し、このスロットだけ0化し忘れていたため、
+        // 「魔法スルー」プリセット(setSpiritItems→全checked=true→typeが'magic'のものだけ後からfalse化)適用時に
+        // このアイテムはtype:'seasonal'のため回避されずchecked=trueのまま残り、getSpiritPointsが
+        // 存在しない枠の+30ptを実際の獲得ポイントに上乗せしてしまっていた。
+        data[3].treeData.tier2[0].points = 0;
         data[3].treeData.tier2[1].points = 60; // 魔法①（自動繰上後の表示名）
         data[3].treeData.tier3[0].points = 27; // エモートLv3
         data[3].treeData.tier3[1].points = 27; // 魔法②
