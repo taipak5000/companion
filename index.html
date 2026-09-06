@@ -2274,8 +2274,9 @@
             <p v-if="dashLastUpdatedText" style="margin:-8px 0 10px; font-size:11px; color:var(--text-gray);">{{ t('dash_last_updated_prefix') }} {{ dashLastUpdatedText }}</p>
             <p v-if="dashRefreshStatus" class="pf-hint" style="margin-top:0;">{{ dashRefreshStatus }}</p>
             <div v-if="dashLoading"><p class="pf-hint">{{ t('dash_loading') }}</p></div>
-            <div v-else-if="dashError"><div class="dash-empty">{{ t('dash_load_error') }}</div></div>
-            <template v-else-if="dashData">
+            <template v-else>
+                <!-- 🚶‍♀️🧡🕯️📅 散歩ログ・ハート推移・闇の破片や大キャンドル等の日課・ICS書き出しは
+                     tai-itemからのfetchに一切依存しない自己完結データのため、dashError時も隠さず常に表示する -->
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_walk_label') }}</p>
                     <div class="dash-row" v-if="hasLoggedWalkToday" style="background:rgba(52,197,89,0.08); color:var(--success-text);">
@@ -2369,6 +2370,8 @@
                         <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-turtle"/></svg></span><span class="dash-row-text">{{ t('dash_kame_label') }} <span class="dash-countdown">{{ t('dash_next_in_prefix') }} {{ dashKameCountdown }}</span></span>
                     </div>
                 </div>
+                <div v-if="dashError"><div class="dash-empty">{{ t('dash_load_error') }}</div></div>
+                <template v-else-if="dashData">
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
                     <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(dashData.season.name) }}</b> {{ t('dash_event_suffix') }}</span></div>
@@ -2402,6 +2405,7 @@
                     <div class="dash-empty" v-if="dashData.season && !dashData.season.endDate">{{ t('dash_season_error') }}</div>
                     <div class="dash-empty" v-else-if="!dashMonthHasContent">{{ t('dash_bucket_empty') }}</div>
                 </div>
+                </template>
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_ics_label') }}</p>
                     <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box;" @click="pfDashExportIcs">{{ t('dash_ics_export_btn') }}</button>
@@ -7524,7 +7528,9 @@
                 return lines;
             };
             const pfDashExportIcs = () => {
-                if (!dashData.value) return;
+                // 🌐 dashData（tai-itemからのfetch）が無くても、日替わり大キャンドル・週間リセット・
+                // 闇の破片は自己完結データのため書き出せる。シーズン終了日時のみ後段でdashData.value
+                // の有無を確認してから使う（未取得なら単に含めない＝90日先を仮の上限にする）。
                 try {
                     const now = new Date();
                     const uidHost = 'taipak5000.github.io';
@@ -7532,7 +7538,7 @@
 
                     // 🌟 季節終了（コンプリート期限）。ダッシュボードが表示しているのと同じfetch済みの値を使う。
                     let seasonEnd = null;
-                    if (dashData.value.season && dashData.value.season.endDate) {
+                    if (dashData.value && dashData.value.season && dashData.value.season.endDate) {
                         seasonEnd = new Date(dashData.value.season.endDate);
                         if (!isNaN(seasonEnd.getTime())) {
                             events.push(...pfIcsBuildEvent({
