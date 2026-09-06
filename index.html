@@ -4606,7 +4606,7 @@
             heart_plan_post: '.',
             heart_total_cost_pre: 'Total candles needed from here:',
             heart_total_cost_unit: '',
-            heart_total_cost_note_pre: ' (includes',
+            heart_total_cost_note_pre: ' (includes ',
             heart_total_cost_note_mid: ' for the Heart trade itself; your current',
             heart_total_cost_note_post: ' candles are separate)',
             heart_pass_needed: 'Trading for the Heart requires the Season Pass (currently: not owned).',
@@ -7445,6 +7445,7 @@
             const pfDashFetchData = async (isRefresh) => {
                 try {
                     const res = await fetch(`${location.origin}/tai-item/index.html`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const html = await res.text();
                     dashData.value = {
                         revisitSchedules: pfExtractArray(html, 'REVISIT_SPIRIT_SCHEDULES') || [],
