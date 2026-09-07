@@ -2776,7 +2776,7 @@
                 <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
                     <label style="font-size: 11px; color: var(--text-gray); font-weight: bold;">{{ t('opt_daily_label') }}</label>
                     <div style="display:flex; align-items:baseline; gap:6px;">
-                        <input type="number" min="0" max="99" v-model.number="estimatedDailyCandles" class="calc-input owned-candle-input" @change="save()">
+                        <input type="number" min="0" max="99" v-model.number="estimatedDailyCandles" class="calc-input owned-candle-input">
                         <span style="font-size: 13px; color: var(--text-gray);">{{ t('calc_unit') }}</span>
                     </div>
                 </div>
@@ -2993,7 +2993,7 @@
                     <div class="opt-controls" style="margin-top:8px;">
                         <label style="font-size:12px; color:var(--text-gray); display:flex; align-items:center; gap:7px;">
                             <svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg> {{ t('opt_daily_label') }}
-                            <input type="number" class="opt-daily-input" min="0" max="99" v-model.number="estimatedDailyCandles" @change="save()">
+                            <input type="number" class="opt-daily-input" min="0" max="99" v-model.number="estimatedDailyCandles">
                         </label>
                         <span style="font-size:11px; color:var(--text-gray);">{{ t('opt_owned_note') }} {{ fmtNum(ownedCandles) }}</span>
                     </div>
@@ -6139,7 +6139,10 @@
             const multiSpiritPlan = computed(() => {
                 const state = buildMultiSpiritState();
                 let pool = ownedCandles.value || 0;
-                const perDay = estimatedDailyCandles.value;
+                // 🩹 バグ修正: 3系統共通の値になったため、他の2系統(optimizerRows)と揃えて
+                // 負数・非数値も0に丸める(揃えないと、この共有欄に負数を入力した場合だけ
+                // 3系統がまた食い違ってしまう)。
+                const perDay = Math.max(0, Number(estimatedDailyCandles.value) || 0);
 
                 // ☀️ 今日、今すぐ交換できるアイテム（新たな日を進める前に、現在の所持数だけで買えるだけ買う）
                 const buyNow = [];
@@ -6218,7 +6221,7 @@
 
                 let points = getSpiritPoints(spirit);
                 let candlePool = ownedCandles.value || 0;
-                const perDay = estimatedDailyCandles.value;
+                const perDay = Math.max(0, Number(estimatedDailyCandles.value) || 0); // 他の2系統と揃えて負数・非数値を0に丸める
                 const heartCost = heartItem.candles || 0;
                 const heartName = cleanName(translateItemName(heartItem.name)); // 🌐 他の箇所（forecast等）と同じくtranslateItemNameを通す（未対応言語では日本語のまま表示されるバグの修正）
 
@@ -7005,10 +7008,19 @@
                 // optimizerPlan.dailyにオプティマイザー専用の値として保存されていたため、
                 // 新形式が無い場合はそちらを引き継ぐ（既存ユーザーが既に調整済みの値を
                 // 失わないため）。どちらも無ければcandlesPerDayの初期値のままにする。
+                // 🩹 バグ修正: Number(n) || candlesPerDay.valueだと、ユーザーが意図的に0を
+                // 設定した場合(0はmin="0"の範囲内で正当な値)でも0がfalsyなためfallback側の
+                // 5/6に化けてしまい、次の自動保存でその5/6が0を上書きして永続的に消えていた。
+                // Number.isFinite()で「有効な数値かどうか」だけを見て、0はそのまま尊重する。
+                const readDaily = (n) => {
+                    if (n === null || typeof n === 'object') return candlesPerDay.value; // null/配列/オブジェクト等の破損データは信用しない
+                    const v = Number(n);
+                    return Number.isFinite(v) ? v : candlesPerDay.value;
+                };
                 if (parsed.estimatedDailyCandles !== undefined) {
-                    estimatedDailyCandles.value = Number(parsed.estimatedDailyCandles) || candlesPerDay.value;
+                    estimatedDailyCandles.value = readDaily(parsed.estimatedDailyCandles);
                 } else if (parsed.optimizerPlan && parsed.optimizerPlan.daily !== undefined) {
-                    estimatedDailyCandles.value = Number(parsed.optimizerPlan.daily) || candlesPerDay.value;
+                    estimatedDailyCandles.value = readDaily(parsed.optimizerPlan.daily);
                 }
                 // 🚶 連れ歩き履歴ログの復元（不正な形式の要素は防御的に除外する）
                 if (Array.isArray(parsed.walkLog)) {
@@ -7206,6 +7218,7 @@
                         sharedCalcFormula: sharedCalcFormula.value,
                         hasSeasonPass: hasSeasonPass.value,
                         ownedCandles: ownedCandles.value,
+                        estimatedDailyCandles: estimatedDailyCandles.value,
                         walkLog: JSON.parse(JSON.stringify(walkLog.value)) // 🔁 参照を共有しないよう複製する
                     };
                     try {
@@ -8041,7 +8054,12 @@
                 document.removeEventListener('keydown', handleGlobalKeydown);
                 systemThemeMediaQuery.removeEventListener('change', onSystemThemeChange);
             });
-            watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles, walkLog], () => { save(); }, { deep: true });
+            // 🩹 バグ修正: estimatedDailyCandles(旧optimizerDaily)はこのwatch対象に含まれておらず、
+            // 代わりに入力欄側にテンプレート内で直接@change="save()"を書いていたが、saveはsetup()の
+            // 戻り値に含まれておらずテンプレートから参照できないため、変更しても保存されず
+            // （コンソールに"save is not a function"のエラーが出るだけで）リロードで消えていた。
+            // 他の入力(ownedCandles等)と同じくwatch対象に加え、テンプレート側の壊れた@change呼び出しは削除する。
+            watch([activeIndex, spirits, sharedNotes, sharedCalcFormula, hasSeasonPass, ownedCandles, estimatedDailyCandles, walkLog], () => { save(); }, { deep: true });
 
             // 🫧 流体ボトムシート用: ドラッグでの閉じ操作を実際のVue状態（showXxxModal系ref）に
             // 反映させるため、各モーダルの閉じる関数をwindowへ公開する（挙動は変えず参照を追加するだけ）。
