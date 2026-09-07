@@ -2768,6 +2768,19 @@
                 <div style="display:flex; justify-content:flex-end; margin-top: 8px;">
                     <button type="button" class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">+{{ candlesPerDay }}{{ t('mobile_add_today') }}</button>
                 </div>
+
+                <!-- 🩹 バグ修正: 「おすすめプラン」「ハート最短シミュレーション」「交換順の計算」の3つが
+                     それぞれ別々の1日あたりキャンドル数の前提を使っており、互いに矛盾した日数・金額を
+                     表示しうる不具合があった。この1つの入力(estimatedDailyCandles)に統合し、3つの
+                     計算すべてに共通で使われるようにする。 -->
+                <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
+                    <label style="font-size: 11px; color: var(--text-gray); font-weight: bold;">{{ t('opt_daily_label') }}</label>
+                    <div style="display:flex; align-items:baseline; gap:6px;">
+                        <input type="number" min="0" max="99" v-model.number="estimatedDailyCandles" class="calc-input owned-candle-input" @change="save()">
+                        <span style="font-size: 13px; color: var(--text-gray);">{{ t('calc_unit') }}</span>
+                    </div>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-gray); line-height: 1.5; margin-top: 4px;">{{ t('est_daily_hint') }}</div>
             </div>
 
             <div class="section-card" style="border: 1px solid var(--accent-blue); background: rgba(0,122,255,0.02);">
@@ -2980,7 +2993,7 @@
                     <div class="opt-controls" style="margin-top:8px;">
                         <label style="font-size:12px; color:var(--text-gray); display:flex; align-items:center; gap:7px;">
                             <svg class="inline-icon" width="11" height="11"><use href="#i-candle"/></svg> {{ t('opt_daily_label') }}
-                            <input type="number" class="opt-daily-input" min="0" max="99" v-model.number="optimizerDaily" @change="save()">
+                            <input type="number" class="opt-daily-input" min="0" max="99" v-model.number="estimatedDailyCandles" @change="save()">
                         </label>
                         <span style="font-size:11px; color:var(--text-gray);">{{ t('opt_owned_note') }} {{ fmtNum(ownedCandles) }}</span>
                     </div>
@@ -4185,6 +4198,7 @@
             calc_unit: '本',
             calc_owned_label: '所持本数',
             calc_day_unit: '日',
+            est_daily_hint: '下の「おすすめプラン」「ハート最短シミュレーション」「交換順の計算」に共通で使われる見込み値です（デイリークエスト分＋普段の探索分の合計目安）。',
 
             plan_title: '効率的な進め方のおすすめ（4体分・魔法除く）',
             plan_close: '閉じる',
@@ -4570,6 +4584,7 @@
             calc_unit: '',
             calc_owned_label: 'Candles currently owned',
             calc_day_unit: 'd',
+            est_daily_hint: 'Used as a shared estimate by the plan, heart simulation, and purchase-order calculations below (a rough total including both the daily quest and regular exploration).',
 
             plan_title: 'Recommended efficient route (all 4 spirits, excluding Spells)',
             plan_close: 'Close',
@@ -4955,6 +4970,7 @@
             calc_unit: '',
             calc_owned_label: '目前持有的蠟燭數',
             calc_day_unit: '天',
+            est_daily_hint: '以下的「建議路線」「愛心最快模擬」「購買順序」計算會共用這個預估值（每日任務加上平常探索的蠟燭數合計）。',
 
             plan_title: '高效進行方式建議（4隻・不含法術）',
             plan_close: '關閉',
@@ -5340,6 +5356,7 @@
             calc_unit: '',
             calc_owned_label: '현재 보유 중인 초 개수',
             calc_day_unit: '일',
+            est_daily_hint: '아래의 추천 진행 방법·하트 최단 시뮬레이션·교환 순서 계산에 공통으로 사용되는 예상치입니다(데일리 퀘스트분+평소 탐험분의 합계 기준).',
 
             plan_title: '효율적인 진행 추천 (4마리・마법 제외)',
             plan_close: '닫기',
@@ -6122,7 +6139,7 @@
             const multiSpiritPlan = computed(() => {
                 const state = buildMultiSpiritState();
                 let pool = ownedCandles.value || 0;
-                const perDay = candlesPerDay.value;
+                const perDay = estimatedDailyCandles.value;
 
                 // ☀️ 今日、今すぐ交換できるアイテム（新たな日を進める前に、現在の所持数だけで買えるだけ買う）
                 const buyNow = [];
@@ -6201,7 +6218,7 @@
 
                 let points = getSpiritPoints(spirit);
                 let candlePool = ownedCandles.value || 0;
-                const perDay = candlesPerDay.value;
+                const perDay = estimatedDailyCandles.value;
                 const heartCost = heartItem.candles || 0;
                 const heartName = cleanName(translateItemName(heartItem.name)); // 🌐 他の箇所（forecast等）と同じくtranslateItemNameを通す（未対応言語では日本語のまま表示されるバグの修正）
 
@@ -6739,7 +6756,14 @@
             const showOptimizer = ref(false);
             const optSelectedId = ref('');
             const optimizerIds = ref([]);      // 優先順に並んだアイテムid
-            const optimizerDaily = ref(20);    // 1日に獲得するキャンドル数（ユーザー入力）
+            // 🩹 バグ修正: 以前はこの値がオプティマイザー専用(optimizerDaily)で、「おすすめプラン」
+            // (multiSpiritPlan)と「ハート最短シミュレーション」(computeFastestHeartPlanFor)は
+            // アドパス有無だけで決まる固定値(candlesPerDay、5または6)を別々に使っていた。同じ
+            // 「1日に集めるキャンドル数」のはずなのに3系統がバラバラの前提を使い、互いに矛盾した
+            // 日数・金額を表示しうる不具合の原因だったため、ここで1つの値(estimatedDailyCandles)
+            // に統合し、3系統すべてがこれを参照するようにする。デイリークエスト分だけの保証値
+            // (candlesPerDay)は「+{{candlesPerDay}}本」ボタン用として別途そのまま残す。
+            const estimatedDailyCandles = ref(candlesPerDay.value); // 1日に集めるキャンドル数の見込み（ユーザー入力・3系統共通）
 
             // 全精霊のツリーから「コストがあり、まだ除外されていない」アイテムを候補として列挙
             const findTreeItemById = (id) => {
@@ -6788,7 +6812,7 @@
             };
 
             const optimizerRows = computed(() => {
-                const daily = Math.max(0, Number(optimizerDaily.value) || 0);
+                const daily = Math.max(0, Number(estimatedDailyCandles.value) || 0);
                 const owned = Math.max(0, Number(ownedCandles.value) || 0);
                 let cumulative = 0;
                 const now = new Date();
@@ -6917,7 +6941,8 @@
                     sharedCalcFormula: sharedCalcFormula.value,
                     hasSeasonPass: hasSeasonPass.value,
                     ownedCandles: ownedCandles.value,
-                    optimizerPlan: { ids: optimizerIds.value, daily: optimizerDaily.value },
+                    estimatedDailyCandles: estimatedDailyCandles.value,
+                    optimizerPlan: { ids: optimizerIds.value },
                     walkLog: walkLog.value
                 };
                 try {
@@ -6975,7 +7000,15 @@
                 if (parsed.ownedCandles !== undefined) ownedCandles.value = parsed.ownedCandles;
                 if (parsed.optimizerPlan) {
                     optimizerIds.value = Array.isArray(parsed.optimizerPlan.ids) ? parsed.optimizerPlan.ids : [];
-                    if (parsed.optimizerPlan.daily !== undefined) optimizerDaily.value = Number(parsed.optimizerPlan.daily) || 0;
+                }
+                // 🩹 バグ修正: estimatedDailyCandlesは新形式のトップレベル項目。旧形式では
+                // optimizerPlan.dailyにオプティマイザー専用の値として保存されていたため、
+                // 新形式が無い場合はそちらを引き継ぐ（既存ユーザーが既に調整済みの値を
+                // 失わないため）。どちらも無ければcandlesPerDayの初期値のままにする。
+                if (parsed.estimatedDailyCandles !== undefined) {
+                    estimatedDailyCandles.value = Number(parsed.estimatedDailyCandles) || candlesPerDay.value;
+                } else if (parsed.optimizerPlan && parsed.optimizerPlan.daily !== undefined) {
+                    estimatedDailyCandles.value = Number(parsed.optimizerPlan.daily) || candlesPerDay.value;
                 }
                 // 🚶 連れ歩き履歴ログの復元（不正な形式の要素は防御的に除外する）
                 if (Array.isArray(parsed.walkLog)) {
@@ -7019,7 +7052,7 @@
                 hasSeasonPass.value = true;
                 ownedCandles.value = 0;
                 optimizerIds.value = [];
-                optimizerDaily.value = 20;
+                estimatedDailyCandles.value = candlesPerDay.value;
                 optSelectedId.value = '';
                 walkLog.value = [];
             };
@@ -8028,7 +8061,7 @@
                 getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, themeMode, toggleTheme,
                 currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay, translateEventName,
                 showSidebar, showSharedTools, sharedNotes,
-                showOptimizer, optSelectedId, optimizerDaily, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
+                showOptimizer, optSelectedId, estimatedDailyCandles, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
                 optCopyStatus, optCopyPlan, heartCopyStatus, heartCopyPlan,
                 hasSeasonPass, ownedCandles, candlesPerDay,
                 showForecast, showHeartPlanDetail, showMultiSpiritLog, showMultiSpiritPlan, pfCurrencyOpen,
