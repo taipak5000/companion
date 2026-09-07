@@ -1563,17 +1563,6 @@
         .site-dock .site-dock-icon { font-size: 20px; line-height: 1; }
         .site-dock .site-dock-label { font-size: 10px; font-weight: 700; color: var(--text-gray);
             max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        /* 🔴 ダッシュボードボタンの「まもなく終了」インジケーター（季節/イベント終了が3日以内の
-           ときだけ表示する小さな赤丸）。既存の再取得済みダッシュボードデータ(dashData)を
-           流用するだけで、新規fetchは行わない（dockUrgentEnding参照）。 */
-        .site-dock .site-dock-icon-wrap { position: relative; display: inline-flex; }
-        .site-dock .dock-urgent-dot {
-            display: none; position: absolute; top: -2px; right: -6px;
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--danger-text); border: 1.5px solid var(--card-bg);
-        }
-        .site-dock .dock-urgent-dot.show { display: block; }
-
         /* --------------------------------------------------------------------------------- */
         /* 🔔 トースト通知（保存/コピー等の一時的なフィードバックを画面下部中央に表示） */
         /* --------------------------------------------------------------------------------- */
@@ -2376,6 +2365,7 @@
                     <p class="dash-section-label">{{ t('dash_today_label') }}</p>
                     <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(dashData.season.name) }}</b> {{ t('dash_event_suffix') }}</span></div>
                     <div class="dash-row" v-for="(ev, idx) in dashTodayEvents" :key="'te'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashTodayCandleBonus" :key="'tc'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-candle"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashTodayRevisits" :key="'rvt'+idx">
                         <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
@@ -2386,6 +2376,7 @@
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashWeekEvents" :key="'we'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashWeekCandleBonus" :key="'wc'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-candle"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashWeekRevisits" :key="'rvw'+idx">
                         <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
@@ -2397,6 +2388,7 @@
                 <div class="dash-section">
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashMonthEvents" :key="'me'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashMonthCandleBonus" :key="'mc'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-candle"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashMonthRevisits" :key="'rvm'+idx">
                         <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
@@ -3344,10 +3336,7 @@
             <span class="site-dock-label">{{ activeRecordName || t('dock_profile') }}</span>
         </button>
         <button type="button" @click="pfDashOpen">
-            <span class="site-dock-icon-wrap">
-                <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-calendar"/></svg></span></span>
-                <span class="dock-urgent-dot" :class="{ show: dockUrgentEnding }" aria-hidden="true" :title="t('dock_urgent_title')"></span>
-            </span>
+            <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-calendar"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock_dashboard') }}</span>
         </button>
         <button type="button" @click="showSidebar = true">
@@ -3980,6 +3969,7 @@
         '光に染まるイベント': 'Event of Radiant Light',
         '来訪する精霊団': 'Traveling Spirit Troupe',
         '夏のキャンプ': 'Summer Camp',
+        '大キャン２倍・シーズンキャンドル２倍': 'Double Grand & Season Candles',
     };
     const EVENT_NAME_ZH_TW = {
         [CURRENT_SEASON_NAME]: SEASON_NAME_ZH_TW,
@@ -3987,6 +3977,7 @@
         '光に染まるイベント': '染光活動',
         '来訪する精霊団': '來訪精靈團',
         '夏のキャンプ': '夏令營',
+        '大キャン２倍・シーズンキャンドル２倍': '大蠟燭・季節蠟燭雙倍',
     };
     const EVENT_NAME_KO = {
         [CURRENT_SEASON_NAME]: SEASON_NAME_KO,
@@ -3994,6 +3985,7 @@
         '光に染まるイベント': '빛으로 물드는 이벤트',
         '来訪する精霊団': '방문 정령단',
         '夏のキャンプ': '여름 캠프',
+        '大キャン２倍・シーズンキャンドル２倍': '큰 초・시즌 초 2배',
     };
     const EVENT_NAME_I18N = { en: EVENT_NAME_EN, 'zh-TW': EVENT_NAME_ZH_TW, ko: EVENT_NAME_KO };
 
@@ -4039,7 +4031,6 @@
             dock_tools: '他のツール',
             dock_settings: '表示設定',
             dock_aria_label: 'クイックメニュー',
-            dock_urgent_title: '季節/イベントの終了が近づいています',
 
             settings_title: '表示設定',
             settings_lang_label: '言語',
@@ -4425,7 +4416,6 @@
             dock_tools: 'More Tools',
             dock_settings: 'Settings',
             dock_aria_label: 'Quick menu',
-            dock_urgent_title: 'A season or event is ending soon',
 
             settings_title: 'Display Settings',
             settings_lang_label: 'Language',
@@ -4811,7 +4801,6 @@
             dock_tools: '其他工具',
             dock_settings: '顯示設定',
             dock_aria_label: '快速選單',
-            dock_urgent_title: '季節/活動即將結束',
 
             settings_title: '顯示設定',
             settings_lang_label: '語言',
@@ -5197,7 +5186,6 @@
             dock_tools: '다른 도구',
             dock_settings: '화면 설정',
             dock_aria_label: '빠른 메뉴',
-            dock_urgent_title: '시즌/이벤트 종료가 임박했습니다',
 
             settings_title: '화면 설정',
             settings_lang_label: '언어',
@@ -5800,29 +5788,28 @@
             const dashTodayEvents = computed(() => dashActiveScheduledEvents.value.filter(e => e.bucket === 'today'));
             const dashWeekEvents = computed(() => dashActiveScheduledEvents.value.filter(e => e.bucket === 'week'));
             const dashMonthEvents = computed(() => dashActiveScheduledEvents.value.filter(e => e.bucket === 'month'));
+            // 大キャンドル・シーズンキャンドルの獲得量が倍になる期間限定ボーナス（CANDLE_BONUS_SCHEDULE）。
+            // イベント一覧(dashActiveScheduledEvents)と同じ判定ロジックだが、アイテムを付与するものでは
+            // ないため別の配列・別アイコン（i-candle）で表示する
+            const dashActiveCandleBonus = computed(() => {
+                dashNow.value;
+                if (!dashData.value) return [];
+                const now = Date.now();
+                return (dashData.value.candleBonusSchedule || []).filter(ev => {
+                    const end = new Date(ev.end).getTime();
+                    const start = ev.start ? new Date(ev.start).getTime() : null;
+                    return now <= end && (!start || now >= start);
+                }).map(ev => {
+                    const endDate = new Date(ev.end);
+                    return { name: ev.name, countdown: pfDashCountdown(endDate, t('countdown_day_suffix')), bucket: pfDashBucketFor(endDate) };
+                });
+            });
+            const dashTodayCandleBonus = computed(() => dashActiveCandleBonus.value.filter(e => e.bucket === 'today'));
+            const dashWeekCandleBonus = computed(() => dashActiveCandleBonus.value.filter(e => e.bucket === 'week'));
+            const dashMonthCandleBonus = computed(() => dashActiveCandleBonus.value.filter(e => e.bucket === 'month'));
             const dashSeasonActive = computed(() => {
                 dashNow.value;
                 return !!(dashData.value && dashData.value.season && dashData.value.season.endDate && Date.now() < new Date(dashData.value.season.endDate).getTime());
-            });
-            // 🔴 サイトドックの「ダッシュボード」ボタンに表示する、終了間近インジケーター（小さな赤丸）。
-            // 新規fetchは一切行わず、既存のdashData（ダッシュボードモーダルを一度開いて読み込み済みの
-            // キャッシュ）を流用するだけ。dashDataが無い（まだ一度も開いていない・fetch失敗）場合は
-            // 何も表示しない＝安全側に倒す（wings/tai-info等の同名インジケーターと同じ考え方）。
-            const DOCK_URGENT_DAYS = 3;
-            const dockUrgentEnding = computed(() => {
-                dashNow.value;
-                if (!dashData.value) return false;
-                const now = Date.now();
-                const ends = [];
-                if (dashData.value.season && dashData.value.season.endDate) {
-                    ends.push(new Date(dashData.value.season.endDate).getTime());
-                }
-                (dashData.value.eventSchedule || []).forEach(ev => {
-                    const end = new Date(ev.end).getTime();
-                    const start = ev.start ? new Date(ev.start).getTime() : null;
-                    if (now <= end && (!start || now >= start)) ends.push(end);
-                });
-                return ends.some(end => { const ms = end - now; return ms > 0 && ms <= DOCK_URGENT_DAYS * 86400000; });
             });
             const dashNextUpdateCountdown = computed(() => {
                 dashNow.value;
@@ -5881,12 +5868,15 @@
             // （すべて他の期間に流れて空になった場合、種類別の空メッセージではなく汎用の
             // 「この期間の予定はありません」を出す）
             const dashTodayHasContent = computed(() => dashSeasonActive.value || dashTodayEvents.value.length > 0
+                || dashTodayCandleBonus.value.length > 0
                 || dashTodayRevisits.value.length > 0
                 || dashEdenBucket.value === 'today');
             const dashWeekHasContent = computed(() => dashWeekEvents.value.length > 0
+                || dashWeekCandleBonus.value.length > 0
                 || dashWeekRevisits.value.length > 0
                 || dashEdenBucket.value === 'week' || dashNextUpdateBucket.value === 'week' || dashSeasonBucket.value === 'week');
             const dashMonthHasContent = computed(() => dashMonthEvents.value.length > 0
+                || dashMonthCandleBonus.value.length > 0
                 || dashMonthRevisits.value.length > 0
                 || dashEdenBucket.value === 'month' || dashNextUpdateBucket.value === 'month' || dashSeasonBucket.value === 'month');
 
@@ -7522,6 +7512,7 @@
                         revisitSchedules: pfExtractArray(html, 'REVISIT_SPIRIT_SCHEDULES') || [],
                         season: pfExtractArray(html, 'CURRENT_SEASON') || null,
                         eventSchedule: pfExtractArray(html, 'EVENT_SCHEDULE') || [],
+                        candleBonusSchedule: pfExtractArray(html, 'CANDLE_BONUS_SCHEDULE') || [],
                         nextUpdate: pfExtractArray(html, 'NEXT_UPDATE') || null,
                     };
                     dashError.value = false;
@@ -8110,7 +8101,8 @@
                 dashCandleRealmLabel, dashCandleCountdown, dashQuestCandleRealmLabel,
                 dashUniCountdown, dashPanCountdown, dashKameCountdown,
                 dashEdenCountdown, dashEdenBucket, dashSeasonCountdown, dashSeasonBucket,
-                dashSeasonActive, dashActiveScheduledEvents, dashTodayEvents, dashWeekEvents, dashMonthEvents, dockUrgentEnding,
+                dashSeasonActive, dashActiveScheduledEvents, dashTodayEvents, dashWeekEvents, dashMonthEvents,
+                dashActiveCandleBonus, dashTodayCandleBonus, dashWeekCandleBonus, dashMonthCandleBonus,
                 dashNextUpdateCountdown, dashNextUpdateBucket,
                 dashTodayHasContent, dashWeekHasContent, dashMonthHasContent,
                 pfDashOpen, pfDashClose,
