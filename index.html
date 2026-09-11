@@ -1399,6 +1399,40 @@
         .dash-shard-time.past { color: var(--text-gray); font-weight: 400; text-decoration: line-through; }
         .dash-empty { font-size: 12.5px; color: var(--text-gray); padding: 2px 2px 4px; }
 
+        /* ---------- ダッシュボードのイベントカレンダー（初期状態は折りたたみ）。ネイティブ<details>を
+           使い、openにv-bindしないことで、Vueが1秒ごとのdashNow更新やcurrentLang切替の再描画で
+           details要素自体を作り直さず（同じ位置の同じ要素として差分パッチされる）、開閉状態が
+           ユーザー操作のまま保持される。矢印の回転だけ、display:noneに関係ない常時表示要素への
+           transitionなので、CLAUDE.mdの「開くアニメーションはtransitionでなくkeyframesで」
+           （display:noneをtransitionは跨げない、という制約）には該当しない。 ---------- */
+        .dash-calendar-summary {
+            display: flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
+            font-size: 12.5px; font-weight: 700; color: var(--text-color); padding: 9px 11px;
+            background: var(--input-bg); border-radius: 10px; user-select: none;
+        }
+        .dash-calendar-summary::-webkit-details-marker { display: none; }
+        .dash-calendar-summary::marker { content: ''; }
+        .dash-calendar-chevron { margin-left: auto; font-size: 13px; color: var(--text-gray); transition: transform 0.2s ease; }
+        .dash-calendar[open] .dash-calendar-summary { border-radius: 10px 10px 0 0; }
+        .dash-calendar[open] .dash-calendar-chevron { transform: rotate(90deg); }
+        .dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+            padding: 10px 11px; background: var(--input-bg); border-radius: 0 0 10px 10px; }
+        .dash-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-gray); padding-bottom: 4px; }
+        .dash-cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
+        .dash-cal-day.is-pad { visibility: hidden; }
+        .dash-cal-daynum { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text-color); }
+        .dash-cal-day.is-today { background: var(--accent-blue); }
+        .dash-cal-day.is-today .dash-cal-daynum { color: #fff; font-weight: 700; }
+        .dash-cal-dots { display: flex; gap: 2px; height: 4px; }
+        .dash-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .dash-cal-dot.season { background: #eab308; }
+        .dash-cal-dot.event { background: #ec4899; }
+        .dash-cal-dot.candle { background: #f97316; }
+        .dash-cal-dot.revisit { background: #14b8a6; }
+        .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-gray); }
+        .dash-cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
+        .dash-cal-legend .dash-cal-dot { width: 6px; height: 6px; }
+
         /* 🔥📅 連続記録（ストリーク）カレンダー/ヒートマップ */
         .walk-cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
         .walk-cal-nav-btn { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color);
@@ -2265,6 +2299,35 @@
             <p v-if="dashRefreshStatus" class="pf-hint" style="margin-top:0;">{{ dashRefreshStatus }}</p>
             <div v-if="dashLoading"><p class="pf-hint">{{ t('dash_loading') }}</p></div>
             <template v-else>
+                <!-- 🗓️ イベントカレンダー：今月1ヶ月分の季節・イベント・キャンドル2倍・再訪精霊をまとめて
+                     見渡せるミニカレンダー。tai-itemのfetchが必要なためdashDataが載ってから表示する
+                     （dashErrorがtrueでも、直前に取得できていた古いdashDataが残っていれば表示は続ける：
+                     手動更新失敗時に既存データごと隠してしまわない、という他のdashXxx項目と同じ方針）。
+                     初期状態は折りたたみ（<details>にopenをv-bindしない＝ネイティブの開閉状態のまま）。 -->
+                <div class="dash-section" v-if="dashData">
+                    <details class="dash-calendar">
+                        <summary class="dash-calendar-summary">
+                            <svg class="inline-icon" width="15" height="15"><use href="#i-calendar"/></svg>
+                            <span>{{ t('dash_calendar_summary', { month: eventCalendarMonthLabel }) }}</span>
+                            <span class="dash-calendar-chevron">›</span>
+                        </summary>
+                        <div class="dash-cal-grid">
+                            <div v-for="dow in walkCalendarDowLabels" :key="'ecdow'+dow" class="dash-cal-dow">{{ dow }}</div>
+                            <div v-for="cell in eventCalendarDays" :key="cell.key" class="dash-cal-day" :class="{ 'is-pad': cell.isPadding, 'is-today': cell.isToday }">
+                                <template v-if="!cell.isPadding">
+                                    <span class="dash-cal-daynum">{{ cell.day }}</span>
+                                    <span class="dash-cal-dots" v-if="cell.cats.length"><i v-for="c in cell.cats" :key="c" class="dash-cal-dot" :class="c"></i></span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="dash-cal-legend">
+                            <span><i class="dash-cal-dot season"></i>{{ t('dash_cal_legend_season') }}</span>
+                            <span><i class="dash-cal-dot event"></i>{{ t('dash_cal_legend_event') }}</span>
+                            <span><i class="dash-cal-dot candle"></i>{{ t('dash_cal_legend_candle') }}</span>
+                            <span><i class="dash-cal-dot revisit"></i>{{ t('dash_cal_legend_revisit') }}</span>
+                        </div>
+                    </details>
+                </div>
                 <!-- 🚶‍♀️🧡🕯️📅 散歩ログ・ハート推移・闇の破片や大キャンドル等の日課・ICS書き出しは
                      tai-itemからのfetchに一切依存しない自己完結データのため、dashError時も隠さず常に表示する -->
                 <div class="dash-section">
@@ -3861,6 +3924,76 @@
     const pfDashRevisitStatuses = (schedules) => (schedules || [])
         .map(schedule => ({ schedule, status: pfDashRevisitStatus(schedule) }))
         .filter(x => x.status);
+
+    /* ================================================================
+       📅 ダッシュボードのイベントカレンダー用ヘルパー（今月1ヶ月分を表示）。
+       pfDashRevisitStatus()等はテキスト表示用に「直近の1回」だけ見れば足りるが、
+       カレンダーは表示中の月に含まれる全ての開催区間を漏れなく描画する必要があるため、
+       [rangeStart, rangeEnd]と重なる区間を全て返す専用のヘルパーを別に持つ。
+       season(CURRENT_SEASON)のようにstartを持たないスケジュールは、
+       dashActiveScheduledEvents等と同じ「start省略＝常に開催中→endで終了」規約に従う。
+       ================================================================ */
+    const pfDashOccurrencesInRange = (schedule, rangeStart, rangeEnd) => {
+        if (!schedule) return [];
+        if (schedule.intervalDays) {
+            if (!schedule.anchorStart || !schedule.anchorEnd) return [];
+            const start0 = new Date(schedule.anchorStart);
+            const end0 = new Date(schedule.anchorEnd);
+            const intervalMs = schedule.intervalDays * 86400000;
+            const durationMs = end0.getTime() - start0.getTime();
+            const out = [];
+            let k = Math.floor((rangeStart.getTime() - start0.getTime()) / intervalMs) - 1;
+            for (let guard = 0; guard < 400; guard++, k++) {
+                const s = new Date(start0.getTime() + k * intervalMs);
+                if (s.getTime() > rangeEnd.getTime()) break;
+                const e = new Date(s.getTime() + durationMs);
+                if (e.getTime() >= rangeStart.getTime()) out.push({ start: s, end: e });
+            }
+            return out;
+        }
+        if (!schedule.end) return [];
+        const e = new Date(schedule.end);
+        const s = schedule.start ? new Date(schedule.start) : null;
+        if (e.getTime() < rangeStart.getTime()) return [];
+        if (s && s.getTime() > rangeEnd.getTime()) return [];
+        return [{ start: s, end: e }];
+    };
+    const DASH_CAL_CAT_ORDER = ['season', 'event', 'candle', 'revisit'];
+    // 表示中の月の各日について、実際に開催中のカテゴリ（season/event/candle/revisit）だけを
+    // 'YYYY-M-D'キー→カテゴリ名Setのマップにまとめる
+    const pfDashCalendarMarks = (data, year, month) => {
+        const rangeStart = new Date(year, month, 1, 0, 0, 0);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const rangeEnd = new Date(year, month, daysInMonth, 23, 59, 59);
+        const marks = new Map();
+        const addRange = (cat, start, end) => {
+            const from = start && start > rangeStart ? start : rangeStart;
+            const to = end < rangeEnd ? end : rangeEnd;
+            if (to < from) return;
+            const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+            const last = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+            while (d <= last) {
+                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                if (!marks.has(key)) marks.set(key, new Set());
+                marks.get(key).add(cat);
+                d.setDate(d.getDate() + 1);
+            }
+        };
+        if (data.season && data.season.name && data.season.endDate) {
+            pfDashOccurrencesInRange({ end: data.season.endDate }, rangeStart, rangeEnd)
+                .forEach(r => addRange('season', r.start, r.end));
+        }
+        (data.eventSchedule || []).forEach(ev => {
+            pfDashOccurrencesInRange(ev, rangeStart, rangeEnd).forEach(r => addRange('event', r.start, r.end));
+        });
+        (data.candleBonusSchedule || []).forEach(ev => {
+            pfDashOccurrencesInRange(ev, rangeStart, rangeEnd).forEach(r => addRange('candle', r.start, r.end));
+        });
+        (data.revisitSchedules || []).forEach(sch => {
+            pfDashOccurrencesInRange(sch, rangeStart, rangeEnd).forEach(r => addRange('revisit', r.start, r.end));
+        });
+        return marks;
+    };
     // 次に太平洋時間0時（＝日替わり大キャンドルの切り替わりのタイミング）を迎える実時刻
     const pfDashNextPacificMidnight = () => {
         const pacNow = pfDashPacificNow();
@@ -4163,6 +4296,11 @@
             dash_season_quote_open: '「',
             dash_season_quote_close: '」',
             dash_season_error: 'シーズン情報が取得できませんでした',
+            dash_calendar_summary: 'カレンダーで見る（{month}）',
+            dash_cal_legend_season: '季節',
+            dash_cal_legend_event: 'イベント',
+            dash_cal_legend_candle: 'キャンドル2倍',
+            dash_cal_legend_revisit: '再訪精霊',
 
             dash_reminder_section_label: '通知リマインダー',
             dash_reminder_toggle_label: '季節・イベントの終了やリセットが近づいたら通知する',
@@ -4564,6 +4702,11 @@
             dash_season_quote_open: '"',
             dash_season_quote_close: '"',
             dash_season_error: 'Failed to retrieve season information',
+            dash_calendar_summary: 'View as Calendar ({month})',
+            dash_cal_legend_season: 'Season',
+            dash_cal_legend_event: 'Event',
+            dash_cal_legend_candle: '2x Candles',
+            dash_cal_legend_revisit: 'Traveling Spirit',
 
             dash_reminder_section_label: 'Reminder Notifications',
             dash_reminder_toggle_label: 'Notify me when a season, event, or reset is about to end',
@@ -4965,6 +5108,11 @@
             dash_season_quote_open: '「',
             dash_season_quote_close: '」',
             dash_season_error: '取得季節資訊失敗',
+            dash_calendar_summary: '以日曆檢視（{month}）',
+            dash_cal_legend_season: '季節',
+            dash_cal_legend_event: '活動',
+            dash_cal_legend_candle: '蠟燭2倍',
+            dash_cal_legend_revisit: '旅行先靈',
 
             dash_reminder_section_label: '通知提醒',
             dash_reminder_toggle_label: '季節、活動結束或重置時間接近時通知我',
@@ -5366,6 +5514,11 @@
             dash_season_quote_open: '"',
             dash_season_quote_close: '"',
             dash_season_error: '시즌 정보를 가져오는 데 실패했습니다',
+            dash_calendar_summary: '캘린더로 보기 ({month})',
+            dash_cal_legend_season: '시즌',
+            dash_cal_legend_event: '이벤트',
+            dash_cal_legend_candle: '초 2배',
+            dash_cal_legend_revisit: '여행영혼',
 
             dash_reminder_section_label: '알림 리마인더',
             dash_reminder_toggle_label: '시즌・이벤트 종료나 리셋이 임박하면 알림 받기',
@@ -5946,6 +6099,38 @@
                 dashNow.value;
                 if (!dashData.value || !dashData.value.season || !dashData.value.season.endDate) return null;
                 return pfDashBucketFor(new Date(dashData.value.season.endDate));
+            });
+            // 🗓️ イベントカレンダー：常に「今」の実月を表示する（散歩ログの月間カレンダーと違い、
+            // 前月・次月ナビゲーションは持たない＝「今日・今週・今月」という枠組みに合わせる）。
+            // 曜日ヘッダーの文言は散歩ログの月間カレンダーと全く同じもの（現在の言語での曜日表記）
+            // でよいため、専用の翻訳キーを新設せず既存のwalkCalendarDowLabelsをそのまま再利用する。
+            const eventCalendarMonthLabel = computed(() => {
+                dashNow.value; // 日付が変わった瞬間にも追随するよう依存させる（他のdashXxx computedと同じ書き方）
+                const now = new Date();
+                return t('dash_walk_cal_month_label', { year: now.getFullYear(), month: pad2(now.getMonth() + 1) });
+            });
+            const eventCalendarDays = computed(() => {
+                dashNow.value;
+                const now = new Date();
+                const year = now.getFullYear(), month = now.getMonth();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const firstWeekday = new Date(year, month, 1).getDay();
+                const marks = dashData.value ? pfDashCalendarMarks(dashData.value, year, month) : new Map();
+                const todayStr = pfLocalDateStr();
+                const cells = [];
+                for (let i = 0; i < firstWeekday; i++) cells.push({ key: 'ecpad-' + i, isPadding: true });
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+                    const cats = marks.get(`${year}-${month}-${day}`);
+                    cells.push({
+                        key: dateStr,
+                        isPadding: false,
+                        day,
+                        isToday: dateStr === todayStr,
+                        cats: cats ? DASH_CAL_CAT_ORDER.filter(c => cats.has(c)) : [],
+                    });
+                }
+                return cells;
             });
             // 各セクション（今日/今週/今月）に、実際に振り分けられた項目が1つでもあるか
             // （すべて他の期間に流れて空になった場合、種類別の空メッセージではなく汎用の
@@ -8345,6 +8530,7 @@
                 dashUniCountdown, dashPanCountdown, dashKameCountdown,
                 dashEdenCountdown, dashEdenBucket, dashSeasonCountdown, dashSeasonBucket,
                 dashSeasonActive, dashActiveScheduledEvents, dashTodayEvents, dashWeekEvents, dashMonthEvents,
+                eventCalendarDays, eventCalendarMonthLabel,
                 dashActiveCandleBonus, dashTodayCandleBonus, dashWeekCandleBonus, dashMonthCandleBonus,
                 dashNextUpdateCountdown, dashNextUpdateBucket,
                 dashTodayHasContent, dashWeekHasContent, dashMonthHasContent,
