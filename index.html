@@ -61,6 +61,10 @@
                #007affのままでも十分なコントラストが出るため、下のダークモード用
                上書きブロックで明示的に元の値へ戻している。 */
             --accent-blue: #0066cc;
+            /* ♿ 塗りつぶし背景+白文字/白ドット用の固定トーン。--accent-blueはダークモードで#007affに
+               変わり、白文字コントラストが4.5:1を割る（約4.02:1）ため、is-todayセルの塗りつぶしのような
+               「常に白いコンテンツをのせる」用途はこちら固定値（ライト/ダーク共通・上書きしない）を使う。 */
+            --accent-blue-solid: #0066cc;
             --accent-orange: #ff9500;
             --accent-purple: #af52de;
             --accent-green: #34c759;
@@ -1415,13 +1419,17 @@
         .dash-calendar-chevron { margin-left: auto; font-size: 13px; color: var(--text-gray); transition: transform 0.2s ease; }
         .dash-calendar[open] .dash-calendar-summary { border-radius: 10px 10px 0 0; }
         .dash-calendar[open] .dash-calendar-chevron { transform: rotate(90deg); }
+        /* 🖥️ モーダル自体は≥560pxでmax-width:600pxまで広がるため、キャップなしだと
+           7列1frのセル（aspect-ratio:1）がデスクトップ幅で80px超まで肥大化してしまう。
+           コンパクトカレンダーとして自然な幅に上限を設け、summary/legendも含めて中央寄せする。 */
+        .dash-calendar { max-width: 360px; margin: 0 auto; }
         .dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
             padding: 10px 11px; background: var(--input-bg); border-radius: 0 0 10px 10px; }
         .dash-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-gray); padding-bottom: 4px; }
         .dash-cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
         .dash-cal-day.is-pad { visibility: hidden; }
         .dash-cal-daynum { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text-color); }
-        .dash-cal-day.is-today { background: var(--accent-blue); }
+        .dash-cal-day.is-today { background: var(--accent-blue-solid); }
         .dash-cal-day.is-today .dash-cal-daynum { color: #fff; font-weight: 700; }
         .dash-cal-dots { display: flex; gap: 2px; height: 4px; }
         .dash-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
@@ -1429,6 +1437,9 @@
         .dash-cal-dot.event { background: #ec4899; }
         .dash-cal-dot.candle { background: #f97316; }
         .dash-cal-dot.revisit { background: #14b8a6; }
+        /* ♿ is-today背景（青塗りつぶし）の上ではドット単色だけでは非テキストコントラスト3:1を
+           満たせない色が複数あるため、白リングを足して背景色に関係なく境界を視認できるようにする。 */
+        .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9); }
         .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-gray); }
         .dash-cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
         .dash-cal-legend .dash-cal-dot { width: 6px; height: 6px; }
@@ -2316,7 +2327,7 @@
                             <div v-for="cell in eventCalendarDays" :key="cell.key" class="dash-cal-day" :class="{ 'is-pad': cell.isPadding, 'is-today': cell.isToday }">
                                 <template v-if="!cell.isPadding">
                                     <span class="dash-cal-daynum">{{ cell.day }}</span>
-                                    <span class="dash-cal-dots" v-if="cell.cats.length"><i v-for="c in cell.cats" :key="c" class="dash-cal-dot" :class="c"></i></span>
+                                    <span class="dash-cal-dots"><i v-for="c in cell.cats" :key="c" class="dash-cal-dot" :class="c"></i></span>
                                 </template>
                             </div>
                         </div>
