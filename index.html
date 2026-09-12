@@ -1416,6 +1416,16 @@
         }
         .dash-calendar-summary::-webkit-details-marker { display: none; }
         .dash-calendar-summary::marker { content: ''; }
+        /* ♿ Class O: このトグルにはこれまでテーマ対応のfocus-visibleスタイルが無く、
+           ブラウザ既定のアウトラインに頼っていた（サイト内に既存の共有focus-visibleルールは
+           見当たらず、他のコントロールも同様にブラウザ既定任せ＝実測でダークモードは背景に
+           ほぼ同化して視認できないことを確認済み）。既存のfocus時カラー指定（.calc-input:focus等）
+           と同じ --accent-blue トークンで、明暗どちらの背景でも3:1以上のコントラストを持つ
+           専用のfocus-visibleリングを追加する。 */
+        .dash-calendar-summary:focus-visible {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: 2px;
+        }
         .dash-calendar-chevron { margin-left: auto; font-size: 13px; color: var(--text-gray); transition: transform 0.2s ease; }
         .dash-calendar[open] .dash-calendar-summary { border-radius: 10px 10px 0 0; }
         .dash-calendar[open] .dash-calendar-chevron { transform: rotate(90deg); }
@@ -2345,10 +2355,10 @@
                         </summary>
                         <div class="dash-cal-grid">
                             <div v-for="dow in walkCalendarDowLabels" :key="'ecdow'+dow" class="dash-cal-dow">{{ dow }}</div>
-                            <div v-for="cell in eventCalendarDays" :key="cell.key" class="dash-cal-day" :class="{ 'is-pad': cell.isPadding, 'is-today': cell.isToday }">
+                            <div v-for="cell in eventCalendarDays" :key="cell.key" class="dash-cal-day" :class="{ 'is-pad': cell.isPadding, 'is-today': cell.isToday }" :title="cell.isPadding ? null : cell.a11yLabel" :aria-label="cell.isPadding ? null : cell.a11yLabel">
                                 <template v-if="!cell.isPadding">
-                                    <span class="dash-cal-daynum">{{ cell.day }}</span>
-                                    <span class="dash-cal-dots"><i v-for="c in cell.cats" :key="c" class="dash-cal-dot" :class="c"></i></span>
+                                    <span class="dash-cal-daynum" aria-hidden="true">{{ cell.day }}</span>
+                                    <span class="dash-cal-dots" aria-hidden="true"><i v-for="c in cell.cats" :key="c" class="dash-cal-dot" :class="c"></i></span>
                                 </template>
                             </div>
                         </div>
@@ -3991,6 +4001,15 @@
         return [{ start: s, end: e }];
     };
     const DASH_CAL_CAT_ORDER = ['season', 'event', 'candle', 'revisit'];
+    // ♿ カレンダーの日付セルはドットの色だけでカテゴリを伝えており、スクリーンリーダー
+    // 利用者には日番号以外の情報が一切渡らない。凡例と同じ翻訳キーを再利用してセルの
+    // title/aria-label用テキストを組み立てるためのカテゴリ→凡例キー対応表。
+    const DASH_CAL_CAT_LEGEND_KEY = {
+        season: 'dash_cal_legend_season',
+        event: 'dash_cal_legend_event',
+        candle: 'dash_cal_legend_candle',
+        revisit: 'dash_cal_legend_revisit',
+    };
     // 表示中の月の各日について、実際に開催中のカテゴリ（season/event/candle/revisit）だけを
     // 'YYYY-M-D'キー→カテゴリ名Setのマップにまとめる
     const pfDashCalendarMarks = (data, year, month) => {
@@ -6149,17 +6168,26 @@
                 const firstWeekday = new Date(year, month, 1).getDay();
                 const marks = dashData.value ? pfDashCalendarMarks(dashData.value, year, month) : new Map();
                 const todayStr = pfLocalDateStr();
+                // ♿ Class N: ドット色だけに頼らず、各セルにカテゴリ名を含んだテキストの等価表現を
+                // 持たせる（title/aria-label用）。日付部分は現在の言語ロケールに合わせて整形し、
+                // カテゴリ名は凡例と全く同じ翻訳キー（DASH_CAL_CAT_LEGEND_KEY経由）を再利用する。
+                const optLocale = PF_DATE_LOCALE_I18N[currentLang.value] || PF_DATE_LOCALE_I18N.ja;
                 const cells = [];
                 for (let i = 0; i < firstWeekday; i++) cells.push({ key: 'ecpad-' + i, isPadding: true });
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dateStr = `${year}-${pad2(month + 1)}-${pad2(day)}`;
                     const cats = marks.get(`${year}-${month}-${day}`);
+                    const catList = cats ? DASH_CAL_CAT_ORDER.filter(c => cats.has(c)) : [];
+                    const dayDateLabel = new Intl.DateTimeFormat(optLocale, { month: 'long', day: 'numeric' }).format(new Date(year, month, day));
                     cells.push({
                         key: dateStr,
                         isPadding: false,
                         day,
                         isToday: dateStr === todayStr,
-                        cats: cats ? DASH_CAL_CAT_ORDER.filter(c => cats.has(c)) : [],
+                        cats: catList,
+                        a11yLabel: catList.length
+                            ? `${dayDateLabel}: ${catList.map(c => t(DASH_CAL_CAT_LEGEND_KEY[c])).join(', ')}`
+                            : dayDateLabel,
                     });
                 }
                 return cells;
