@@ -1444,10 +1444,15 @@
            背景がほぼ黒でどれも十分なコントラストが出るためそのままにし、ライトモード限定で
            3:1を満たす濃色バリアントへ差し替える（eventは元々3.38:1でクリアしているため変更なし）。
            html要素には常にdata-theme="light"/"dark"のどちらかが明示的に付与されるため、
-           [data-theme="light"]スコープで確実に上書きできる。 */
-        [data-theme="light"] .dash-cal-dot.season { background: #a16207; }
-        [data-theme="light"] .dash-cal-dot.candle { background: #c2410c; }
-        [data-theme="light"] .dash-cal-dot.revisit { background: #0f766e; }
+           [data-theme="light"]スコープで確実に上書きできる。
+           🐛 round3で発覚：is-today（青塗りつぶし）セルを除外していなかったため、この濃色が
+           今日のセルにも適用され、素の色より青背景とのコントラストが悪化する回帰を生んでいた。
+           今日のセルは既にリング対応（下記）で背景色に関係なく安全なことを検証済みなので、
+           :not(.is-today)で通常セルだけに限定し、今日のセルは素の色（.dash-cal-dot.season等）に
+           戻す。 */
+        [data-theme="light"] .dash-cal-day:not(.is-today) .dash-cal-dot.season { background: #a16207; }
+        [data-theme="light"] .dash-cal-day:not(.is-today) .dash-cal-dot.candle { background: #c2410c; }
+        [data-theme="light"] .dash-cal-day:not(.is-today) .dash-cal-dot.revisit { background: #0f766e; }
         /* ♿ is-today背景（青塗りつぶし）の上ではドット単色だけでは非テキストコントラスト3:1を
            満たせない色が複数あるため、白リングを足して背景色に関係なく境界を視認できるようにする。 */
         .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9); }
