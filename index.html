@@ -1419,14 +1419,16 @@
         .dash-calendar-chevron { margin-left: auto; font-size: 13px; color: var(--text-gray); transition: transform 0.2s ease; }
         .dash-calendar[open] .dash-calendar-summary { border-radius: 10px 10px 0 0; }
         .dash-calendar[open] .dash-calendar-chevron { transform: rotate(90deg); }
-        /* 🖥️ モーダル自体は≥560pxでmax-width:600pxまで広がるため、キャップなしだと
-           7列1frのセル（aspect-ratio:1）がデスクトップ幅で80px超まで肥大化してしまう。
-           コンパクトカレンダーとして自然な幅に上限を設け、summary/legendも含めて中央寄せする。 */
-        .dash-calendar { max-width: 360px; margin: 0 auto; }
+        /* 🖥️ モーダル自体は≥560pxでmax-width:600pxまで広がる。以前はここに直接max-width:360pxを
+           かけていたが、それだとカレンダー全体（summary見出し・legendも含む）だけが他の全幅セクション
+           （デイリー等）より狭い「浮き島」のように見えてしまっていた（round1のClass D対応がround2で
+           Class Kとして再指摘）。見出し・legendは他セクションと同じく全幅のまま保ち、肥大化を防ぎたい
+           日付セルだけに直接max-widthをかけて中央寄せする（グリッド自体は7列1frで全幅を維持）。 */
         .dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
             padding: 10px 11px; background: var(--input-bg); border-radius: 0 0 10px 10px; }
         .dash-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-gray); padding-bottom: 4px; }
-        .dash-cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
+        .dash-cal-day { aspect-ratio: 1; max-width: 46px; width: 100%; justify-self: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
         .dash-cal-day.is-pad { visibility: hidden; }
         .dash-cal-daynum { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text-color); }
         .dash-cal-day.is-today { background: var(--accent-blue-solid); }
@@ -1437,9 +1439,23 @@
         .dash-cal-dot.event { background: #ec4899; }
         .dash-cal-dot.candle { background: #f97316; }
         .dash-cal-dot.revisit { background: #14b8a6; }
+        /* ♿ ライトモードの通常セル背景（--input-bg:#fafafa）に対して、season/candle/revisitの
+           素の色は非テキストコントラスト3:1未満（実測1.84:1 / 2.69:1 / 2.39:1）。ダークモードは
+           背景がほぼ黒でどれも十分なコントラストが出るためそのままにし、ライトモード限定で
+           3:1を満たす濃色バリアントへ差し替える（eventは元々3.38:1でクリアしているため変更なし）。
+           html要素には常にdata-theme="light"/"dark"のどちらかが明示的に付与されるため、
+           [data-theme="light"]スコープで確実に上書きできる。 */
+        [data-theme="light"] .dash-cal-dot.season { background: #a16207; }
+        [data-theme="light"] .dash-cal-dot.candle { background: #c2410c; }
+        [data-theme="light"] .dash-cal-dot.revisit { background: #0f766e; }
         /* ♿ is-today背景（青塗りつぶし）の上ではドット単色だけでは非テキストコントラスト3:1を
            満たせない色が複数あるため、白リングを足して背景色に関係なく境界を視認できるようにする。 */
         .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9); }
+        /* 🐛 4px角の隣接ドット同士は通常gapが2pxしかなく、上のリング(片側+1px)を足すと隣同士の
+           リング外周がちょうど接触してしまい、季節+キャンドル+再訪等が重なる今日のセルで
+           1個の白い塊に見えてしまう（round1のリング対応自体が生んだ回帰＝Class I）。is-today限定で
+           ドット間のgapを広げ、リング同士がはっきり離れて見えるようにする。 */
+        .dash-cal-day.is-today .dash-cal-dots { gap: 4px; }
         .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-gray); }
         .dash-cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
         .dash-cal-legend .dash-cal-dot { width: 6px; height: 6px; }
@@ -8708,7 +8724,10 @@
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'], subtree: true, attributeOldValue: true });
 
   function isInteractive(el) {
-    return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, [contenteditable], [role="button"], input[type="range"]'));
+    // 🐛 summary（カレンダーの開閉トグル）はネイティブのdisclosureで role="button" を持たないため、
+    // このホワイトリストに含めないとドラッグ判定に巻き込まれてタップが効かなくなる／シート自体が
+    // 閉じてしまう（指のわずかな動きも10px超のドラッグとして誤検出されるため）。
+    return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, [contenteditable], [role="button"], input[type="range"], summary'));
   }
   document.addEventListener('pointerdown', function (e) {
     if (REDUCE_MOTION.matches) return;
