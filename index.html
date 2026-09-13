@@ -2827,7 +2827,10 @@
             <span style="font-weight:bold; white-space:nowrap;"><svg class="inline-icon" width="12" height="12"><use href="#i-candle"/></svg> {{ t('mobile_owned') }}</span>
             <input type="number" min="0" v-model.number="ownedCandles">
             <span style="white-space:nowrap;">{{ t('calc_unit') }}</span>
-            <button class="btn-sm" style="margin-left:auto;" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">+{{ candlesPerDay }}{{ t('mobile_add_today') }}</button>
+            <div style="display:flex; gap:6px; margin-left:auto;">
+                <button class="btn-sm" :title="t('mobile_add_one_title')" @click="ownedCandles = (ownedCandles || 0) + 1">+1</button>
+                <button class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">+{{ candlesPerDay }}{{ t('mobile_add_today') }}</button>
+            </div>
         </div>
 
         <div class="left-column">
@@ -2862,7 +2865,8 @@
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; margin-top: 8px;">
+                <div style="display:flex; justify-content:flex-end; gap:6px; margin-top: 8px;">
+                    <button type="button" class="btn-sm" :title="t('mobile_add_one_title')" @click="ownedCandles = (ownedCandles || 0) + 1">+1</button>
                     <button type="button" class="btn-sm" @click="ownedCandles = (ownedCandles || 0) + candlesPerDay">+{{ candlesPerDay }}{{ t('mobile_add_today') }}</button>
                 </div>
 
@@ -4408,6 +4412,7 @@
 
             mobile_owned: '所持',
             mobile_add_today: '（今日の分）',
+            mobile_add_one_title: '集めきれなかった分などを1本ずつ調整できます',
 
             goal_hearts: 'シーズンハート獲得: {n} / 4 個',
             goal_complete_msg: 'おめでとうございます！全精霊のシーズンハートを獲得しました！',
@@ -4806,6 +4811,7 @@
 
             mobile_owned: 'Owned',
             mobile_add_today: " (today's)",
+            mobile_add_one_title: 'Adjust one at a time, e.g. if you couldn\'t collect the full amount',
 
             goal_hearts: 'Season Hearts Earned: {n} / 4',
             goal_complete_msg: 'Congratulations! You\'ve earned every spirit\'s Season Heart!',
@@ -5204,6 +5210,7 @@
 
             mobile_owned: '持有',
             mobile_add_today: '（今日份）',
+            mobile_add_one_title: '若無法收集到完整數量，可一根一根微調',
 
             goal_hearts: '獲得季節之心：{n} / 4 個',
             goal_complete_msg: '恭喜！你已獲得所有精靈的季節之心！',
@@ -5602,6 +5609,7 @@
 
             mobile_owned: '보유',
             mobile_add_today: ' (오늘 분)',
+            mobile_add_one_title: '다 모으지 못했을 때 등 1개씩 조정할 수 있습니다',
 
             goal_hearts: '시즌 하트 획득: {n} / 4개',
             goal_complete_msg: '축하합니다! 모든 정령의 시즌 하트를 획득했습니다!',
