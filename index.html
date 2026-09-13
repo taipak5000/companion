@@ -4025,14 +4025,18 @@
             if (!colorMap.has(name)) colorMap.set(name, DASH_CAL_BAR_PALETTE[colorMap.size % DASH_CAL_BAR_PALETTE.length]);
             return colorMap.get(name);
         };
-        const pushItems = (schedule, name) => {
+        // colorKeyは色の割り当てだけに使うキー（省略時はnameそのもの）。再訪精霊は表示名が
+        // 「再訪精霊」で全スケジュール共通のため、nameのままだと由来の異なる複数の再訪スケジュールが
+        // 同じ色に潰れてしまう——そのため呼び出し側（revisitSchedulesのforEach）だけ、由来スケジュールを
+        // 一意に特定できるキー（配列インデックス）を別途渡す。表示テキスト(name)自体は変更しない。
+        const pushItems = (schedule, name, colorKey = name) => {
             pfDashOccurrencesInRange(schedule, rangeStart, rangeEnd).forEach(o => {
                 const clipStart = o.start && o.start > rangeStart ? o.start : rangeStart;
                 const clipEnd = o.end < rangeEnd ? o.end : rangeEnd;
                 if (clipEnd < clipStart) return;
                 items.push({
                     name,
-                    color: colorFor(name),
+                    color: colorFor(colorKey),
                     startDay: clipStart.getDate(),
                     endDay: clipEnd.getDate(),
                     // 実際の開始/終了がこの月の表示範囲内にあるかどうか（範囲外なら、その端は
@@ -4052,7 +4056,7 @@
         }
         (data.eventSchedule || []).forEach(ev => pushItems(ev, resolveName('event', ev.name)));
         (data.candleBonusSchedule || []).forEach(ev => pushItems(ev, resolveName('candle', ev.name)));
-        (data.revisitSchedules || []).forEach(sch => pushItems(sch, resolveName('revisit', null)));
+        (data.revisitSchedules || []).forEach((sch, idx) => pushItems(sch, resolveName('revisit', null), `revisit:${idx}`));
 
         // 開始日が早い順、同じ開始日なら長い予定を優先してレーンに割り当てる
         // （長い予定ほど上のレーンに固定されやすくなり、月をまたいでも位置が安定しやすい）
