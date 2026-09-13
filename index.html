@@ -5855,7 +5855,7 @@
             // 別のモーダルが上に重なるケースで、下側のトラップ情報が上書きされて壊れていた）。
             // Tabトラップの対象は常にスタック最上段（＝一番手前のモーダル）だけでよいので、
             // 開閉のたびにpush/popするだけでネストにも自動的に対応できる。
-            const FT_FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+            const FT_FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
             const ftStack = [];
             let ftListenerAttached = false;
             const ftGetFocusable = (container) => Array.from(container.querySelectorAll(FT_FOCUSABLE_SELECTOR))
@@ -7891,6 +7891,20 @@
                 dashError.value = false;
                 await pfDashFetchData(false);
                 dashLoading.value = false;
+                // ♿ 初回オープン時はデータ取得が非同期なため、useModalFocusTrap側の初期フォーカス
+                // （dashOpen=trueになった直後のnextTick）はこのfetch解決前、まだローディング表示
+                // （フォーカス可能要素が閉じるボタンしか無い状態）に対して実行されてしまう。実データが
+                // 描画された後のDOMに対してフォーカス対象を再計算し、本来の最初のフォーカス可能要素
+                // （更新ボタン等）へ当て直す。
+                if (dashOpen.value) {
+                    await nextTick();
+                    const container = dashModalCardEl.value;
+                    const stillTop = container && ftStack.length && ftStack[ftStack.length - 1].key === dashModalCardEl;
+                    if (stillTop) {
+                        const focusables = ftGetFocusable(container);
+                        (focusables[0] || container).focus();
+                    }
+                }
             };
             const pfDashClose = () => {
                 dashOpen.value = false;
@@ -8662,7 +8676,7 @@
                 pfCompareOpenModal, pfCompareCloseModal,
                 showShareModal, shareCardDataUrl, shareCardCanShare, shareCardFilename,
                 pfShareOpenModal, pfShareCloseModal, pfShareCardShare,
-                pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl, shareModalCardEl,
+                pfModalCardEl, dmModalCardEl, dashModalCardEl, iconModalCardEl, settingsModalCardEl, compareModalCardEl, shareModalCardEl, sidebarEl,
                 toastMessage, toastVisible,
                 fmtNum
             };
