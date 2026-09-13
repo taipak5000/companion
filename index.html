@@ -2652,7 +2652,7 @@
 
     <!-- ═══ 🆚 プロフィール比較 ═══ -->
     <div id="compareModalOverlay" class="pf-modal-overlay" :class="{ 'is-visible': showCompareModal }" @click.self="pfCompareCloseModal">
-        <div class="pf-modal-card" ref="compareModalCardEl" tabindex="-1" style="max-width:400px;">
+        <div class="pf-modal-card" ref="compareModalCardEl" tabindex="-1">
             <h3>{{ t('compare_title') }}</h3>
             <p class="pf-hint" style="margin-top:0;">{{ t('compare_hint') }}</p>
 
@@ -2707,7 +2707,7 @@
 
     <!-- ═══ 📤 シーズン進捗のシェアカード ═══ -->
     <div id="shareModalOverlay" class="pf-modal-overlay" :class="{ 'is-visible': showShareModal }" @click.self="pfShareCloseModal">
-        <div class="pf-modal-card" ref="shareModalCardEl" tabindex="-1" style="max-width:400px;">
+        <div class="pf-modal-card" ref="shareModalCardEl" tabindex="-1">
             <h3>{{ t('share_card_title') }}</h3>
             <p class="pf-hint" style="margin-top:0;">{{ t('share_card_hint') }}</p>
             <div style="display:flex; justify-content:center; margin-top:10px;">
