@@ -1464,6 +1464,12 @@
            開始/終了日と一致するときだけtrueになる）。 */
         .dash-cal-bar.round-l { border-top-left-radius: 9px; border-bottom-left-radius: 9px; margin-left: 2px; }
         .dash-cal-bar.round-r { border-top-right-radius: 9px; border-bottom-right-radius: 9px; margin-right: 2px; }
+        /* 🕓 このプロジェクトの予定はほぼ全てゲーム内デイリーリセット基準（太平洋時間8:00＝
+           日本時間15:59/16:00終了・開始）のため、実際の終了時刻は日付が変わる直前(23:59台)では
+           なく日中(だいたい15:59)であることが多い。最終日を丸ごと塗ると「その日一日ずっと
+           開催中」に誤って見えてしまうため、終了時刻が日付境界でない場合はeventCalendarWeeksで
+           最終日だけ半分の幅に短縮する。 */
+        .dash-cal-bar.half-end { width: 50%; }
 
         /* 🔥📅 連続記録（ストリーク）カレンダー/ヒートマップ */
         .walk-cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
@@ -2370,9 +2376,9 @@
                                     </div>
                                 </div>
                                 <div class="dash-cal-bars" :style="{ gridTemplateRows: 'repeat(' + week.rowCount + ', 18px)' }">
-                                    <div v-for="bar in week.bars" :key="bar.key" class="dash-cal-bar" :class="{ 'round-l': bar.roundL, 'round-r': bar.roundR }"
+                                    <div v-for="bar in week.bars" :key="bar.key" class="dash-cal-bar" :class="{ 'round-l': bar.roundL, 'round-r': bar.roundR, 'half-end': bar.halfEnd }"
                                          :style="{ gridColumn: bar.colStart + ' / span ' + bar.colSpan, gridRow: bar.row, background: bar.color }"
-                                         :title="bar.name">{{ bar.name }}</div>
+                                         :title="bar.title">{{ bar.name }}</div>
                                 </div>
                             </div>
                         </div>
@@ -4053,6 +4059,13 @@
                     // （＝丸めない）」として扱う。
                     trueStart: !!o.start && o.start.getTime() >= rangeStart.getTime(),
                     trueEnd: o.end.getTime() <= rangeEnd.getTime(),
+                    // 🕓 このプロジェクトの予定はほぼ全てゲーム内デイリーリセット基準
+                    // （太平洋時間8:00＝日本時間15:59/16:00終了・開始）のため、実際の終了時刻は
+                    // 日付が変わる直前(23:59台)ではなく日中(だいたい15:59)であることが多い。
+                    // 最終日を丸ごと塗ると「その日一日ずっと開催中」に誤って見えてしまうため、
+                    // 終了時刻が日付境界でない場合はeventCalendarWeeksで最終日だけ半分の幅に
+                    // 短縮する（判定は日でクリップされる前の本物のo.endに基づく）。
+                    endsMidDay: !(o.end.getHours() === 23 && o.end.getMinutes() >= 59),
                 });
             });
         };
@@ -6224,23 +6237,66 @@
                         .filter(x => x.startDay <= weekLastDay && x.endDay >= weekFirstDay)
                         .sort((a, b) => a.lane - b.lane);
 
-                    const bars = weekItems.map((it, localRow) => {
+                    const bars = weekItems.flatMap((it, localRow) => {
                         const segStartDay = Math.max(it.startDay, weekFirstDay);
                         const segEndDay = Math.min(it.endDay, weekLastDay);
+                        const colStart = segStartDay - weekFirstDay + 1; // 1-indexed グリッド列
+                        const colSpan = segEndDay - segStartDay + 1;
+                        const row = localRow + 1;
                         // 「本当にこの週で始まる/終わる」は、月内クリップ後のstartDay/endDayがこの週の
                         // 範囲に入っているだけでなく、それが本物の開始/終了日であること（trueStart/trueEnd）
                         // も条件にする——でないと、前月から継続中の予定がたまたま月初の週に表示される際に、
                         // 丸めのない継続中の左端を誤って「ここが本当の開始」であるかのように丸めてしまう。
-                        return {
+                        const roundL = it.trueStart && it.startDay >= weekFirstDay;
+                        const roundR = it.trueEnd && it.endDay <= weekLastDay;
+                        // 🕓 この週に本当の最終日が含まれ（roundR）、かつその終了時刻が日中(15:59等)で
+                        // ある場合（endsMidDay）だけ最終日のセルを半分の幅に短縮する。翌月へ継続中の
+                        // 予定（roundR===false）は本当にここで終わるわけではないため対象外。
+                        const halfEnd = roundR && it.endsMidDay;
+                        if (halfEnd && colSpan > 1) {
+                            // 最終日より前の分は通常どおり全幅で塗り、最終日のセルとの間は余白なく
+                            // 隣接させることで1本の連続した棒に見えるようにする
+                            // （column-gap:0のグリッド設計を踏襲）。名前ラベルは長い方の要素に乗せ、
+                            // 半分幅の最終日要素はホバー用のtitleだけを持つ空表示にする。
+                            return [
+                                {
+                                    key: 'ecb-' + w + '-' + localRow + '-a',
+                                    name: it.name,
+                                    title: it.name,
+                                    color: it.color,
+                                    colStart,
+                                    colSpan: colSpan - 1,
+                                    row,
+                                    roundL,
+                                    roundR: false,
+                                    halfEnd: false,
+                                },
+                                {
+                                    key: 'ecb-' + w + '-' + localRow + '-b',
+                                    name: '',
+                                    title: it.name,
+                                    color: it.color,
+                                    colStart: colStart + colSpan - 1,
+                                    colSpan: 1,
+                                    row,
+                                    roundL: false,
+                                    roundR: true,
+                                    halfEnd: true,
+                                },
+                            ];
+                        }
+                        return [{
                             key: 'ecb-' + w + '-' + localRow,
                             name: it.name,
+                            title: it.name,
                             color: it.color,
-                            colStart: segStartDay - weekFirstDay + 1, // 1-indexed グリッド列
-                            colSpan: segEndDay - segStartDay + 1,
-                            row: localRow + 1,
-                            roundL: it.trueStart && it.startDay >= weekFirstDay,
-                            roundR: it.trueEnd && it.endDay <= weekLastDay,
-                        };
+                            colStart,
+                            colSpan,
+                            row,
+                            roundL,
+                            roundR,
+                            halfEnd,
+                        }];
                     });
 
                     weeks.push({ key: 'ecw-' + w, dayNums, bars, rowCount: Math.max(weekItems.length, 1) });
