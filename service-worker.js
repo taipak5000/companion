@@ -14,9 +14,8 @@
 //
 // キャッシュを作り直したい場合はCACHE_VERSIONの文字列を上げるだけでよい。
 // 古いバージョンのキャッシュはactivate時に自動で破棄される。
-const CACHE_VERSION = 'v7'; // v7: イベントカレンダーのsummaryタップがシートドラッグに誤認識される不具合・
-// 通常セルでのドット文字コントラスト不足・is-todayの複数ドット重なり・デスクトップ幅での
-// 浮き島レイアウトを修正したための強制キャッシュ更新
+const CACHE_VERSION = 'v8'; // v8: イベントカレンダーを日ごとの丸ドット＋凡例からGoogleカレンダー風の
+// 複数日にまたがる棒（予定名を直接表示）へ全面刷新したための強制キャッシュ更新
 const CACHE_NAME = `companion-shell-${CACHE_VERSION}`;
 
 // self.registration.scope（このSWが登録されているディレクトリ）からの相対パスで解決する。
