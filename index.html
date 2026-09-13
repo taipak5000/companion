@@ -1470,6 +1470,11 @@
            開催中」に誤って見えてしまうため、終了時刻が日付境界でない場合はeventCalendarWeeksで
            最終日だけ半分の幅に短縮する。 */
         .dash-cal-bar.half-end { width: 50%; }
+        /* 🕓 開始時刻についても同様（ほぼ全ての予定が日本時間16:00開始）。開始日を丸ごと
+           塗ると「その日の朝からずっと開催中」に誤って見えてしまうため、開始時刻が日付境界
+           でない場合はeventCalendarWeeksで開始日だけ右半分（翌日に向かって）に短縮する。
+           justify-selfでグリッドセル内を右詰めにするため、round-lのmargin-leftとは競合しない。 */
+        .dash-cal-bar.half-start { width: 50%; justify-self: end; }
 
         /* 🔥📅 連続記録（ストリーク）カレンダー/ヒートマップ */
         .walk-cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
@@ -2376,7 +2381,7 @@
                                     </div>
                                 </div>
                                 <div class="dash-cal-bars" :style="{ gridTemplateRows: 'repeat(' + week.rowCount + ', 18px)' }">
-                                    <div v-for="bar in week.bars" :key="bar.key" class="dash-cal-bar" :class="{ 'round-l': bar.roundL, 'round-r': bar.roundR, 'half-end': bar.halfEnd }"
+                                    <div v-for="bar in week.bars" :key="bar.key" class="dash-cal-bar" :class="{ 'round-l': bar.roundL, 'round-r': bar.roundR, 'half-start': bar.halfStart, 'half-end': bar.halfEnd }"
                                          :style="{ gridColumn: bar.colStart + ' / span ' + bar.colSpan, gridRow: bar.row, background: bar.color }"
                                          :title="bar.title">{{ bar.name }}</div>
                                 </div>
@@ -4066,6 +4071,10 @@
                     // 終了時刻が日付境界でない場合はeventCalendarWeeksで最終日だけ半分の幅に
                     // 短縮する（判定は日でクリップされる前の本物のo.endに基づく）。
                     endsMidDay: !(o.end.getHours() === 23 && o.end.getMinutes() >= 59),
+                    // 🕓 開始時刻についても同様（ほぼ全ての予定が日本時間16:00開始）。
+                    // o.startが無い場合（季節など）は「開始日が分かっている」こと自体が無いため
+                    // false（trueStartも常にfalseになるので、この値自体は参照されない）。
+                    startsMidDay: !!o.start && !(o.start.getHours() === 0 && o.start.getMinutes() === 0),
                 });
             });
         };
@@ -6249,54 +6258,102 @@
                         // 丸めのない継続中の左端を誤って「ここが本当の開始」であるかのように丸めてしまう。
                         const roundL = it.trueStart && it.startDay >= weekFirstDay;
                         const roundR = it.trueEnd && it.endDay <= weekLastDay;
-                        // 🕓 この週に本当の最終日が含まれ（roundR）、かつその終了時刻が日中(15:59等)で
-                        // ある場合（endsMidDay）だけ最終日のセルを半分の幅に短縮する。翌月へ継続中の
-                        // 予定（roundR===false）は本当にここで終わるわけではないため対象外。
+                        // 🕓 この週に本当の開始日/最終日が含まれ（roundL/roundR）、かつその開始/終了
+                        // 時刻が日付境界（0:00/23:59台）でない場合（ほぼ全ての予定が16:00開始・
+                        // 15:59終了）だけ、その日のセルを半分の幅に短縮する。開始日は右半分（翌日に
+                        // 向かって）、最終日は左半分（前日から続いて）に配置する。前月/前週から継続中
+                        // （roundL===false）・翌月/翌週へ継続中（roundR===false）の側は本当にここで
+                        // 始まる/終わるわけではないため対象外。
+                        const halfStart = roundL && it.startsMidDay;
                         const halfEnd = roundR && it.endsMidDay;
-                        if (halfEnd && colSpan > 1) {
-                            // 最終日より前の分は通常どおり全幅で塗り、最終日のセルとの間は余白なく
-                            // 隣接させることで1本の連続した棒に見えるようにする
-                            // （column-gap:0のグリッド設計を踏襲）。名前ラベルは長い方の要素に乗せ、
-                            // 半分幅の最終日要素はホバー用のtitleだけを持つ空表示にする。
-                            return [
-                                {
-                                    key: 'ecb-' + w + '-' + localRow + '-a',
-                                    name: it.name,
-                                    title: it.name,
-                                    color: it.color,
-                                    colStart,
-                                    colSpan: colSpan - 1,
-                                    row,
-                                    roundL,
-                                    roundR: false,
-                                    halfEnd: false,
-                                },
-                                {
-                                    key: 'ecb-' + w + '-' + localRow + '-b',
-                                    name: '',
-                                    title: it.name,
-                                    color: it.color,
-                                    colStart: colStart + colSpan - 1,
-                                    colSpan: 1,
-                                    row,
-                                    roundL: false,
-                                    roundR: true,
-                                    halfEnd: true,
-                                },
-                            ];
+                        if (!halfStart && !halfEnd) {
+                            return [{
+                                key: 'ecb-' + w + '-' + localRow,
+                                name: it.name,
+                                title: it.name,
+                                color: it.color,
+                                colStart,
+                                colSpan,
+                                row,
+                                roundL,
+                                roundR,
+                                halfStart: false,
+                                halfEnd: false,
+                            }];
                         }
-                        return [{
-                            key: 'ecb-' + w + '-' + localRow,
-                            name: it.name,
-                            title: it.name,
-                            color: it.color,
-                            colStart,
-                            colSpan,
-                            row,
-                            roundL,
-                            roundR,
-                            halfEnd,
-                        }];
+                        if (colSpan === 1) {
+                            // この週にはその予定の1日分（開始日と最終日が同じ週内の1日に重なる
+                            // 稀なケース含む）しか含まれない。
+                            return [{
+                                key: 'ecb-' + w + '-' + localRow,
+                                name: it.name,
+                                title: it.name,
+                                color: it.color,
+                                colStart,
+                                colSpan: 1,
+                                row,
+                                roundL,
+                                roundR,
+                                halfStart,
+                                halfEnd,
+                            }];
+                        }
+                        // colSpan > 1で開始日・最終日の少なくとも一方が半分幅になるケース。
+                        // 半分幅の要素同士・半分幅と通常幅の要素の間は余白なく隣接させることで
+                        // 1本の連続した棒に見えるようにする（column-gap:0のグリッド設計を踏襲）。
+                        // 名前ラベルは中央の通常幅要素に乗せ、半分幅の開始/最終日要素はホバー用の
+                        // titleだけを持つ空表示にする（開始・最終日の両方が半分幅かつcolSpan===2の
+                        // 場合は中央の要素自体が存在せず、ラベルはどちらにも乗らない）。
+                        const endCol = colStart + colSpan - 1;
+                        const midStart = halfStart ? colStart + 1 : colStart;
+                        const midSpan = (halfEnd ? endCol : endCol + 1) - midStart;
+                        const bars = [];
+                        if (halfStart) {
+                            bars.push({
+                                key: 'ecb-' + w + '-' + localRow + '-s',
+                                name: '',
+                                title: it.name,
+                                color: it.color,
+                                colStart,
+                                colSpan: 1,
+                                row,
+                                roundL,
+                                roundR: false,
+                                halfStart: true,
+                                halfEnd: false,
+                            });
+                        }
+                        if (midSpan > 0) {
+                            bars.push({
+                                key: 'ecb-' + w + '-' + localRow + '-m',
+                                name: it.name,
+                                title: it.name,
+                                color: it.color,
+                                colStart: midStart,
+                                colSpan: midSpan,
+                                row,
+                                roundL: !halfStart && roundL,
+                                roundR: !halfEnd && roundR,
+                                halfStart: false,
+                                halfEnd: false,
+                            });
+                        }
+                        if (halfEnd) {
+                            bars.push({
+                                key: 'ecb-' + w + '-' + localRow + '-e',
+                                name: '',
+                                title: it.name,
+                                color: it.color,
+                                colStart: endCol,
+                                colSpan: 1,
+                                row,
+                                roundL: false,
+                                roundR,
+                                halfStart: false,
+                                halfEnd: true,
+                            });
+                        }
+                        return bars;
                     });
 
                     weeks.push({ key: 'ecw-' + w, dayNums, bars, rowCount: Math.max(weekItems.length, 1) });
