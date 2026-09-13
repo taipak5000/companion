@@ -2005,7 +2005,12 @@
         .pf-modal-overlay.is-visible { animation: iosFade 0.32s cubic-bezier(0.25, 1, 0.5, 1); }
         .pf-modal-overlay.is-closing { display: flex; pointer-events: none; }
         .pf-modal-card {
-          width: 100%; max-width: 100%; max-height: 88vh; max-height: 88dvh;
+          /* 📐 幅の統一（cross-site consistency）: 基準サイト item の .wrap と同じ
+             max-width: 720px（850px以上で960px）を、ここでは「通常サイズの」ボトムシート
+             モーダル全般の基準値として使う（旧: 560px以上で600pxだった独自基準を是正）。
+             モバイル幅では実際のビューポート幅の方が狭いため、この基準値自体は見た目に
+             影響しない（従来の max-width:100% と同じ edge-to-edge のまま）。 */
+          width: 100%; max-width: 720px; max-height: 88vh; max-height: 88dvh;
           border-radius: 20px 20px 0 0;
           box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25);
           position: relative; overscroll-behavior: contain;
@@ -2013,9 +2018,15 @@
           animation: sheetSlideUp 0.32s cubic-bezier(0.25, 1, 0.5, 1);
           transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1);
         }
+        /* ⚙️ 表示設定モーダルだけは他サイトの多くと同様、意図的に狭いまま据え置く
+           （トグル数個の短いリストは720-960px幅より狭い方が読みやすいため）。
+           この分岐点（560px）自体は従来から変えていない — 変えたのは一般モーダルの
+           基準値・分岐点（下のmin-width:850pxブロック）だけ。 */
         @media (min-width: 560px) {
-          .pf-modal-card { max-width: 600px; }
           #settingsModalOverlay .pf-modal-card { max-width: 360px; }
+        }
+        @media (min-width: 850px) {
+          .pf-modal-card { max-width: 960px; }
         }
         .pf-modal-card.is-dragging, .pf-modal-card.js-anim { transition: none; animation: none; cursor: grabbing; user-select: none; }
         .pf-modal-card::before {
@@ -2704,7 +2715,7 @@
     <div v-if="showSidebar" class="sidebar-overlay" @click="showSidebar = false"></div>
 
     <!-- ═══ サイドバー（他のツール一覧ドロワー） ═══ -->
-    <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
+    <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }" ref="sidebarEl">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('side_related_tools') }}</div>
             <button class="sidebar-close-btn" @click="showSidebar = false"><span class="icon-chip" style="width:22px; height:22px;"><svg width="16" height="16"><use href="#i-close"/></svg></span></button>
@@ -3448,7 +3459,7 @@
             <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-calendar"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock_dashboard') }}</span>
         </button>
-        <button type="button" @click="showSidebar = true">
+        <button type="button" @click="pfSidebarOpen">
             <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-menu"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock_tools') }}</span>
         </button>
@@ -5835,49 +5846,64 @@
             // watchすることで、専用関数を経由しない直接代入（例: @click="switchRecord(rec.id); showProfileModal = false"）
             // でも確実に効くようにしている。共有オーバーレイパターン（.pf-modal-overlay/.pf-modal-card）を
             // 使う全モーダルに useModalFocusTrap(...) で紐付ける。
+            // 🥞 wings のtrapPush/trapPopと同じ、開いた順に積むスタック方式（旧実装は同時に1つの
+            // モーダルしか覚えられなかったため、「?」ショートカット等で他のモーダルが開いたまま
+            // 別のモーダルが上に重なるケースで、下側のトラップ情報が上書きされて壊れていた）。
+            // Tabトラップの対象は常にスタック最上段（＝一番手前のモーダル）だけでよいので、
+            // 開閉のたびにpush/popするだけでネストにも自動的に対応できる。
             const FT_FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-            let ftLastTrigger = null;
-            let ftContainerEl = null;
+            const ftStack = [];
+            let ftListenerAttached = false;
             const ftGetFocusable = (container) => Array.from(container.querySelectorAll(FT_FOCUSABLE_SELECTOR))
                 .filter(el => el.offsetParent !== null); // 非表示要素（v-show等）は対象外にする
             const ftHandleKeydown = (e) => {
-                if (e.key !== 'Tab' || !ftContainerEl) return;
-                const focusables = ftGetFocusable(ftContainerEl);
-                if (focusables.length === 0) { e.preventDefault(); ftContainerEl.focus(); return; }
+                if (e.key !== 'Tab' || !ftStack.length) return;
+                const container = ftStack[ftStack.length - 1].container; // 常にスタック最上段＝一番手前のモーダルだけをトラップする
+                const focusables = ftGetFocusable(container);
+                if (focusables.length === 0) { e.preventDefault(); container.focus(); return; }
                 const first = focusables[0];
                 const last = focusables[focusables.length - 1];
-                const activeInside = ftContainerEl.contains(document.activeElement);
+                const activeInside = container.contains(document.activeElement);
                 if (e.shiftKey) {
                     if (!activeInside || document.activeElement === first) { e.preventDefault(); last.focus(); }
                 } else {
                     if (!activeInside || document.activeElement === last) { e.preventDefault(); first.focus(); }
                 }
             };
-            const ftOpen = (containerEl) => {
-                if (!containerEl) return;
-                ftLastTrigger = document.activeElement;
-                ftContainerEl = containerEl;
-                document.addEventListener('keydown', ftHandleKeydown);
+            // keyをそのモーダルの識別子として使う（同じcontainerRefオブジェクトは常に同一なので、
+            // 文字列IDを別途用意しなくてもスタック内の重複判定に使える）
+            const ftOpen = (key, containerEl) => {
+                if (!containerEl || ftStack.some(s => s.key === key)) return; // 多重呼び出し時にトリガー参照を上書きしない
+                ftStack.push({ key, container: containerEl, prevFocusEl: document.activeElement });
+                if (!ftListenerAttached) {
+                    document.addEventListener('keydown', ftHandleKeydown);
+                    ftListenerAttached = true;
+                }
                 nextTick(() => {
-                    if (ftContainerEl !== containerEl) return; // 待っている間に別モーダルへ切り替わっていたら何もしない
+                    // 待っている間にこのモーダルがスタック最上段でなくなっていたら（既に閉じられた等）何もしない
+                    if (!ftStack.length || ftStack[ftStack.length - 1].key !== key) return;
                     const focusables = ftGetFocusable(containerEl);
                     (focusables[0] || containerEl).focus();
                 });
             };
-            const ftClose = () => {
-                document.removeEventListener('keydown', ftHandleKeydown);
-                ftContainerEl = null;
-                const trigger = ftLastTrigger;
-                ftLastTrigger = null;
-                if (trigger && typeof trigger.focus === 'function' && document.contains(trigger)) {
-                    trigger.focus();
+            const ftClose = (key) => {
+                const idx = ftStack.findIndex(s => s.key === key);
+                if (idx === -1) return;
+                const [entry] = ftStack.splice(idx, 1);
+                if (!ftStack.length && ftListenerAttached) {
+                    document.removeEventListener('keydown', ftHandleKeydown);
+                    ftListenerAttached = false;
+                }
+                if (entry.prevFocusEl && typeof entry.prevFocusEl.focus === 'function' && document.contains(entry.prevFocusEl)) {
+                    entry.prevFocusEl.focus();
                 }
             };
-            // isOpenRef（表示状態の真偽値ref）とcontainerRef（モーダルカードのtemplate ref）を紐付ける
+            // isOpenRef（表示状態の真偽値ref）とcontainerRef（モーダルカードのtemplate ref）を紐付ける。
+            // containerRef自体（同一オブジェクト）をスタックのkeyとして使う。
             const useModalFocusTrap = (isOpenRef, containerRef) => {
                 watch(isOpenRef, (isOpen) => {
-                    if (isOpen) ftOpen(containerRef.value);
-                    else ftClose();
+                    if (isOpen) ftOpen(containerRef, containerRef.value);
+                    else ftClose(containerRef);
                 });
             };
             // 各モーダルの .pf-modal-card 本体を指すtemplate ref（フォーカストラップの対象コンテナ）
@@ -5888,6 +5914,7 @@
             const settingsModalCardEl = ref(null);
             const compareModalCardEl = ref(null);
             const shareModalCardEl = ref(null);
+            const sidebarEl = ref(null); // ♿ サイドバー（他のツールドロワー）本体。フォーカストラップの対象コンテナ
 
             const showSharedTools = ref(false); // 📌 メモ・計算欄はデフォルトで折りたたみ
             const sharedNotes = ref(''); // 📌 新規：共通メモの状態管理変数
@@ -6992,7 +7019,13 @@
             };
 
             // ⚙️ 表示設定モーダルの開閉
-            const settingsOpenModal = () => { showSettingsModal.value = true; };
+            const settingsOpenModal = () => {
+                // 既に開いている場合は何もしない（ここでガードしないとフォーカストラップ側の
+                // トリガー参照がモーダル内の要素で上書きされ、閉じたときにフォーカスの戻し先を見失う）
+                if (showSettingsModal.value) return;
+                pfCloseOtherTopLevelOverlays(showSettingsModal);
+                showSettingsModal.value = true;
+            };
             const settingsCloseModal = () => { showSettingsModal.value = false; };
 
             // ⌨️ キーボードショートカット（?・d・Esc）が有効かどうかを、その都度localStorageから
@@ -7698,6 +7731,10 @@
             // ポップアップブロックの影響を受ける prompt()/confirm() は使わず、
             // モーダル内にインラインで表示する（他ツールと同じ方式）。
             const pfOpenModal = () => {
+                // 既に開いている場合は何もしない（ここでガードしないとフォーカストラップ側の
+                // トリガー参照がモーダル内の要素で上書きされ、閉じたときにフォーカスの戻し先を見失う）
+                if (showProfileModal.value) return;
+                pfCloseOtherTopLevelOverlays(showProfileModal);
                 pfEditingId.value = null;
                 pfDeletingId.value = null;
                 loadCurrencyFields();
@@ -7839,6 +7876,10 @@
                 }
             };
             const pfDashOpen = async () => {
+                // 既に開いている場合は何もしない（ここでガードしないとフォーカストラップ側の
+                // トリガー参照がモーダル内の要素で上書きされ、閉じたときにフォーカスの戻し先を見失う）
+                if (dashOpen.value) return;
+                pfCloseOtherTopLevelOverlays(dashOpen);
                 dashOpen.value = true;
                 pfDashStartTimer();
                 if (dashData.value) return;
@@ -8369,6 +8410,10 @@
                 shareCardDataUrl.value = canvas.toDataURL('image/png');
             };
             const pfShareOpenModal = () => {
+                // 既に開いている場合は何もしない（ここでガードしないとフォーカストラップ側の
+                // トリガー参照がモーダル内の要素で上書きされ、閉じたときにフォーカスの戻し先を見失う）
+                if (showShareModal.value) return;
+                pfCloseOtherTopLevelOverlays(showShareModal);
                 showShareModal.value = true;
                 nextTick(() => {
                     shareCardGenerate();
@@ -8500,6 +8545,33 @@
             useModalFocusTrap(showSettingsModal, settingsModalCardEl);
             useModalFocusTrap(showCompareModal, compareModalCardEl);
             useModalFocusTrap(showShareModal, shareModalCardEl);
+            useModalFocusTrap(showSidebar, sidebarEl); // ♿ 「他のツール」ドロワーも他モーダルと同じくフォーカストラップの対象にする
+
+            // 🚪 オーバーレイの排他制御（mutual exclusion）: 表示設定／ダッシュボード／
+            // プロフィール切替／シェアカード／サイドバー（「他のツール」ドロワー）の5つは、
+            // 下部ドックや「?」ショートカット、メインページのボタンからいつでも独立して開けるため、
+            // 他のどれかが開いたままもう1つを開くとオーバーレイ同士が重なって見えてしまう
+            // （例: ダッシュボードを開いたまま「?」で表示設定を開くと2枚重なる）。開く前に、
+            // 開こうとしているもの以外を閉じておく（各close関数は未オープン時は何もしない安全な関数）。
+            // 比較(compare)・データ管理(dm)・アイコンカスタム(icon)モーダルは、いずれもプロフィール／
+            // 表示設定モーダル内の専用ボタンからしか開けず、そのボタン自体が呼び出し時に親モーダルを
+            // 明示的に閉じてから開く実装（例: pfCloseModal(); pfCompareOpenModal();）のため、
+            // ここでの排他制御には含めない（他のトップレベルが開いた状態でこの3つだけが開くことはない）。
+            const pfCloseOtherTopLevelOverlays = (exceptRef) => {
+                if (exceptRef !== showSettingsModal && showSettingsModal.value) settingsCloseModal();
+                if (exceptRef !== dashOpen && dashOpen.value) pfDashClose();
+                if (exceptRef !== showProfileModal && showProfileModal.value) pfCloseModal();
+                if (exceptRef !== showShareModal && showShareModal.value) pfShareCloseModal();
+                if (exceptRef !== showSidebar && showSidebar.value) showSidebar.value = false;
+            };
+            // 📌 サイドバー（「他のツール」ドロワー）専用の開く関数。他のトップレベルオーバーレイと
+            // 同様に排他制御の対象にするため、テンプレート側の直接代入（showSidebar = true）から
+            // この関数呼び出しに置き換える。
+            const pfSidebarOpen = () => {
+                if (showSidebar.value) return; // 既に開いている場合は何もしない（トリガー参照の上書き防止）
+                pfCloseOtherTopLevelOverlays(showSidebar);
+                showSidebar.value = true;
+            };
 
             onMounted(() => {
                 load();
@@ -8539,7 +8611,7 @@
                 incrementWalkDays, decrementWalkDays, applyPreset,
                 getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, themeMode, toggleTheme,
                 currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay, translateEventName,
-                showSidebar, showSharedTools, sharedNotes,
+                showSidebar, pfSidebarOpen, showSharedTools, sharedNotes,
                 showOptimizer, optSelectedId, estimatedDailyCandles, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
                 optCopyStatus, optCopyPlan, heartCopyStatus, heartCopyPlan,
                 hasSeasonPass, ownedCandles, candlesPerDay,
