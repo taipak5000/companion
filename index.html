@@ -1597,7 +1597,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 90;
+            /* 🩹 z-index: オーバーレイ背景(.pf-modal-overlay:1000 / .sidebar-overlay:499)より
+               低いままだと、オーバーレイが開いている間ドックがクリックを奪われ、別のドック
+               アイコンをタップしても「現在のオーバーレイを閉じるだけ」になり、意図した
+               オーバーレイへの一発切り替えができなかった。ドックは常にクリック可能であるべき
+               なので、全オーバーレイ背景より上に置く。 */
+            z-index: 1001;
             padding: 6px 10px calc(8px + env(safe-area-inset-bottom));
             background: var(--card-bg);
             backdrop-filter: blur(10px);
@@ -8512,11 +8517,17 @@
             // Esc＝開いているモーダルを閉じる）。Escはテキスト入力中でも常に有効（ダイアログを閉じる
             // のはユーザーの期待に沿うため）。?とdは、テキスト入力中は通常の文字入力として使えるよう
             // ガードする。
+            // 🩹 input要素はtypeを問わず一律「入力中」扱いにしていたため、type=colorのような
+            // 実際には'?'や'd'をリテラル文字として受け付けない入力（チェックボックス/ラジオ/
+            // レンジ/カラー/ボタン等）にフォーカスがあるだけでショートカットが死んでいた。
+            // 実際に文字を打ち込めるtypeだけを「入力中」とみなす（spirit-catalogと同じ方針）。
+            const PF_NON_TEXT_INPUT_TYPES = ['checkbox', 'radio', 'range', 'color', 'button', 'submit', 'reset', 'file', 'image', 'hidden'];
             const handleGlobalKeydown = (e) => {
                 if (e.repeat) return;
                 if (e.ctrlKey || e.metaKey || e.altKey) return;
                 const tgt = e.target;
-                const isTyping = tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable);
+                const isTextInput = tgt && tgt.tagName === 'INPUT' && PF_NON_TEXT_INPUT_TYPES.indexOf((tgt.type || '').toLowerCase()) === -1;
+                const isTyping = tgt && (isTextInput || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable);
 
                 if (e.key === 'Escape') {
                     closeTopmostOpenModal();
@@ -8574,13 +8585,22 @@
             // 比較(compare)・データ管理(dm)・アイコンカスタム(icon)モーダルは、いずれもプロフィール／
             // 表示設定モーダル内の専用ボタンからしか開けず、そのボタン自体が呼び出し時に親モーダルを
             // 明示的に閉じてから開く実装（例: pfCloseModal(); pfCompareOpenModal();）のため、
-            // ここでの排他制御には含めない（他のトップレベルが開いた状態でこの3つだけが開くことはない）。
+            // 「開く前」側の排他制御（自分の呼び出しからこの関数を呼ぶ必要）は不要。ただし、この3つが
+            // 開いている間に「?」ショートカットのようなクリックチェーンを経由しない経路で表示設定等の
+            // 別のトップレベルオーバーレイが開かれるケースがあり、その場合は下の「閉じられる側」の
+            // 一覧に含めておかないと表示設定がこの3つの上に重なって表示されてしまう
+            // （🐛 実際に「?」ショートカットで再現: データ管理／比較／アイコンカスタムモーダルを開いた
+            // 状態で「?」を押すと、settingsOpenModal()はクリックチェーンを経由しないためこの3つが
+            // 閉じられないまま表示設定が重なって開いていた）。そのため「閉じられる側」にはこの3つも含める。
             const pfCloseOtherTopLevelOverlays = (exceptRef) => {
                 if (exceptRef !== showSettingsModal && showSettingsModal.value) settingsCloseModal();
                 if (exceptRef !== dashOpen && dashOpen.value) pfDashClose();
                 if (exceptRef !== showProfileModal && showProfileModal.value) pfCloseModal();
                 if (exceptRef !== showShareModal && showShareModal.value) pfShareCloseModal();
                 if (exceptRef !== showSidebar && showSidebar.value) showSidebar.value = false;
+                if (exceptRef !== showDmModal && showDmModal.value) dmCloseModal();
+                if (exceptRef !== showCompareModal && showCompareModal.value) pfCompareCloseModal();
+                if (exceptRef !== showIconModal && showIconModal.value) pfIconCloseModal();
             };
             // 📌 サイドバー（「他のツール」ドロワー）専用の開く関数。他のトップレベルオーバーレイと
             // 同様に排他制御の対象にするため、テンプレート側の直接代入（showSidebar = true）から
