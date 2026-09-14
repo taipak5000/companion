@@ -1455,7 +1455,7 @@
         .dash-cal-bars { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 18px; row-gap: 2px; column-gap: 0; padding-top: 2px; }
         .dash-cal-bar {
             display: flex; align-items: center; min-width: 0; height: 18px; margin: 0;
-            padding: 0 6px; font-size: 10px; font-weight: 600; color: #fff;
+            padding: 0 6px; font-size: 10px; font-weight: 600;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         /* 🐛 継続中の予定（前月/前週から続く・翌月/翌週へ続く）の非丸め側は、隣接週内グリッド
@@ -2382,7 +2382,7 @@
                                 </div>
                                 <div class="dash-cal-bars" :style="{ gridTemplateRows: 'repeat(' + week.rowCount + ', 18px)' }">
                                     <div v-for="bar in week.bars" :key="bar.key" class="dash-cal-bar" :class="{ 'round-l': bar.roundL, 'round-r': bar.roundR, 'half-start': bar.halfStart, 'half-end': bar.halfEnd }"
-                                         :style="{ gridColumn: bar.colStart + ' / span ' + bar.colSpan, gridRow: bar.row, background: bar.color }"
+                                         :style="{ gridColumn: bar.colStart + ' / span ' + bar.colSpan, gridRow: bar.row, background: bar.color, color: bar.textColor }"
                                          :title="bar.title">{{ bar.name }}</div>
                                 </div>
                             </div>
@@ -4010,14 +4010,31 @@
         if (s && s.getTime() > rangeEnd.getTime()) return [];
         return [{ start: s, end: e }];
     };
-    // 予定名ごとに棒の色を割り当てる固定パレット（10色）。白文字を乗せる前提で、
-    // 全色ともWCAG 4.5:1以上のコントラストになるよう選定・検証済み
-    // （実測値: 5.0〜7.9:1。ライト/ダーク共通のテーマ非依存パレットで、テーマ別の
-    // 出し分けは行わない）。
+    // 予定名ごとに棒の色を割り当てる固定パレット（9色）。かわいらしい色合いにしたいという
+    // ユーザー要望の参考画像の色をそのまま採用（値は変更しない）。ライト/ダーク共通の
+    // テーマ非依存パレットで、テーマ別の出し分けは行わない。
+    // 多くが白文字だとWCAG 4.5:1を満たさないパステル寄りの色のため、背景色ごとに実際の
+    // 相対輝度を計算し、白文字/黒文字のうちコントラスト比が高い方を自動選択する
+    // （pfDashTextColorFor）ことで、色の値を一切妥協せずに全色とも4.5:1以上を確保する
+    // （実測値: 白文字採用時5.03:1、黒文字採用時5.72〜11.26:1）。
     const DASH_CAL_BAR_PALETTE = [
-        '#b91c1c', '#7c3aed', '#57534e', '#1d4ed8', '#92400e',
-        '#15803d', '#0f766e', '#be185d', '#9a3412', '#4338ca',
+        '#e775a0', '#3c768e', '#f2b32b', '#b27764', '#f48a77',
+        '#06d1b6', '#4e91e1', '#b7a517', '#f16262',
     ];
+    // WCAG相対輝度を計算し、背景色に対して白文字/黒文字のうちコントラスト比が高い方を返す
+    // （sRGBのガンマ補正込みの標準式。10px太字はWCAG上「大きな文字」の閾値未満のため、
+    // 通常テキストの基準4.5:1をどちらの文字色でも満たせるかで単純に大小比較すればよい）。
+    const pfDashTextColorFor = (hex) => {
+        const c = hex.replace('#', '');
+        const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+        const r = lin(parseInt(c.slice(0, 2), 16));
+        const g = lin(parseInt(c.slice(2, 4), 16));
+        const b = lin(parseInt(c.slice(4, 6), 16));
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const contrastWithWhite = (1.0 + 0.05) / (luminance + 0.05);
+        const contrastWithBlack = (luminance + 0.05) / (0 + 0.05);
+        return contrastWithWhite >= contrastWithBlack ? '#fff' : '#000';
+    };
     // 表示中の月に登場する予定（季節・イベント・キャンドル2倍・再訪精霊）を、月全体で重ならないよう
     // 「レーン」（縦位置）に割り当てる。同じ予定は月内を通して同じレーンに留まるようにするため、
     // 週ごとではなく月全体で1回だけレーンを計算する（週ごとに再計算すると、同じ予定が週によって
@@ -4050,9 +4067,11 @@
                 const clipStart = o.start && o.start > rangeStart ? o.start : rangeStart;
                 const clipEnd = o.end < rangeEnd ? o.end : rangeEnd;
                 if (clipEnd < clipStart) return;
+                const barColor = colorFor(colorKey);
                 items.push({
                     name,
-                    color: colorFor(colorKey),
+                    color: barColor,
+                    textColor: pfDashTextColorFor(barColor),
                     startDay: clipStart.getDate(),
                     endDay: clipEnd.getDate(),
                     // 実際の開始/終了がこの月の表示範囲内にあるかどうか（範囲外なら、その端は
@@ -6300,6 +6319,7 @@
                                 name: it.name,
                                 title: it.name,
                                 color: it.color,
+                                textColor: it.textColor,
                                 colStart,
                                 colSpan,
                                 row,
@@ -6317,6 +6337,7 @@
                                 name: it.name,
                                 title: it.name,
                                 color: it.color,
+                                textColor: it.textColor,
                                 colStart,
                                 colSpan: 1,
                                 row,
@@ -6342,6 +6363,7 @@
                                 name: '',
                                 title: it.name,
                                 color: it.color,
+                                textColor: it.textColor,
                                 colStart,
                                 colSpan: 1,
                                 row,
@@ -6357,6 +6379,7 @@
                                 name: it.name,
                                 title: it.name,
                                 color: it.color,
+                                textColor: it.textColor,
                                 colStart: midStart,
                                 colSpan: midSpan,
                                 row,
@@ -6372,6 +6395,7 @@
                                 name: '',
                                 title: it.name,
                                 color: it.color,
+                                textColor: it.textColor,
                                 colStart: endCol,
                                 colSpan: 1,
                                 row,
