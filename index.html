@@ -2311,8 +2311,8 @@
                 </div>
                 </template>
             </div>
-            <button v-if="records.length > 1" type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="pfCloseModal(); pfCompareOpenModal();">{{ t('record_compare_btn') }}</button>
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="pfCloseModal(); dmOpenModal();">{{ t('dm_open_btn') }}</button>
+            <button v-if="records.length > 1" type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="pfChainOverlay(pfCloseModal, pfCompareOpenModal)">{{ t('record_compare_btn') }}</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" @click="pfChainOverlay(pfCloseModal, dmOpenModal)">{{ t('dm_open_btn') }}</button>
             <button type="button" class="pf-close-btn" @click="pfCloseModal">{{ t('record_close') }}</button>
         </div>
     </div>
@@ -2636,7 +2636,7 @@
 
             <div class="dash-section">
                 <p class="dash-section-label"><svg class="inline-icon" width="15" height="15"><use href="#i-palette"/></svg> {{ t('side_icon_section_label') }}</p>
-                <button type="button" class="dash-row" style="width:100%; box-sizing:border-box; border:none; cursor:pointer; text-align:left; font:inherit; color:inherit; align-items:center;" @click="settingsCloseModal(); pfIconOpenModal();">
+                <button type="button" class="dash-row" style="width:100%; box-sizing:border-box; border:none; cursor:pointer; text-align:left; font:inherit; color:inherit; align-items:center;" @click="pfChainOverlay(settingsCloseModal, pfIconOpenModal)">
                     <span class="dash-row-icon icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-palette"/></svg></span>
                     <span class="dash-row-text">{{ t('side_icon_customize_btn') }}</span>
                 </button>
@@ -5885,6 +5885,16 @@
             const FT_FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
             const ftStack = [];
             let ftListenerAttached = false;
+            // 🩹 連鎖オーバーレイのフォーカス誤復元バグ対策: pfCloseOtherTopLevelOverlays()が
+            // 「開こうとしているBのために他のAを閉じる」際、ftClose(A)（＝isOpenRefのwatchが
+            // isOpen=falseへの変化を検知して即座に呼ぶ）が即座にA自身のトリガーへフォーカスを
+            // 戻してしまうと、その直後に走るB側のwatch（isOpen=true）→ftOpen(B)が
+            // document.activeElementを読み取る時点で既にA側のトリガーに上書きされてしまっており、
+            // Bの本当のトリガー（実際にクリックされた要素や「?」ショートカット押下時にフォーカス
+            // されていた要素）を正しく記憶できなくなる。この「他を閉じるための連鎖的なclose」で
+            // ある間だけ、ftClose()自身のフォーカス復元を止めておく（Escape等ユーザーが直接1つだけ
+            // 閉じる通常のcloseでは、このフラグは立たないので今までどおり即座に復元される）。
+            let pfSuppressTrapFocusRestore = 0;
             const ftGetFocusable = (container) => Array.from(container.querySelectorAll(FT_FOCUSABLE_SELECTOR))
                 .filter(el => el.offsetParent !== null); // 非表示要素（v-show等）は対象外にする
             const ftHandleKeydown = (e) => {
@@ -5925,17 +5935,35 @@
                     document.removeEventListener('keydown', ftHandleKeydown);
                     ftListenerAttached = false;
                 }
-                if (entry.prevFocusEl && typeof entry.prevFocusEl.focus === 'function' && document.contains(entry.prevFocusEl)) {
-                    entry.prevFocusEl.focus();
+                // 🩹 他のオーバーレイを開くための連鎖的なcloseの最中は、ここでの復元をスキップし、
+                // これから開く側のftOpen()がdocument.activeElementを汚染なしに読み取れるようにする
+                if (pfSuppressTrapFocusRestore) return;
+                const el = entry.prevFocusEl;
+                // offsetParentのチェックは、トリガーがDOM上には残っているものの（例：別のオーバーレイの
+                // 中の要素）、そのオーバーレイ自体が閉じてdisplay:noneになりフォーカス不可能になっている
+                // ケースに備えたもの——この場合は無言で失敗させず、常に見えている下部ドックへ安全に逃がす。
+                if (el && typeof el.focus === 'function' && document.contains(el) && el.offsetParent !== null) {
+                    el.focus();
+                } else {
+                    const fallback = document.querySelector('.site-dock button, .site-dock a');
+                    if (fallback) fallback.focus();
                 }
             };
             // isOpenRef（表示状態の真偽値ref）とcontainerRef（モーダルカードのtemplate ref）を紐付ける。
             // containerRef自体（同一オブジェクト）をスタックのkeyとして使う。
             const useModalFocusTrap = (isOpenRef, containerRef) => {
+                // 🩹 flush:'sync'が必須: デフォルト(flush:'pre')だとisOpenRefへの複数の同期的な代入
+                // （pfCloseOtherTopLevelOverlays()内でA→false、直後に呼び出し元でB→true）が
+                // マイクロタスクへまとめてバッチされてしまい、ftClose(A)・ftOpen(B)が実際に走るのは
+                // pfCloseOtherTopLevelOverlays()のtry/finallyが同期的に完了しpfSuppressTrapFocusRestore
+                // を0へ戻した後になってしまう——それでは上のサプレッションフラグが無意味になる。
+                // flush:'sync'でisOpenRef変更のたびに即座に（同期的に）このwatchを走らせることで、
+                // ftClose/ftOpenの実行順序を実際のref代入順序と一致させ、フラグが有効な間に
+                // ftClose(A)を確実に完了させられるようにする。
                 watch(isOpenRef, (isOpen) => {
                     if (isOpen) ftOpen(containerRef, containerRef.value);
                     else ftClose(containerRef);
-                });
+                }, { flush: 'sync' });
             };
             // 各モーダルの .pf-modal-card 本体を指すtemplate ref（フォーカストラップの対象コンテナ）
             const pfModalCardEl = ref(null);
@@ -8706,14 +8734,31 @@
             // 状態で「?」を押すと、settingsOpenModal()はクリックチェーンを経由しないためこの3つが
             // 閉じられないまま表示設定が重なって開いていた）。そのため「閉じられる側」にはこの3つも含める。
             const pfCloseOtherTopLevelOverlays = (exceptRef) => {
-                if (exceptRef !== showSettingsModal && showSettingsModal.value) settingsCloseModal();
-                if (exceptRef !== dashOpen && dashOpen.value) pfDashClose();
-                if (exceptRef !== showProfileModal && showProfileModal.value) pfCloseModal();
-                if (exceptRef !== showShareModal && showShareModal.value) pfShareCloseModal();
-                if (exceptRef !== showSidebar && showSidebar.value) showSidebar.value = false;
-                if (exceptRef !== showDmModal && showDmModal.value) dmCloseModal();
-                if (exceptRef !== showCompareModal && showCompareModal.value) pfCompareCloseModal();
-                if (exceptRef !== showIconModal && showIconModal.value) pfIconCloseModal();
+                pfSuppressTrapFocusRestore++;
+                try {
+                    if (exceptRef !== showSettingsModal && showSettingsModal.value) settingsCloseModal();
+                    if (exceptRef !== dashOpen && dashOpen.value) pfDashClose();
+                    if (exceptRef !== showProfileModal && showProfileModal.value) pfCloseModal();
+                    if (exceptRef !== showShareModal && showShareModal.value) pfShareCloseModal();
+                    if (exceptRef !== showSidebar && showSidebar.value) showSidebar.value = false;
+                    if (exceptRef !== showDmModal && showDmModal.value) dmCloseModal();
+                    if (exceptRef !== showCompareModal && showCompareModal.value) pfCompareCloseModal();
+                    if (exceptRef !== showIconModal && showIconModal.value) pfIconCloseModal();
+                } finally {
+                    pfSuppressTrapFocusRestore--;
+                }
+            };
+            // 🩹 プロフィール/表示設定モーダル内の専用ボタンから、そのモーダル自身を閉じつつ別の
+            // オーバーレイを開く「pfCloseModal(); dmOpenModal();」のような直接の連鎖呼び出しも、
+            // pfCloseOtherTopLevelOverlays()経由の連鎖と全く同じ理由でPART1のサプレッションが必要
+            // （例: プロフィールモーダル内の「バックアップ」ボタンでデータ管理モーダルを開く場合、
+            // closeFn()側のftCloseが即座にプロフィール自身のトリガーへフォーカスを戻してしまうと、
+            // 直後のopenFn()側のftOpenがそのプロフィールのトリガーを誤って捕捉してしまう）。
+            // テンプレート側の該当箇所はこのヘルパー経由に統一する。
+            const pfChainOverlay = (closeFn, openFn) => {
+                pfSuppressTrapFocusRestore++;
+                try { closeFn(); } finally { pfSuppressTrapFocusRestore--; }
+                openFn();
             };
             // 📌 サイドバー（「他のツール」ドロワー）専用の開く関数。他のトップレベルオーバーレイと
             // 同様に排他制御の対象にするため、テンプレート側の直接代入（showSidebar = true）から
@@ -8762,7 +8807,7 @@
                 incrementWalkDays, decrementWalkDays, applyPreset,
                 getIcon, getItemImageUrl, TYPE_IMAGES, getLevel, cleanName, getItemLabel, getItemLabelForSpirit, isPhantomItem, getTier2Slots, isDarkMode, themeMode, toggleTheme,
                 currentLang, setLang, SUPPORTED_LANGS, t, spiritName, translateItemName, seasonNameDisplay, translateEventName,
-                showSidebar, pfSidebarOpen, showSharedTools, sharedNotes,
+                showSidebar, pfSidebarOpen, pfChainOverlay, showSharedTools, sharedNotes,
                 showOptimizer, optSelectedId, estimatedDailyCandles, optimizerCandidates, optimizerRows, optimizerSummary, optAdd, optMove, optRemove,
                 optCopyStatus, optCopyPlan, heartCopyStatus, heartCopyPlan,
                 hasSeasonPass, ownedCandles, candlesPerDay,
