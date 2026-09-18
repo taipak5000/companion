@@ -1509,7 +1509,10 @@
             overflow-y: auto;
             background: var(--card-bg);
             border-radius: 14px;
-            padding: 20px;
+            /* 🩹 .site-dock（画面下部固定、z-index:1001でこのシートより常に手前）に
+               最後の項目が隠れないよう下端だけ底上げ。body{padding-bottom}と同じ
+               「下部固定のサイトドックに隠れないよう」の76px（ドックの実測高さ分）を再利用。 */
+            padding: 20px 20px calc(76px + env(safe-area-inset-bottom)) 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             box-sizing: border-box;
         }
