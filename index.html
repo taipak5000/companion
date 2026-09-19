@@ -2143,6 +2143,7 @@
     <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.5 6L20 12l-6.5 1.5L12 21l-1.5-6L4 12l6.5-1.5Z"/></symbol>
     <symbol id="i-wing" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.281) translate(-10.5 -12.83)"><path d="M4 19c2-6 6-11 13-13-1 6-2 9-6 12-3 2-5 2-7 1Z"/><path d="M7 17c3-2 6-5 8-9"/></g></symbol>
     <symbol id="i-music-note" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.207) translate(-13.75 -10.75)"><path d="M9 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M11.5 15.5V5l7-1.5v9"/><path d="M18.5 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/></g></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5Z"/><circle cx="9" cy="10.5" r="2"/><path d="M6 16c.4-1.7 1.7-2.8 3-2.8s2.6 1.1 3 2.8M14 9.5h4M14 12.5h3"/></symbol>
     <symbol id="i-sync" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M17 7h-8a4 4 0 0 0-4 4"/><path d="M11 4l-2 3 2 3"/><path d="M7 17h8a4 4 0 0 0 4-4"/><path d="M13 20l2-3-2-3"/></g></symbol>
     <symbol id="i-settings" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></symbol>
     <symbol id="i-person" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></g></symbol>
@@ -2769,6 +2770,9 @@
                 </a>
                 <a href="https://taipak5000.github.io/tai-score/" class="sidebar-nav-link">
                     <span class="tool-badge-test">test</span><svg class="inline-icon" width="19" height="19"><use href="#i-music-note"/></svg> {{ t('side_score_tool') }}
+                </a>
+                <a href="https://taipak5000.github.io/tai-card/" class="sidebar-nav-link">
+                    <svg class="inline-icon" width="19" height="19"><use href="#i-card"/></svg> {{ t('side_card_tool') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link">
                     <svg class="inline-icon" width="19" height="19"><use href="#i-sync"/></svg> {{ t('side_transfer_tool') }}
@@ -4301,6 +4305,7 @@
             side_catalog_tool: '精霊ツリー管理',
             side_revisit_tool: '再訪精霊データベース',
             side_score_tool: '楽譜づくり',
+            side_card_tool: '星紡ぎカード',
             side_share_tool: '創作物管理ツール',
             side_item_tool: 'アイテム所持管理',
             side_emote_tool: 'エモート所持率管理',
@@ -4702,6 +4707,7 @@
             side_catalog_tool: 'Spirit Tree Catalog',
             side_revisit_tool: 'Revisit Spirit Database',
             side_score_tool: 'Sheet Music Maker',
+            side_card_tool: 'Self-Intro Card Maker',
             side_share_tool: 'Creation Manager',
             side_item_tool: 'Item Collection',
             side_emote_tool: 'Emote Collection',
@@ -5103,6 +5109,7 @@
             side_catalog_tool: '精靈樹管理',
             side_revisit_tool: '再訪精靈資料庫',
             side_score_tool: '樂譜製作工具',
+            side_card_tool: '星紡卡片',
             side_share_tool: '創作物管理工具',
             side_item_tool: '道具持有管理',
             side_emote_tool: '動作持有率管理',
@@ -5504,6 +5511,7 @@
             side_catalog_tool: '정령 트리 관리',
             side_revisit_tool: '재방문 정령 데이터베이스',
             side_score_tool: '악보 제작 도구',
+            side_card_tool: '별잣기 카드',
             side_share_tool: '창작물 관리 도구',
             side_item_tool: '아이템 보유 관리',
             side_emote_tool: '감정표현 보유율 관리',
