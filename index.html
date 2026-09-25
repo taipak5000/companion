@@ -1694,7 +1694,12 @@
         .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px;
           display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
         .pf-currency-toggle-label { font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; }
+        /* 🩹 「所持通貨」欄は上半分（candle/heart/starCandle）がitem等の他ツールとも共有され、
+           下半分（シーズンキャンドル・ギフトパス）はcompanion専用の記録という、保存範囲が異なる
+           2グループで構成されている。説明ヒントに加え、区切り線でも視覚的にグルーピングする */
+        .pf-currency-hint { margin: 0 0 8px; }
         .pf-currency-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 2px; }
+        .pf-currency-row-group-start { margin-top: 4px; padding-top: 9px; border-top: 1px dashed var(--border-color); }
         .pf-currency-label { font-size: 13px; color: var(--text-color); }
         .pf-currency-input { width: 90px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px;
           padding: 6px 8px; font-size: 14px; color: var(--text-color); font-family: inherit; outline: none; box-sizing: border-box; text-align: right; }
@@ -2293,25 +2298,26 @@
                     <span class="pf-currency-toggle-label">{{ pfCurrencyOpen ? t('pfcur_toggle_close') : t('pfcur_toggle_open') }}</span>
                 </div>
                 <template v-if="pfCurrencyOpen">
+                <p class="pf-hint pf-currency-hint">{{ t('pfcur_hint', { tool: t('side_item_tool') }) }}</p>
                 <div class="pf-currency-row">
                     <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-candle"/></svg> {{ t('pfcur_candle') }}</span>
-                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyCandle" @change="saveCurrencyCandleHeart">
+                    <input type="number" min="0" inputmode="numeric" class="pf-currency-input" v-model.number="currencyCandle" @change="saveCurrencyCandleHeart" @focus="$event.target.select()">
                 </div>
                 <div class="pf-currency-row">
                     <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-heart"/></svg> {{ t('pfcur_heart') }}</span>
-                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyHeart" @change="saveCurrencyCandleHeart">
+                    <input type="number" min="0" inputmode="numeric" class="pf-currency-input" v-model.number="currencyHeart" @change="saveCurrencyCandleHeart" @focus="$event.target.select()">
                 </div>
                 <div class="pf-currency-row">
                     <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-star-candle"/></svg> {{ t('pfcur_ascended') }}</span>
-                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyCandleHeart">
+                    <input type="number" min="0" inputmode="numeric" class="pf-currency-input" v-model.number="currencyAscended" @change="saveCurrencyCandleHeart" @focus="$event.target.select()">
                 </div>
-                <div class="pf-currency-row">
+                <div class="pf-currency-row pf-currency-row-group-start">
                     <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-candle"/></svg> {{ t('pfcur_season') }}</span>
-                    <input type="number" min="0" class="pf-currency-input" v-model.number="ownedCandles">
+                    <input type="number" min="0" inputmode="numeric" class="pf-currency-input" v-model.number="ownedCandles" @focus="$event.target.select()">
                 </div>
                 <div class="pf-currency-row">
                     <span class="pf-currency-label"><svg class="inline-icon" width="12" height="12"><use href="#i-ticket"/></svg> {{ t('pfcur_gift_pass') }}</span>
-                    <input type="number" min="0" class="pf-currency-input" v-model.number="currencyGiftPass" @change="saveCurrencyExtra">
+                    <input type="number" min="0" inputmode="numeric" class="pf-currency-input" v-model.number="currencyGiftPass" @change="saveCurrencyExtra" @focus="$event.target.select()">
                 </div>
                 </template>
             </div>
@@ -4356,6 +4362,7 @@
             pfcur_ascended: '星のキャンドル',
             pfcur_season: 'シーズンキャンドル',
             pfcur_gift_pass: 'ギフトパス',
+            pfcur_hint: 'キャンドル・ハート・星のキャンドルは{tool}などのツールとも共有されます。シーズンキャンドル・ギフトパスはこのツール専用の記録です。',
 
             record_compare_btn: '記録を比較',
             dm_open_btn: 'データのバックアップ・復元・削除',
@@ -4758,6 +4765,7 @@
             pfcur_ascended: 'Star Candles',
             pfcur_season: 'Season Candles',
             pfcur_gift_pass: 'Gift Pass',
+            pfcur_hint: 'Candles, Hearts, and Star Candles are shared with tools like {tool}. Season Candles and the Gift Pass are recorded only in this tool.',
 
             record_compare_btn: 'Compare Records',
             dm_open_btn: 'Data Backup / Restore / Delete',
@@ -5160,6 +5168,7 @@
             pfcur_ascended: '星之蠟燭',
             pfcur_season: '季節蠟燭',
             pfcur_gift_pass: '禮物通行證',
+            pfcur_hint: '蠟燭・心・星之蠟燭會與{tool}等工具共用。季節蠟燭・禮物通行證僅記錄在本工具中。',
 
             record_compare_btn: '比較記錄',
             dm_open_btn: '資料備份・還原・刪除',
@@ -5562,6 +5571,7 @@
             pfcur_ascended: '별의 초',
             pfcur_season: '시즌 초',
             pfcur_gift_pass: '기프트 패스',
+            pfcur_hint: '초・하트・별의 초는 {tool} 등의 도구와 공유됩니다. 시즌 초・기프트 패스는 이 도구에만 기록됩니다.',
 
             record_compare_btn: '기록 비교',
             dm_open_btn: '데이터 백업・복원・삭제',
@@ -7760,6 +7770,17 @@
                     };
                     try {
                         localStorage.setItem(dataKeyForRecord(newId), JSON.stringify(snapshot));
+                    } catch (e) { /* noop */ }
+                    // 🩹 所持通貨（キャンドル/ハート/星のキャンドル/ギフトパス）はownedCandles等とは別の
+                    // 名前空間キー（wishOwnCurrency・skyCurrencyExtra_v1）で管理しているため、上のsnapshotには
+                    // 含まれない。複製元からこれらもコピーしないと、「複製」直後なのに所持通貨欄だけ0に
+                    // リセットされてしまう（複製元を編集中の実データそのままコピーしたいので、activeRecordId
+                    // をまだ書き換える前の＝複製元のキーから読む）。
+                    try {
+                        const wishRaw = localStorage.getItem(pfCurrencyNsKey('wishOwnCurrency'));
+                        const extraRaw = localStorage.getItem(pfCurrencyNsKey('skyCurrencyExtra_v1'));
+                        if (wishRaw) localStorage.setItem('wishOwnCurrency__p_' + newId, wishRaw);
+                        if (extraRaw) localStorage.setItem('skyCurrencyExtra_v1__p_' + newId, extraRaw);
                     } catch (e) { /* noop */ }
                 }
 
