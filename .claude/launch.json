@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "companion-dev", "runtimeExecutable": "python", "runtimeArgs": ["-m", "http.server", "8954"], "port": 8954 }
+  ]
+}
