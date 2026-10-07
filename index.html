@@ -4116,7 +4116,7 @@
                 });
             });
         };
-        if (data.season && data.season.name && data.season.endDate) {
+        if (data.season && data.season.name && data.season.endDate && new Date() < new Date(data.season.endDate)) {
             pushItems({ end: data.season.endDate }, resolveName('season', data.season.name));
         }
         (data.eventSchedule || []).forEach(ev => pushItems(ev, resolveName('event', ev.name)));
@@ -6272,6 +6272,8 @@
             const dashSeasonBucket = computed(() => {
                 dashNow.value;
                 if (!dashData.value || !dashData.value.season || !dashData.value.season.endDate) return null;
+                // 終了済みの季節はダッシュボードに出さない（終了まで00:00:00のまま残ってしまうため）
+                if (Date.now() >= new Date(dashData.value.season.endDate).getTime()) return null;
                 return pfDashBucketFor(new Date(dashData.value.season.endDate));
             });
             // 🗓️ イベントカレンダー：常に「今」の実月を表示する（散歩ログの月間カレンダーと違い、
@@ -8175,7 +8177,7 @@
                     let seasonEnd = null;
                     if (dashData.value && dashData.value.season && dashData.value.season.endDate) {
                         seasonEnd = new Date(dashData.value.season.endDate);
-                        if (!isNaN(seasonEnd.getTime())) {
+                        if (!isNaN(seasonEnd.getTime()) && seasonEnd.getTime() > now.getTime()) {
                             events.push(...pfIcsBuildEvent({
                                 uid: `companion-season-end-${seasonEnd.getTime()}@${uidHost}`,
                                 start: seasonEnd,
