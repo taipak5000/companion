@@ -2478,6 +2478,7 @@
                     <div class="dash-row" v-if="dashSeasonActive"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(dashData.season.name) }}</b> {{ t('dash_event_suffix') }}</span></div>
                     <div class="dash-row" v-for="(ev, idx) in dashTodayEvents" :key="'te'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(ev, idx) in dashTodayCandleBonus" :key="'tc'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-candle"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashTodayUpcoming" :key="'tu'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use :href="'#' + ev.icon"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_starts_suffix') }} <span class="dash-countdown">{{ t('dash_event_starts_prefix') }} {{ ev.countdown }}</span><span class="dash-note">{{ ev.when }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashTodayRevisits" :key="'rvt'+idx">
                         <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
@@ -2489,6 +2490,7 @@
                     <p class="dash-section-label">{{ t('dash_week_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashWeekEvents" :key="'we'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(ev, idx) in dashWeekCandleBonus" :key="'wc'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-candle"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashWeekUpcoming" :key="'wu'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use :href="'#' + ev.icon"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_starts_suffix') }} <span class="dash-countdown">{{ t('dash_event_starts_prefix') }} {{ ev.countdown }}</span><span class="dash-note">{{ ev.when }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashWeekRevisits" :key="'rvw'+idx">
                         <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
@@ -2501,6 +2503,7 @@
                     <p class="dash-section-label">{{ t('dash_month_label') }}</p>
                     <div class="dash-row" v-for="(ev, idx) in dashMonthEvents" :key="'me'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-star"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
                     <div class="dash-row" v-for="(ev, idx) in dashMonthCandleBonus" :key="'mc'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-candle"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_suffix') }} <span class="dash-countdown">{{ t('dash_event_ends_prefix') }} {{ ev.countdown }}</span></span></div>
+                    <div class="dash-row" v-for="(ev, idx) in dashMonthUpcoming" :key="'mu'+idx"><span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use :href="'#' + ev.icon"/></svg></span><span class="dash-row-text"><b>{{ translateEventName(ev.name) }}</b> {{ t('dash_event_starts_suffix') }} <span class="dash-countdown">{{ t('dash_event_starts_prefix') }} {{ ev.countdown }}</span><span class="dash-note">{{ ev.when }}</span></span></div>
                     <div class="dash-row" v-for="(rv, idx) in dashMonthRevisits" :key="'rvm'+idx">
                         <span class="dash-row-icon"><svg class="inline-icon" width="13" height="13"><use href="#i-wing"/></svg></span><span class="dash-row-text">{{ t('dash_revisit_label') }}{{ rv.active ? t('dash_revisit_active_suffix') : t('dash_revisit_upcoming_suffix') }} <span class="dash-countdown">{{ rv.countdown }}</span></span>
                     </div>
@@ -4360,6 +4363,9 @@
             dash_month_label: '今月',
             dash_event_suffix: 'が開催中',
             dash_event_ends_prefix: '終了まで',
+            dash_event_starts_suffix: 'が始まります',
+            dash_event_starts_prefix: '開始まで',
+            dash_weekdays: '日,月,火,水,木,金,土',
             dash_no_events: '現在開催中の季節・イベントはありません',
             dash_bucket_empty: 'この期間の予定はありません',
             dash_revisit_label: '再訪精霊',
@@ -4750,6 +4756,9 @@
             dash_month_label: 'This Month',
             dash_event_suffix: 'is currently active',
             dash_event_ends_prefix: 'Ends in',
+            dash_event_starts_suffix: 'is coming up',
+            dash_event_starts_prefix: 'Starts in',
+            dash_weekdays: 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
             dash_no_events: 'No season or events currently active',
             dash_bucket_empty: 'Nothing scheduled in this range',
             dash_revisit_label: 'Traveling Spirit ',
@@ -5140,6 +5149,9 @@
             dash_month_label: '本月',
             dash_event_suffix: '進行中',
             dash_event_ends_prefix: '結束倒數',
+            dash_event_starts_suffix: '即將開始',
+            dash_event_starts_prefix: '開始倒數',
+            dash_weekdays: '日,一,二,三,四,五,六',
             dash_no_events: '目前沒有進行中的季節・活動',
             dash_bucket_empty: '此期間內沒有排定的項目',
             dash_revisit_label: '旅行先靈',
@@ -5530,6 +5542,9 @@
             dash_month_label: '이번 달',
             dash_event_suffix: '진행 중',
             dash_event_ends_prefix: '종료까지',
+            dash_event_starts_suffix: '시작 예정',
+            dash_event_starts_prefix: '시작까지',
+            dash_weekdays: '일,월,화,수,목,금,토',
             dash_no_events: '현재 진행 중인 시즌・이벤트가 없습니다',
             dash_bucket_empty: '이 기간에는 예정된 항목이 없습니다',
             dash_revisit_label: '여행영혼 ',
@@ -6119,6 +6134,30 @@
             const dashTodayCandleBonus = computed(() => dashActiveCandleBonus.value.filter(e => e.bucket === 'today'));
             const dashWeekCandleBonus = computed(() => dashActiveCandleBonus.value.filter(e => e.bucket === 'week'));
             const dashMonthCandleBonus = computed(() => dashActiveCandleBonus.value.filter(e => e.bucket === 'month'));
+            // 🆕 これから始まるイベント（EVENT_SCHEDULE・CANDLE_BONUS_SCHEDULE）。開催中のものが「終了まで」の
+            // 残り時間で今日/今週/今月へ振り分けられるのと対称に、「開始まで」の残り時間で振り分ける
+            // （例: 金曜に始まる季節は今週欄）。startを持たないエントリは「常に開催中」扱いなので対象外。
+            // 開始が約1か月より先のものは今月欄が埋もれないよう載せない（先の予定はカレンダーで確認できる）。
+            const dashUpcoming = computed(() => {
+                dashNow.value;
+                if (!dashData.value) return [];
+                const now = Date.now();
+                const MAX_MS = 31 * 24 * 60 * 60 * 1000;
+                const weekdays = t('dash_weekdays').split(',');
+                const pick = (list, icon) => (list || []).filter(ev => {
+                    if (!ev || !ev.start) return false;
+                    const s = new Date(ev.start).getTime();
+                    return s > now && s - now <= MAX_MS;
+                }).map(ev => {
+                    const startDate = new Date(ev.start);
+                    const when = `${startDate.getMonth() + 1}/${startDate.getDate()}(${weekdays[startDate.getDay()] || ''}) ${pad2(startDate.getHours())}:${pad2(startDate.getMinutes())}`;
+                    return { name: ev.name, icon, start: startDate.getTime(), when, countdown: pfDashCountdown(startDate, t('countdown_day_suffix')), bucket: pfDashBucketFor(startDate) };
+                });
+                return [...pick(dashData.value.eventSchedule, 'i-star'), ...pick(dashData.value.candleBonusSchedule, 'i-candle')].sort((a, b) => a.start - b.start);
+            });
+            const dashTodayUpcoming = computed(() => dashUpcoming.value.filter(e => e.bucket === 'today'));
+            const dashWeekUpcoming = computed(() => dashUpcoming.value.filter(e => e.bucket === 'week'));
+            const dashMonthUpcoming = computed(() => dashUpcoming.value.filter(e => e.bucket === 'month'));
             const dashSeasonActive = computed(() => {
                 dashNow.value;
                 return !!(dashData.value && dashData.value.season && dashData.value.season.endDate && Date.now() < new Date(dashData.value.season.endDate).getTime());
@@ -6356,15 +6395,15 @@
             // （すべて他の期間に流れて空になった場合、種類別の空メッセージではなく汎用の
             // 「この期間の予定はありません」を出す）
             const dashTodayHasContent = computed(() => dashSeasonActive.value || dashTodayEvents.value.length > 0
-                || dashTodayCandleBonus.value.length > 0
+                || dashTodayCandleBonus.value.length > 0 || dashTodayUpcoming.value.length > 0
                 || dashTodayRevisits.value.length > 0
                 || dashEdenBucket.value === 'today');
             const dashWeekHasContent = computed(() => dashWeekEvents.value.length > 0
-                || dashWeekCandleBonus.value.length > 0
+                || dashWeekCandleBonus.value.length > 0 || dashWeekUpcoming.value.length > 0
                 || dashWeekRevisits.value.length > 0
                 || dashEdenBucket.value === 'week' || dashNextUpdateBucket.value === 'week' || dashSeasonBucket.value === 'week');
             const dashMonthHasContent = computed(() => dashMonthEvents.value.length > 0
-                || dashMonthCandleBonus.value.length > 0
+                || dashMonthCandleBonus.value.length > 0 || dashMonthUpcoming.value.length > 0
                 || dashMonthRevisits.value.length > 0
                 || dashEdenBucket.value === 'month' || dashNextUpdateBucket.value === 'month' || dashSeasonBucket.value === 'month');
 
@@ -8856,6 +8895,7 @@
                 dashSeasonActive, dashActiveScheduledEvents, dashTodayEvents, dashWeekEvents, dashMonthEvents,
                 eventCalendarWeeks, eventCalendarMonthLabel,
                 dashActiveCandleBonus, dashTodayCandleBonus, dashWeekCandleBonus, dashMonthCandleBonus,
+                dashTodayUpcoming, dashWeekUpcoming, dashMonthUpcoming,
                 dashNextUpdateCountdown, dashNextUpdateBucket,
                 dashTodayHasContent, dashWeekHasContent, dashMonthHasContent,
                 pfDashOpen, pfDashClose,
