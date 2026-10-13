@@ -3634,16 +3634,71 @@
         .concat([{ name: season.name, start: season.startDate, end: season.endDate }]);
     }
     const pfDashPacificNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+
+    /* ================================================================
+       🕓 太平洋時間(PT)⇔実時刻の変換（夏時間の切替に対応）
+       ゲームのリセット類（デイリー・週間・ウニ/パン/亀・再訪の周期など）はすべて「太平洋時間の壁時計」
+       基準で動く。そのため夏時間(UTC-7)⇔標準時(UTC-8)の切替（毎年11月第1日曜・3月第2日曜）の前後で
+       日本時間の時刻が1時間動く（夏時間中: 毎日16:00 → 標準時: 17:00。2026年は11/1 18:00 JSTに切替）。
+       「今との時差を固定で足す」「24時間×日数で足す」方式だと、切替をまたぐ予定が1時間ずれるため、
+       壁時計⇔実時刻の変換は必ずここを通す。
+       ================================================================ */
+    var pfDashPtFormatter = null;
+    // 実時刻ms → 太平洋時間の壁時計の各成分 {year, month, day, hour, minute, second}
+    function pfDashPtParts(ms) {
+      if (!pfDashPtFormatter) {
+        pfDashPtFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+      }
+      var o = {};
+      pfDashPtFormatter.formatToParts(new Date(ms)).forEach(function (p) { if (p.type !== 'literal') o[p.type] = Number(p.value); });
+      if (o.hour === 24) o.hour = 0;
+      return o;
+    }
+    // 太平洋時間の壁時計の成分 → 実時刻(Date)。日が範囲を超えていてもよい（例: day=32は翌月1日）。
+    // 夏時間(UTC-7)と標準時(UTC-8)の両方の候補を実際にPTへ変換し直し、元の壁時計と一致する方を採用する
+    // （切替の前後でも正確。3月の「存在しない2時台」は標準時として扱う）
+    function pfDashPtToReal(y, mo, d, h, mi, s) {
+      var wall = Date.UTC(y, mo - 1, d, h, mi, s);
+      var offsets = [7, 8];
+      for (var i = 0; i < offsets.length; i++) {
+        var real = wall + offsets[i] * 3600000;
+        var p = pfDashPtParts(real);
+        if (Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) === wall) return new Date(real);
+      }
+      return new Date(wall + 8 * 3600000);
+    }
+    // pfDashPacificNow()のような「太平洋時間の壁時計をローカルタイムゾーンの見た目で表したDate」→ 実時刻
+    function pfDashPacificFakeToReal(fake) {
+      return new Date(pfDashPtToReal(fake.getFullYear(), fake.getMonth() + 1, fake.getDate(), fake.getHours(), fake.getMinutes(), fake.getSeconds()).getTime() + fake.getMilliseconds());
+    }
+    // 周期的な来訪(intervalDaysあり)のk周期目の開始・終了。anchorStart/anchorEndを太平洋時間の壁時計に直し、
+    // 日付だけをintervalDays×k日ずらして実時刻へ戻す（「24時間×日数」で足すと、切替後の周期が1時間ずれる）
+    function pfDashCycleBounds(schedule, k) {
+      var a = pfDashPtParts(new Date(schedule.anchorStart).getTime());
+      var e = pfDashPtParts(new Date(schedule.anchorEnd).getTime());
+      var shift = k * schedule.intervalDays;
+      return {
+        start: pfDashPtToReal(a.year, a.month, a.day + shift, a.hour, a.minute, a.second),
+        end: pfDashPtToReal(e.year, e.month, e.day + shift, e.hour, e.minute, e.second)
+      };
+    }
+    // 時刻t（Dateまたはms）の時点で「始まっている最新の周期」の番号k（tが最初の周期より前なら負になる）
+    function pfDashCycleIndexAt(schedule, t) {
+      var ms = new Date(t).getTime();
+      var k = Math.floor((ms - new Date(schedule.anchorStart).getTime()) / (schedule.intervalDays * 86400000));
+      while (pfDashCycleBounds(schedule, k).start.getTime() > ms) k--;
+      while (pfDashCycleBounds(schedule, k + 1).start.getTime() <= ms) k++;
+      return k;
+    }
     const pfDashNextEdenResetTarget = () => {
         const now = pfDashPacificNow();
-        const realOffsetMs = Date.now() - now.getTime();
         const todayMidnight = new Date(now);
         todayMidnight.setHours(0, 0, 0, 0);
         let addDays = (7 - todayMidnight.getDay()) % 7;
         if (addDays === 0 && now.getTime() > todayMidnight.getTime()) addDays = 7;
         const target = new Date(todayMidnight);
         target.setDate(target.getDate() + addDays);
-        return new Date(target.getTime() + realOffsetMs);
+        return pfDashPacificFakeToReal(target);
     };
     // 闇の破片（赤闇・黒闇）の出現予測。コミュニティ製の予測ツール
     // https://github.com/PlutoyDev/sky-shards （src/data/shard.ts）のアルゴリズムを
@@ -3708,18 +3763,16 @@
         const hasShard = !group.noShardWkDay.includes(dayOfWk);
         const realm = SHARD_REALMS[realmIdx];
         const location = SHARD_LOCATIONS[groupIdx][realm];
-        const realOffsetMs = Date.now() - pacNow.getTime();
         const firstStartFake = new Date(today);
         firstStartFake.setHours(group.offsetH, group.offsetM, 0, 0);
         const intervalMs = group.intervalH * 3600000;
-        const occurrences = [0, 1, 2].map(i => new Date(firstStartFake.getTime() + intervalMs * i + realOffsetMs));
+        const occurrences = [0, 1, 2].map(i => pfDashPacificFakeToReal(new Date(firstStartFake.getTime() + intervalMs * i)));
         return { isRed, hasShard, realm, location, occurrences };
     };
     // 📅 ICSカレンダー書き出し用：pfDashShardInfo()の「今日」判定をdayOffset日後にずらした汎用版。
     // pfDashGrandCandleRealm(dayOffset)と同じ考え方で、今日から数日先までの出現予測をまとめて算出する。
     const pfIcsShardInfoForOffset = (dayOffset) => {
         const pacNow = pfDashPacificNow();
-        const realOffsetMs = Date.now() - pacNow.getTime();
         const base = new Date(pacNow);
         base.setHours(0, 0, 0, 0);
         base.setDate(base.getDate() + dayOffset);
@@ -3736,14 +3789,13 @@
         const firstStartFake = new Date(base);
         firstStartFake.setHours(group.offsetH, group.offsetM, 0, 0);
         const intervalMs = group.intervalH * 3600000;
-        const occurrences = [0, 1, 2].map(i => new Date(firstStartFake.getTime() + intervalMs * i + realOffsetMs));
+        const occurrences = [0, 1, 2].map(i => pfDashPacificFakeToReal(new Date(firstStartFake.getTime() + intervalMs * i)));
         return { hasShard: true, isRed, realm, location, occurrences };
     };
     // 今日の3回の出現が全て過去の場合に備え、翌日以降（出現なしの日はスキップ）も
     // 探索して次に出現する闇の破片の実時刻を求める
     const pfDashNextShardTime = () => {
         const pacNow = pfDashPacificNow();
-        const realOffsetMs = Date.now() - pacNow.getTime();
         for (let dayOffset = 0; dayOffset <= 10; dayOffset++) {
             const base = new Date(pacNow);
             base.setHours(0, 0, 0, 0);
@@ -3758,7 +3810,7 @@
             firstStartFake.setHours(group.offsetH, group.offsetM, 0, 0);
             const intervalMs = group.intervalH * 3600000;
             for (let i = 0; i < 3; i++) {
-                const t = new Date(firstStartFake.getTime() + intervalMs * i + realOffsetMs);
+                const t = pfDashPacificFakeToReal(new Date(firstStartFake.getTime() + intervalMs * i));
                 if (t.getTime() > Date.now()) return t;
             }
         }
@@ -3786,32 +3838,28 @@
         return SHARD_REALMS[idx];
     };
     // ウニ焼き・パン焼き・亀闇：2時間おき（太平洋時間の偶数時）に発生する協力プレイイベント。
-    // サマータイム期間中は各偶数時（0,2,4,...,22時）の指定の分から開始する
-    // （ユーザーからの実測情報に基づく。標準時期間のオフセットは未確認）。
+    // 各偶数時（0,2,4,...,22時）の指定の分から開始する。太平洋時間基準で計算しているため、
+    // 日本時間では夏時間中は偶数時、標準時（11月第1日曜〜3月）は奇数時に自動で切り替わる。
     const pfDashNextEvenHourEvent = (minuteOffset) => {
         const pacNow = pfDashPacificNow();
-        const realOffsetMs = Date.now() - pacNow.getTime();
         const candidate = new Date(pacNow);
         candidate.setSeconds(0, 0);
         candidate.setMinutes(minuteOffset);
         const curHour = candidate.getHours();
         candidate.setHours(curHour % 2 === 0 ? curHour : curHour - 1);
         if (candidate.getTime() <= pacNow.getTime()) candidate.setTime(candidate.getTime() + 2 * 3600000);
-        return new Date(candidate.getTime() + realOffsetMs);
+        return pfDashPacificFakeToReal(candidate);
     };
     const pfDashRevisitStatus = (schedule) => {
         if (!schedule) return null;
         const now = new Date();
         if (schedule.intervalDays) {
             if (!schedule.anchorStart || !schedule.anchorEnd) return null;
-            const start0 = new Date(schedule.anchorStart);
-            const end0 = new Date(schedule.anchorEnd);
-            const intervalMs = schedule.intervalDays * 86400000;
-            const k = Math.floor((now - start0) / intervalMs);
-            const start = new Date(start0.getTime() + k * intervalMs);
-            const end = new Date(start.getTime() + (end0 - start0));
+            const k = pfDashCycleIndexAt(schedule, now);
+            const start = pfDashCycleBounds(schedule, k).start;
+            const end = pfDashCycleBounds(schedule, k).end;
             if (start <= now && now <= end) return { active: true, daysLeft: Math.ceil((end - now) / 86400000), target: end };
-            const nextStart = now < start ? start : new Date(start.getTime() + intervalMs);
+            const nextStart = now < start ? start : pfDashCycleBounds(schedule, k + 1).start;
             return { active: false, daysUntil: Math.ceil((nextStart - now) / 86400000), target: nextStart };
         }
         // 一回限りの来訪（intervalDaysなし）：start/endで判定し、終了済みなら二度と表示しない
@@ -3840,16 +3888,13 @@
         if (!schedule) return [];
         if (schedule.intervalDays) {
             if (!schedule.anchorStart || !schedule.anchorEnd) return [];
-            const start0 = new Date(schedule.anchorStart);
-            const end0 = new Date(schedule.anchorEnd);
-            const intervalMs = schedule.intervalDays * 86400000;
-            const durationMs = end0.getTime() - start0.getTime();
             const out = [];
-            let k = Math.floor((rangeStart.getTime() - start0.getTime()) / intervalMs) - 1;
+            let k = pfDashCycleIndexAt(schedule, rangeStart) - 1;
             for (let guard = 0; guard < 400; guard++, k++) {
-                const s = new Date(start0.getTime() + k * intervalMs);
+              const cycle = pfDashCycleBounds(schedule, k);
+              const s = cycle.start;
                 if (s.getTime() > rangeEnd.getTime()) break;
-                const e = new Date(s.getTime() + durationMs);
+              const e = cycle.end;
                 if (e.getTime() >= rangeStart.getTime()) out.push({ start: s, end: e });
             }
             return out;
@@ -3970,10 +4015,9 @@
     // 次に太平洋時間0時（＝日替わり大キャンドルの切り替わりのタイミング）を迎える実時刻
     const pfDashNextPacificMidnight = () => {
         const pacNow = pfDashPacificNow();
-        const realOffsetMs = Date.now() - pacNow.getTime();
         const target = new Date(pacNow);
         target.setHours(24, 0, 0, 0);
-        return new Date(target.getTime() + realOffsetMs);
+        return pfDashPacificFakeToReal(target);
     };
     // 指定の未来時刻までの残り時間を「D<日単位> HH:MM:SS」（1日未満なら「HH:MM:SS」）で表示する、
     // リアルタイムカウントダウン用のフォーマッタ。日数単位のサフィックスは呼び出し側が現在の言語で
@@ -8021,6 +8065,54 @@
                 lines.push('END:VEVENT');
                 return lines;
             };
+            // 🕓 繰り返し予定（毎日0時PT・毎週日曜0時PT）は、UTCで繰り返すRRULEのままだと夏時間⇔標準時の切替で
+            // 日本時間の時刻が1時間ずれる（夏時間中16:00 → 標準時17:00）。そこで切替の瞬間で系列を分け、
+            // 切替後の系列は「切替後の最初の発生」から始める。occurrenceAfter(ms)は「ms より後の最初の発生」を返す。
+            // fromMs〜toMsの間の夏時間⇔標準時の切替の瞬間(ms)を古い順に返す（1日刻みで探し、変化した日は1時間刻みで絞る）
+            const pfIcsOffsetChanges = (fromMs, toMs) => {
+                const HOUR = 3600000, DAY = 86400000;
+                const offsetAt = (ms) => {
+                    const p = pfDashPtParts(ms);
+                    return Math.round((Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(ms / 1000) * 1000) / 60000);
+                };
+                const out = [];
+                let t0 = Math.floor(fromMs / HOUR) * HOUR;
+                let prev = offsetAt(t0);
+                while (t0 < toMs) {
+                    const dayEnd = t0 + DAY;
+                    if (offsetAt(dayEnd) !== prev) {
+                        for (let h = t0 + HOUR; h <= dayEnd; h += HOUR) {
+                            if (offsetAt(h) !== prev) {
+                                if (h > fromMs && h <= toMs) out.push(h);
+                                prev = offsetAt(h);
+                                break;
+                            }
+                        }
+                    }
+                    t0 = dayEnd;
+                }
+                return out;
+            };
+            const pfIcsRecurringBlocks = (firstStart, untilMs, occurrenceAfter) => {
+                const blocks = [];
+                let start = firstStart;
+                pfIcsOffsetChanges(firstStart.getTime(), untilMs).forEach((cut) => {
+                    blocks.push({ start, until: new Date(cut - 1000) });
+                    start = occurrenceAfter(cut);
+                });
+                blocks.push({ start, until: new Date(untilMs) });
+                return blocks.filter((b) => b.start.getTime() <= b.until.getTime());
+            };
+            const pfIcsNextPacificMidnightAfter = (ms) => {
+                const p = pfDashPtParts(ms);
+                return pfDashPtToReal(p.year, p.month, p.day + 1, 0, 0, 0);
+            };
+            const pfIcsNextEdenResetAfter = (ms) => {
+                const p = pfDashPtParts(ms);
+                const dow = new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay(); // 0=日
+                const days = (7 - dow) % 7 || 7; // 同じ日曜でも発生(0時)は過ぎているので、次の日曜は7日後
+                return pfDashPtToReal(p.year, p.month, p.day + days, 0, 0, 0);
+            };
             const pfDashExportIcs = () => {
                 // 🌐 dashData（tai-itemからのfetch）が無くても、日替わり大キャンドル・週間リセット・
                 // 闇の破片は自己完結データのため書き出せる。シーズン終了日時のみ後段でdashData.value
@@ -8051,27 +8143,29 @@
                     const recurUntil = seasonEnd || new Date(now.getTime() + 90 * 86400000);
 
                     // 🕯️ 大キャンドル・クエストキャンドルの切替（太平洋時間0時・毎日）
-                    const dailyStart = pfDashNextPacificMidnight();
-                    events.push(...pfIcsBuildEvent({
-                        uid: `companion-daily-candle@${uidHost}`,
-                        start: dailyStart,
-                        end: new Date(dailyStart.getTime() + 5 * 60000),
-                        summary: t('ics_daily_reset_summary'),
-                        description: t('ics_daily_reset_desc'),
-                        rrule: `FREQ=DAILY;UNTIL=${pfIcsDate(recurUntil)}`,
-                        alarmTrigger: '-PT10M',
-                    }));
+                    pfIcsRecurringBlocks(pfDashNextPacificMidnight(), recurUntil.getTime(), pfIcsNextPacificMidnightAfter).forEach((b, i) => {
+                        events.push(...pfIcsBuildEvent({
+                            uid: `companion-daily-candle${i ? '-' + (i + 1) : ''}@${uidHost}`,
+                            start: b.start,
+                            end: new Date(b.start.getTime() + 5 * 60000),
+                            summary: t('ics_daily_reset_summary'),
+                            description: t('ics_daily_reset_desc'),
+                            rrule: `FREQ=DAILY;UNTIL=${pfIcsDate(b.until)}`,
+                            alarmTrigger: '-PT10M',
+                        }));
+                    });
 
                     // 🌩️ 週間リセット（原罪など・毎週日曜0時＝太平洋時間）
-                    const weeklyStart = pfDashNextEdenResetTarget();
-                    events.push(...pfIcsBuildEvent({
-                        uid: `companion-weekly-eden@${uidHost}`,
-                        start: weeklyStart,
-                        end: new Date(weeklyStart.getTime() + 5 * 60000),
-                        summary: t('ics_weekly_reset_summary'),
-                        rrule: `FREQ=WEEKLY;BYDAY=SU;UNTIL=${pfIcsDate(recurUntil)}`,
-                        alarmTrigger: '-PT30M',
-                    }));
+                    pfIcsRecurringBlocks(pfDashNextEdenResetTarget(), recurUntil.getTime(), pfIcsNextEdenResetAfter).forEach((b, i) => {
+                        events.push(...pfIcsBuildEvent({
+                            uid: `companion-weekly-eden${i ? '-' + (i + 1) : ''}@${uidHost}`,
+                            start: b.start,
+                            end: new Date(b.start.getTime() + 5 * 60000),
+                            summary: t('ics_weekly_reset_summary'),
+                            rrule: `FREQ=WEEKLY;BYDAY=SU;UNTIL=${pfIcsDate(b.until)}`,
+                            alarmTrigger: '-PT30M',
+                        }));
+                    });
 
                     // 🔴⚫ 闇の破片（赤闇・黒闇）出現ウィンドウ：直近14日分（季節終了がそれより早ければ短縮する）
                     const daysUntilEnd = seasonEnd ? Math.ceil((seasonEnd - now) / 86400000) : 14;
