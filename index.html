@@ -3264,7 +3264,7 @@
                             <span class="tier-title">{{ t('tier2_title') }}</span>
                             <span class="tier-req">{{ activePoints >= activeTier2Total ? t('tier_unlocked') : t('tier_remaining_pre') + (activePoints < 40 ? activeTier2Total - 40 : activeTier2Total - activePoints) + t('tier_remaining_post') }}</span>
                         </div>
-                        <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: 喜びの思い出のアドパスアイテム）を右寄せで表示 -->
+                        <!-- 🔼 上段: 単独で折り返すアイテム（wrapRow: true、例: 前シーズンの喜びの思い出のアドパスアイテム）を右寄せで表示 -->
                         <div class="game-node-wrapper" style="margin-bottom: 16px;" v-if="activeSpirit.treeData.tier2.some(i => i.wrapRow && !isPhantomItem(i))">
                             <div class="node-placeholder"></div>
                             <div class="node-placeholder"></div>
@@ -3509,188 +3509,37 @@
     });
 
 
-    // 🎨 オランダの思い出（s1）の実機アイコン画像（本家スクショより）。
-    // 特定精霊の特定アイテム専用の画像のため、全精霊共通のTYPE_IMAGESとは別に用意し、
-    // item.customImage で個別のアイテムに割り当てる（getItemImageUrlで最優先される）。
-    const S1_ART_IMAGES = {
-        emote_generic: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/c/cb/Dear-Van-Gogh-Dutch-Memory-Emote-icon.png/revision/latest/scale-to-width-down/51",
-        dye_white: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/6/64/White-dye-container-icon.png/revision/latest/scale-to-width-down/51",
-        adpass_dress: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/a/a1/Dear-Van-Gogh-Dutch-Memory-Outfit-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal_shell: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/8/85/Dear-Van-Gogh-Dutch-Memory-Cape-icon.png/revision/latest/scale-to-width-down/51",
-        adpass_headpiece: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/a/ab/Dear-Van-Gogh-Dutch-Memory-Hair-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal_vase: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/0/0a/Dear-Van-Gogh-Dutch-Memory-Vase-Prop-icon.png/revision/latest/scale-to-width-down/51"
-    };
-
-
-    // 🎨 素朴な思い出（s2）の実機アイコン画像（本家スクショより）。
-    const S2_ART_IMAGES = {
-        emote_generic: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/f/fc/Dear-Van-Gogh-Rustic-Memory-Emote-icon.png/revision/latest/scale-to-width-down/51",
-        dye_red: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/6/6c/Red-dye-container-icon.png/revision/latest/scale-to-width-down/51",
-        adpass_cape: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/2/24/Dear-Van-Gogh-Rustic-Memory-Cape-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal_hat: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/0/0e/Dear-Van-Gogh-Rustic-Memory-Hair-Accessory-icon.png/revision/latest/scale-to-width-down/51",
-        adpass_shoe: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/3/36/Dear-Van-Gogh-Rustic-Memory-Shoes-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal_painting: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/f/f2/Dear-Van-Gogh-Rustic-Memory-Painting-Prop-icon.png/revision/latest/scale-to-width-down/51"
-    };
-
-
-    // 🎨 喜びの思い出（s4）の実機アイコン画像（本家スクショより）。
-    const S4_ART_IMAGES = {
-        emote_generic: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/b/b8/Dear-Van-Gogh-Joyful-Memory-Emote-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal_jacket: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/5/5f/Dear-Van-Gogh-Joyful-Memory-Cape-icon.png/revision/latest/scale-to-width-down/51",
-        dye_black: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/9/97/Black-dye-container-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal_hair: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/7/77/Dear-Van-Gogh-Joyful-Memory-Hair-icon.png/revision/latest/scale-to-width-down/51",
-        adpass_cap: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/c/ca/Dear-Van-Gogh-Joyful-Memory-Hair-Accessory-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal_painting: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/6/62/Dear-Van-Gogh-Joyful-Memory-Painting-Prop-icon.png/revision/latest/scale-to-width-down/51"
-    };
-
-    // 📊 次回イベント精霊ツリー（画像より）のキャンドルコスト一覧
-    // ツリー合計: オランダの思い出=89 / 素朴な思い出=89 / 芸術の思い出=103（黄色染料+10込み） / 喜びの思い出=111 （シーズンハートとの交換 🕯️3・要アドパス を含む）
-    // ※ エモートLv1（初回解放）は0コスト、魔法①側にコストがかかる
+    // 🌱 次シーズンの精霊ツリー（準備中の仮データ）
+    // 次の季節の精霊ツリーが判明するまでの仮データ。4体とも名前を「1〜4」にし、ツリーの形・獲得ポイント・
+    // 必要キャンドルを、前シーズン「親愛なるファン・ゴッホへ」の「素朴な思い出」と同じにしている
+    // （合計89: 第2層の魔法②が染料🕯️8・第3層にアドパス枠あり・第4層の魔法④は枠なし）。
+    // 実際のツリーが判明したら、このコスト表と、下のcreateDefaultSpiritsDataの精霊ごとの上書きを書き換える。
+    // 前シーズンの精霊別のアイコン画像・個別上書きはこのファイルから削除した（Git履歴から復元できる）。
     // ※ キー名（mag1/it1など）はツリー内の「位置」を表す識別子であり、実際の種別(type)は
-    //   下のspirits初期化直後の個別上書きで変わる場合がある（例: 芸術の思い出のmag1は実際には季節アイテム）。
-    const SPIRIT_TREE_COSTS = {
-        s1: { em1: 0, mag1: 4,  it1: 18, mag2: 6, em2: 22, mag3: 10, it2: 26, extra: 0,  heart: 3 }, // 合計89（第3層は「白染料」。下のspirits初期化直後でtype/customLabelを上書き）
-        s2: { em1: 0, mag1: 4,  it1: 18, mag2: 8, em2: 22, mag3: 8,  it2: 26, extra: 0,  heart: 3 }, // 合計89（第2層は「赤染料」、魔法④は枠が存在しないため削除）
-        s3: { em1: 0, mag1: 12, it1: 18, mag2: 6, em2: 22, mag3: 22, it2: 10, extra: 0,  heart: 3 }, // 合計93（第1層は季節アイテム①、第2層magは①へ繰上、第3層は季節アイテム③、第4層itは魔法②へ）
-        s4: { em1: 0, mag1: 12, it1: 0,  mag2: 6, em2: 22, mag3: 8,  it2: 26, extra: 12, heart: 3 }  // 合計93（第1層は季節アイテム①、第2層itは削除・magは①へ繰上、第3層magは②へ・季節アイテム②を追加、第4層extraは「黒染料」。キャンドルコストは変更なし、獲得ポイントのみ下記で27p/27p/27pに修正）
-    };
+    //   個別上書きで変わる場合がある（例: 第2層のmag2は染料）。
+    const PLACEHOLDER_TREE_COSTS = { em1: 0, mag1: 4, it1: 18, mag2: 8, em2: 22, mag3: 8, it2: 26, extra: 0, heart: 3 }; // 合計89
 
-    // 🎨 芸術の思い出（s3）の実機アイコン画像（本家スクショより）。
-    // 特定精霊の特定アイテム専用の画像のため、全精霊共通のTYPE_IMAGESとは別に用意し、
-    // item.customImage で個別のアイテムに割り当てる（getItemImageUrlで最優先される）。
-    const S3_ART_IMAGES = {
-        dye_yellow: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/a/ad/Yellow-dye-container-icon.png/revision/latest/scale-to-width-down/51",
-        adpass4_spiral: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/9/96/Dear-Van-Gogh-Artistic-Memory-Cape-icon.png/revision/latest/scale-to-width-down/51",
-        emote_painting: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/1/1c/Dear-Van-Gogh-Artistic-Memory-Emote-icon.png/revision/latest/scale-to-width-down/51",
-        magic_swirl: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/2/28/Special-event-spell-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal1_frame: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/8/87/Dear-Van-Gogh-Artistic-Memory-Painting-Prop-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal2_blob: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/2/26/Dear-Van-Gogh-Artistic-Memory-Hair-Accessory-icon.png/revision/latest/scale-to-width-down/51",
-        seasonal3_vase: "https://static.wikia.nocookie.net/sky-children-of-the-light/images/6/64/Dear-Van-Gogh-Artistic-Memory-Vase-Prop-icon.png/revision/latest/scale-to-width-down/51"
-    };
+    // 🪄 魔法アイテムの渦巻きアイコン（全精霊共通の実機画像。TYPE_IMAGES.magicで使う）
+    const MAGIC_SWIRL_IMAGE = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/2/28/Special-event-spell-icon.png/revision/latest/scale-to-width-down/51";
 
     // 🧬 精霊4体ぶんの初期データ（デフォルト状態）を毎回まっさらに生成するファクトリ関数。
-    // 元々は setup() 内で一度だけ実行される初期化コードだったが、
     // 記録（データ）を新規追加するたびに同じ初期状態を作れるよう、関数として独立させてある。
-    const createDefaultSpiritsData = () => {
-        const data = [
-            { id: 1, name: 'オランダの思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s1', SPIRIT_TREE_COSTS.s1) },
-            { id: 2, name: '素朴な思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s2', SPIRIT_TREE_COSTS.s2) },
-            { id: 3, name: '芸術の思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s3', SPIRIT_TREE_COSTS.s3) },
-            { id: 4, name: '喜びの思い出', walkDays: 0, currentPreset: 'custom', treeData: createInitialTree('s4', SPIRIT_TREE_COSTS.s4) }
-        ];
-
-        // 🎨 実際に公開されたツリーで「魔法」枠の中身が染料だった精霊は、種別(type)と表示名をここで個別に上書きする。
-        // 種別を変えると同じ精霊内・同じ種別の自動採番（①②③…）がズレるため、
-        // 影響を受ける他のアイテムは customLabel で元の表示名に固定し直している。
-
-        // オランダの思い出: 第3層の魔法③ → 白染料（🕯️10）
-        data[0].treeData.tier3[1].type = 'dye';
-        data[0].treeData.tier3[1].customLabel = '白染料';
-        data[0].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示のまま）
-
-        // 🖼️ オランダの思い出: 実機スクショに基づく個別アイコン画像を割り当て
-        data[0].treeData.tier1[0].customImage = S1_ART_IMAGES.emote_generic; // エモートLv1
-        data[0].treeData.tier2[0].customImage = S1_ART_IMAGES.seasonal_vase; // 季節アイテム①（花瓶）
-        data[0].treeData.tier2[2].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv2
-        data[0].treeData.tier3[0].customImage = S1_ART_IMAGES.emote_generic; // エモートLv3
-        data[0].treeData.tier3[1].customImage = S1_ART_IMAGES.dye_white; // 白染料
-        data[0].treeData.tier4[0].customImage = S1_ART_IMAGES.seasonal_shell; // 季節アイテム②（貝殻）
-        data[0].treeData.tier4[3].customImage = S1_ART_IMAGES.adpass_dress; // アドパスアイテム
-        data[0].treeData.tier4[4].customImage = S1_ART_IMAGES.emote_generic; // アドパスエモートLv4
-
-        // 🆕 オランダの思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
-        data[0].treeData.tier3.push({ id: 's1_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S1_ART_IMAGES.adpass_headpiece });
-
-        // 素朴な思い出: 第2層の魔法② → 赤染料（🕯️8）。第4層の魔法④は枠自体が存在しないため削除（コスト0化）
-        data[1].treeData.tier2[1].type = 'dye';
-        data[1].treeData.tier2[1].customLabel = '赤染料';
-        data[1].treeData.tier3[1].customLabel = '魔法③'; // ↑の採番ズレ補正
-        data[1].treeData.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示）
-
-        // 🖼️ 素朴な思い出: 実機スクショに基づく個別アイコン画像を割り当て
-        data[1].treeData.tier1[0].customImage = S2_ART_IMAGES.emote_generic; // エモートLv1
-        data[1].treeData.tier2[0].customImage = S2_ART_IMAGES.seasonal_painting; // 季節アイテム①（風車の絵）
-        data[1].treeData.tier2[1].customImage = S2_ART_IMAGES.dye_red; // 赤染料
-        data[1].treeData.tier2[2].customImage = S2_ART_IMAGES.emote_generic; // アドパスエモートLv2
-        data[1].treeData.tier3[0].customImage = S2_ART_IMAGES.emote_generic; // エモートLv3
-        data[1].treeData.tier4[0].customImage = S2_ART_IMAGES.seasonal_hat; // 季節アイテム②（帽子）
-        data[1].treeData.tier4[3].customImage = S2_ART_IMAGES.adpass_cape; // アドパスアイテム
-        data[1].treeData.tier4[4].customImage = S2_ART_IMAGES.emote_generic; // アドパスエモートLv4
-
-        // 🆕 素朴な思い出: 実機スクショで確認できた、第3層に存在するアドパス専用枠（コスト0・ポイント外）を追加
-        data[1].treeData.tier3.push({ id: 's2_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false, customImage: S2_ART_IMAGES.adpass_shoe });
-
-        // 🔁 芸術の思い出・喜びの思い出は「魔法」⇄「季節アイテム」の入れ替えが多いため、
-        // ここでは customLabel を使わず type だけ書き換え、自動採番（①②③…）の繰り上がりに任せている。
-        // （繰り上がり後の結果は末尾のシミュレーションで確認済み）
-
-        // 芸術の思い出: 第1層 魔法①→季節アイテム①(🕯️12) / 第2層 魔法②は自動で①に繰上(🕯️6)
-        // 第3層 魔法③→季節アイテム③(🕯️22) / 第4層 季節アイテム②→魔法②(🕯️10、自動で②になる)
-        // 第3層に「黄色染料」を追加(🕯️10)。3アイテム構成・獲得ポイント合計は80になるよう
-        // 26.4/26.4/27.2で配分（表示は丸めて+26p/+26p/+27p。3等分の26.67だと全て+27pに丸まってしまうため、
-        // 2枠を26.4に寄せて+26p表示を維持しつつ、残りを最後の枠(黄色染料)に27.2として集約している）
-        data[2].treeData.tier1[1].type = 'seasonal';
-        data[2].treeData.tier3[0].points = 26.4; // エモートLv3
-        data[2].treeData.tier3[1].type = 'seasonal';
-        data[2].treeData.tier3[1].points = 26.4; // 季節アイテム③
-        data[2].treeData.tier3.push({ id: 's3_dye_yellow', type: 'dye', customLabel: '黄色染料', points: 27.2, candles: 10, checked: false, excluded: false });
-        data[2].treeData.tier4[0].type = 'magic';
-        // 🖼️ 芸術の思い出の実機アイコン画像を割り当て（エモートは絵を描くポーズで全レベル共通、魔法は渦巻き模様の星で共通）
-        data[2].treeData.tier1[0].customImage = S3_ART_IMAGES.emote_painting; // エモートLv1
-        data[2].treeData.tier1[1].customImage = S3_ART_IMAGES.seasonal1_frame; // 季節アイテム①（額縁の花の絵）
-        data[2].treeData.tier2[1].customImage = S3_ART_IMAGES.magic_swirl; // 魔法①
-        data[2].treeData.tier3[0].customImage = S3_ART_IMAGES.emote_painting; // エモートLv3
-        data[2].treeData.tier3[1].customImage = S3_ART_IMAGES.seasonal3_vase; // 季節アイテム③（ひまわりの花瓶）
-        data[2].treeData.tier4[0].customImage = S3_ART_IMAGES.magic_swirl; // 魔法②
-        data[2].treeData.tier2[0].customImage = S3_ART_IMAGES.seasonal2_blob; // 季節アイテム②（クリーム色の塊）
-        data[2].treeData.tier2[2].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv2
-        data[2].treeData.tier3[2].customImage = S3_ART_IMAGES.dye_yellow; // 黄色染料（フック状の壺アイコン）
-        data[2].treeData.tier4[3].customImage = S3_ART_IMAGES.adpass4_spiral; // アドパスアイテム（茶色い渦巻き）
-        data[2].treeData.tier4[4].customImage = S3_ART_IMAGES.emote_painting; // アドパスエモートLv4
-
-        // 喜びの思い出: 第1層 魔法①→季節アイテム①(🕯️12)
-        // 第2層 季節アイテム①は枠が存在しないため削除（コスト0化。typeはseasonalのまま維持し非表示に）
-        //       魔法②は自動で①に繰上(🕯️6のまま)。獲得ポイントは実機確認により60pに修正
-        // 第3層 エモートのコストのみ変更(🕯️22) / 魔法③は自動で②に繰上(🕯️8のまま)
-        //       季節アイテム②を新規追加(🕯️22)。キャンドルコストは変更なし、獲得ポイントは
-        //       実機確認によりエモート・魔法・季節アイテムいずれも27p（第3層合計81p）に修正
-        // 第4層 季節アイテムはコストのみ変更(🕯️26、自動で③に繰上) / 魔法④→黒染料(🕯️12)。
-        //       獲得ポイントは実機確認により季節アイテム・黒染料それぞれ50p（合計100p）に修正
-        data[3].treeData.tier1[1].type = 'seasonal';
-        // 🐛 バグ修正: 第2層の季節アイテム①(tier2[0])は枠が存在しない（コスト0=isPhantomItem扱い）のに、
-        // pointsがcreateInitialTreeの初期値30のまま残っていた。他精霊の「枠が存在しない」魔法④(extra4)は
-        // テンプレート側で最初からpoints:0なのに対し、このスロットだけ0化し忘れていたため、
-        // 「魔法スルー」プリセット(setSpiritItems→全checked=true→typeが'magic'のものだけ後からfalse化)適用時に
-        // このアイテムはtype:'seasonal'のため回避されずchecked=trueのまま残り、getSpiritPointsが
-        // 存在しない枠の+30ptを実際の獲得ポイントに上乗せしてしまっていた。
-        data[3].treeData.tier2[0].points = 0;
-        data[3].treeData.tier2[1].points = 60; // 魔法①（自動繰上後の表示名）
-        data[3].treeData.tier3[0].points = 27; // エモートLv3
-        data[3].treeData.tier3[1].points = 27; // 魔法②
-        data[3].treeData.tier3.push({ id: 's4_it3', type: 'seasonal', name: '季節アイテム②', points: 27, candles: 22, checked: false, excluded: false });
-        data[3].treeData.tier4[0].points = 50; // 季節アイテム③
-        data[3].treeData.tier4[1].type = 'dye';
-        data[3].treeData.tier4[1].points = 50; // 黒染料
-        data[3].treeData.tier4[1].customLabel = '黒染料';
-
-        // 🖼️ 喜びの思い出: 実機スクショに基づく個別アイコン画像を割り当て
-        data[3].treeData.tier1[0].customImage = S4_ART_IMAGES.emote_generic; // エモートLv1
-        data[3].treeData.tier1[1].customImage = S4_ART_IMAGES.seasonal_painting; // 季節アイテム①（村の絵）
-        data[3].treeData.tier2[2].customImage = S4_ART_IMAGES.emote_generic; // アドパスエモートLv2
-        data[3].treeData.tier3[0].customImage = S4_ART_IMAGES.emote_generic; // エモートLv3
-        data[3].treeData.tier3[2].customImage = S4_ART_IMAGES.seasonal_hair; // 季節アイテム②（巻き毛）
-        data[3].treeData.tier4[0].customImage = S4_ART_IMAGES.seasonal_jacket; // 季節アイテム③（青い服）
-        data[3].treeData.tier4[1].customImage = S4_ART_IMAGES.dye_black; // 黒染料
-
-        // 🔀 喜びの思い出: 実機スクショで確認したところ、他の精霊と異なりアドパス専用枠（コスト0）は
-        // 第4層ではなく第2層に存在する。ベーステンプレートの第4層アドパス枠(bonus4)を取り除き、
-        // 第2層に付け替える（アドパスエモートLv4は通常通り第4層に残る）。
-        data[3].treeData.tier4.splice(3, 1); // 第4層のbonus4（アドパスアイテム）を削除
-        data[3].treeData.tier4[3].customImage = S4_ART_IMAGES.emote_generic; // アドパスエモートLv4（繰上後のindex）
-        data[3].treeData.tier2.push({ id: 's4_bonus2c', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, requiresSeasonPass: true, wrapRow: true, checked: false, excluded: false, customImage: S4_ART_IMAGES.adpass_cap });
-
-        return data;
+    // 今は次シーズンの仮データ: 4体とも同じ形（前シーズンの「素朴な思い出」と同じ）で、名前は「1〜4」。
+    // アイテムIDは従来どおり s1〜s4 のまま（保存済みの記録のチェック状態を消さないため。
+    // 前シーズンの進捗が残る場合は、各精霊の「リセット」で戻せる）。
+    const createPlaceholderTree = (prefix) => {
+        const tree = createInitialTree(prefix, PLACEHOLDER_TREE_COSTS);
+        // 第2層の魔法② → 染料（🕯️8）。第4層の魔法④は枠自体が存在しないため非表示（コスト0）
+        tree.tier2[1].type = 'dye';
+        tree.tier3[1].customLabel = '魔法③'; // ↑の採番ズレ補正
+        tree.tier4[1].customLabel = '魔法④'; // ↑の採番ズレ補正（コスト0のため実際は非表示）
+        // 第3層に存在するアドパス専用枠（コスト0・ポイント外）
+        tree.tier3.push({ id: prefix + '_bonus3', name: 'アドパスアイテム', points: 0, candles: 0, noPoints: true, firstBonus: true, requiresSeasonPass: true, checked: false, excluded: false });
+        return tree;
     };
+    const createDefaultSpiritsData = () => [1, 2, 3, 4].map(n => ({
+        id: n, name: String(n), walkDays: 0, currentPreset: 'custom', treeData: createPlaceholderTree('s' + n)
+    }));
 
     // 🌸 現在のシーズン情報
     const CURRENT_SEASON_NAME = '親愛なるファン・ゴッホへ';
@@ -4133,25 +3982,11 @@
     };
 
     // 🌐 多言語対応（日本語 / English）
-    // 精霊名（Sky公式の英語名から "The " を省略。Fandom Wiki「Dear Van Gogh」ページで確認済み）
-    const SPIRIT_NAME_EN = {
-        'オランダの思い出': 'Dutch Memory',
-        '素朴な思い出': 'Rustic Memory',
-        '芸術の思い出': 'Artistic Memory',
-        '喜びの思い出': 'Joyful Memory'
-    };
-    const SPIRIT_NAME_ZH_TW = {
-        'オランダの思い出': '荷蘭的回憶',
-        '素朴な思い出': '質樸的回憶',
-        '芸術の思い出': '藝術的回憶',
-        '喜びの思い出': '喜悅的回憶'
-    };
-    const SPIRIT_NAME_KO = {
-        'オランダの思い出': '네덜란드의 추억',
-        '素朴な思い出': '소박한 추억',
-        '芸術の思い出': '예술의 추억',
-        '喜びの思い出': '기쁨의 추억'
-    };
+    // 精霊名の翻訳。次シーズンの精霊は仮データ（名前は「1〜4」）のため未収録。
+    // 精霊名が決まったら「日本語名: 訳」の形で追加する（未収録の名前はそのまま表示される）。
+    const SPIRIT_NAME_EN = {};
+    const SPIRIT_NAME_ZH_TW = {};
+    const SPIRIT_NAME_KO = {};
     // 🌐 精霊名辞書を言語コードでまとめたもの（'ja' はキーの値そのものを使うため未収録）
     const SPIRIT_NAME_I18N = { en: SPIRIT_NAME_EN, 'zh-TW': SPIRIT_NAME_ZH_TW, ko: SPIRIT_NAME_KO };
 
@@ -6428,16 +6263,10 @@
             const totalHearts = computed(() => spirits.value.filter(s => s.treeData.tier4[2].checked).length);
 
             // 🔓 各層の「完了時の累計ポイント」。t2=第2層完了(第3層解放)、t3=第3層完了(第4層解放)、
-            // t4=第4層まで全アイテム取得後の最終累計。通常は100/180/280だが、
-            // 喜びの思い出(id:4)はツリー構成が異なるため上書きする。
-            // 🐛 バグ修正: 以前は180/280/380だったが、これは各層のアイテムのポイント（第2層60p・
-            // 第3層27p×3・第4層50p×2、いずれも実機確認済み）を個別に見直した際にここが
-            // 追従更新されていなかった値だった。そのため第2層完了時の実際の累計は
-            // 40(第1層)+60(第2層)=100にしかならないのに解放ラインが180のままとなり、
-            // 第3層のアイテムを「連れ歩き」で+10p×8日分を稼がない限り絶対に押せない
-            // （実質ずっと押せないように見える）不具合が起きていた。実際のアイテム構成から
-            // 逆算した正しい累計値（100/181/281）に修正する。
-            const TIER_TOTAL_OVERRIDES = { 4: { t2: 100, t3: 181, t4: 281 } };
+            // t4=第4層まで全アイテム取得後の最終累計。通常は100/180/280。ツリーの構成が違う精霊が
+            // いる場合だけ、精霊idをキーにここで上書きする（例: { 4: { t2: 100, t3: 181, t4: 281 } }）。
+            // 今は4体とも同じ形の仮データなので上書きは無い。
+            const TIER_TOTAL_OVERRIDES = {};
             const activeTier2Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t2 || 100);
             const activeTier3Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t3 || 180);
             const activeTier4Total = computed(() => (TIER_TOTAL_OVERRIDES[activeSpirit.value.id] || {}).t4 || 280);
@@ -6609,7 +6438,7 @@
             // ・ハートとの交換はアドパス未保有の場合、対象から除外する
             // 各層のアイテムが「候補として提案されてよい」ようになる、必要累計ポイントの下限。
             // 第3層の解放累計=t2、第4層の解放累計=t3（t4は「全取得後の最終累計」なのでここでは使わない）。
-            // 通常は0/40/100/180だが、喜びの思い出(id:4)はTIER_TOTAL_OVERRIDESに合わせて100→100・180→181に修正。
+            // 通常は0/40/100/180。TIER_TOTAL_OVERRIDESで上書きされた精霊はそれに合わせる。
             const getTierThresholds = (spiritId) => {
                 const o = TIER_TOTAL_OVERRIDES[spiritId];
                 return { tier1: 0, tier2: 40, tier3: o ? o.t2 : 100, tier4: o ? o.t3 : 180 };
@@ -6721,7 +6550,7 @@
             const computeFastestHeartPlanFor = (spirit) => {
                 const heartItem = spirit.treeData.tier4[2];
                 const tierThreshold = getTierThresholds(spirit.id);
-                const goalPoints = getSpiritTier4Total(spirit); // 🔓 ハート交換に必要な最終累計（喜びの思い出はTIER_TOTAL_OVERRIDESで281に上書き）
+                const goalPoints = getSpiritTier4Total(spirit); // 🔓 ハート交換に必要な最終累計（TIER_TOTAL_OVERRIDESで上書きされた精霊はその値）
 
                 // まだ購入していない、アドパス枠でもハートでもない通常アイテムを集める
                 let remaining = [];
@@ -6966,7 +6795,7 @@
 
             const activeStatusText = computed(() => {
                 const p = activePoints.value;
-                // 精霊ごとの累計しきい値（喜びの思い出はTIER_TOTAL_OVERRIDESで100/181/281に上書きされる）
+                // 精霊ごとの累計しきい値（TIER_TOTAL_OVERRIDESがあればそちらを使う）
                 if (p >= activeTier4Total.value) return t('status_complete');
                 if (p >= activeTier3Total.value) return t('status_tier4');
                 if (p >= activeTier2Total.value) return t('status_tier3');
@@ -7013,7 +6842,7 @@
             const TYPE_IMAGES = {
                 walk: '',
                 seasonal: '',
-                magic: S3_ART_IMAGES.magic_swirl, // 🪄 魔法アイテムの渦巻きアイコンは全精霊共通の実機画像
+                magic: MAGIC_SWIRL_IMAGE, // 🪄 魔法アイテムの渦巻きアイコンは全精霊共通の実機画像
                 adpass: ''
             };
 
@@ -7101,7 +6930,7 @@
             // 🧩 第2層の下段は常に3列（左:通常アイテム / 中:通常アイテム / 右:アドパスボーナス）を維持したい。
             // treeData.tier2 自体の並び順は他のロジック（自動採番①②③…など）が前提にしているため変更できない。
             // そのため表示専用に「フリー枠（noPoints以外）は詰めて左から、ボーナス枠（noPoints）は右端固定」で
-            // 3枠に再配置する。フリー枠が1つしかない精霊（例: 喜びの思い出）は中央が自動的に空欄になる。
+            // 3枠に再配置する。フリー枠が1つしかない精霊は中央が自動的に空欄になる。
             const getTier2Slots = (spirit) => {
                 const items = spirit.treeData.tier2.filter(i => !i.wrapRow);
                 const freeItems = items.filter(i => !i.noPoints && !isPhantomItem(i));
@@ -7532,7 +7361,7 @@
                                         // 🔁 保存済み配列と現在の構成でid対応が取れない場合（ツリー構造が変わった場合）は
                                         // このアイテムの復元自体をスキップする。
                                         if (!targetItem || (savedItem.id && targetItem.id !== savedItem.id)) return;
-                                        // 🕯️ キャンドルコスト・種別は常に現在の正規データ（SPIRIT_TREE_COSTS由来）を使用する。
+                                        // 🕯️ キャンドルコスト・種別は常に現在の正規データ（createDefaultSpiritsData由来）を使用する。
                                         // ユーザーによる個別上書きは保存・復元しない（チェック状態・除外指定のみ復元する）。
                                         targetItem.checked = savedItem.checked;
                                         if (savedItem.excluded !== undefined) targetItem.excluded = savedItem.excluded;
