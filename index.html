@@ -2068,6 +2068,69 @@
         }
 
     </style>
+<script id="side-panels-early">
+  // 🪟 ワイド画面（幅1280px以上）のサイドパネル（関連ツール＝左端／ダッシュボード＝右端）を使う設定なら、描画前にレイアウト用の
+  // クラスを付ける（JS起動後に付けると本文が左右にずれて画面がガクつくため）。設定のキーはtai-hubの
+  // 「表示設定 > ワイド画面でサイドパネルを表示」と共通（未設定＝オン）。実際に出るのは幅1280px以上の時だけ（下のCSSのメディアクエリ）。
+  (function () {
+    var cls = document.documentElement.classList;
+    function apply() {
+      var on = true;
+      try { on = localStorage.getItem('sky_hub_side_panels') !== '0'; } catch (e) {}
+      cls.toggle('side-panels-on', on);
+      cls.toggle('side-dash-on', on);
+    }
+    apply();
+    window.addEventListener('storage', function (e) { if (e.key === 'sky_hub_side_panels') apply(); });
+  })();
+</script>
+<style id="side-panels-css">
+/* 🪟 ワイド画面のサイドパネル（関連ツール＝左端／ダッシュボード＝右端）。tai-hubの同名機能と同じ仕様:
+   幅1280px以上で、html.side-panels-on（左）/ html.side-dash-on（右）が付いている時だけ出る。
+   左パネルは既存の「他のツール」サイドバー（.sidebar / .pf-drawer）をそのまま固定表示にしたもの。
+   右パネルはダッシュボードを別の入れ物(#sideDashPanel)に常時描画する。ドックから左右へ移ったボタンは
+   .dock-tools / .dock-dash で隠す。モーダル・引き出しは従来どおり全幅（パネルより手前）。 */
+.side-dash-panel { display: none; }
+.side-panel-title { font-weight: 700; font-size: 14px; margin: 0 0 12px; }
+@media (min-width: 1280px) {
+  html.side-panels-on, html.side-dash-on { --side-left-w: 232px; --side-right-w: 340px; --side-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  html.side-panels-on body { padding-left: var(--side-left-w) !important; }
+  html.side-dash-on body { padding-right: var(--side-right-w) !important; }
+  html.side-panels-on .sidebar, html.side-panels-on .pf-drawer {
+    display: block !important; position: fixed !important; top: 0 !important; left: 0 !important;
+    bottom: var(--side-bottom) !important; height: auto !important; width: var(--side-left-w) !important; max-width: none !important;
+    z-index: 900 !important; overflow-y: auto !important; border-radius: 0 !important; margin: 0 !important;
+    transform: none !important; animation: none !important; box-shadow: none !important; visibility: visible !important; opacity: 1 !important;
+    border-right: 0.5px solid var(--sep, var(--border-color, rgba(128,128,128,0.3))) !important; box-sizing: border-box !important;
+  }
+  html.side-panels-on .sidebar-close-btn, html.side-panels-on .pf-drawer-close-btn,
+  html.side-panels-on .sidebar-overlay, html.side-panels-on .pf-drawer-overlay { display: none !important; }
+  html.side-panels-on .site-dock .dock-tools { display: none !important; }
+  html.side-dash-on .site-dock .dock-dash { display: none !important; }
+  html.side-panels-on .site-dock { justify-content: center !important; gap: 28px !important; }
+  html.side-dash-on .side-dash-panel {
+    display: block; position: fixed; top: 0; right: 0; bottom: var(--side-bottom); width: var(--side-right-w);
+    z-index: 900; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 16px 14px 20px;
+    background: var(--card, var(--card-bg, #fff)); color: var(--text, var(--text-color, inherit));
+    border-left: 0.5px solid var(--sep, var(--border-color, rgba(128,128,128,0.3)));
+  }
+}
+@media (min-width: 1280px) {
+  html.side-dash-on #dashModalOverlay {
+    display: block !important; position: fixed !important; inset: auto !important; top: 0 !important; right: 0 !important;
+    bottom: var(--side-bottom) !important; width: var(--side-right-w) !important; z-index: 900 !important;
+    background: none !important; padding: 0 !important; margin: 0 !important; animation: none !important; transition: none !important;
+  }
+  html.side-dash-on #dashModalOverlay .pf-modal-card {
+    max-width: none !important; width: 100% !important; height: 100% !important; max-height: none !important; margin: 0 !important;
+    border-radius: 0 !important; box-shadow: none !important; transform: none !important; animation: none !important; transition: none !important;
+    padding: 16px 14px 20px !important; box-sizing: border-box !important; overflow-y: auto !important;
+    border-left: 0.5px solid var(--border-color, rgba(128,128,128,0.3));
+  }
+  html.side-dash-on #dashModalOverlay .pf-modal-card::before { display: none !important; }
+  html.side-dash-on #dashModalOverlay .pf-close-btn, html.side-dash-on .pf-dash-btn { display: none !important; }
+}
+</style>
 </head>
 <body>
 
@@ -3461,11 +3524,11 @@
             <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-folder"/></svg></span></span>
             <span class="site-dock-label">{{ activeRecordName || t('dock_profile') }}</span>
         </button>
-        <button type="button" @click="pfDashOpen">
+        <button class="dock-dash" type="button" @click="pfDashOpen">
             <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-calendar"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock_dashboard') }}</span>
         </button>
-        <button type="button" @click="pfSidebarOpen">
+        <button class="dock-tools" type="button" @click="pfSidebarOpen">
             <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-menu"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock_tools') }}</span>
         </button>
@@ -8045,7 +8108,11 @@
                 if (pfDashTimer) clearInterval(pfDashTimer);
                 pfDashTimer = setInterval(() => { dashNow.value = Date.now(); }, 1000);
             };
+            // 🪟 ワイド画面の右サイドパネルとして常時表示している間は、他のオーバーレイを開いた時などに
+            // 呼ばれるpfDashClose()でもカウントダウンを止めない（止めると右パネルの表示が固まる）
+            let sideDashActive = false;
             const pfDashStopTimer = () => {
+                if (sideDashActive) return;
                 if (pfDashTimer) { clearInterval(pfDashTimer); pfDashTimer = null; }
             };
             // 🔁 実際のfetch処理本体。初回読み込み・手動更新の両方から呼ばれる共通処理。
@@ -8107,6 +8174,29 @@
                 dashOpen.value = false;
                 pfDashStopTimer();
             };
+            // 🪟 ワイド画面（幅1280px以上）の右サイドパネル: ダッシュボードのモーダルをCSSでパネル表示にしている
+            // （<head>内の #side-panels-css）ので、ここでデータ取得とカウントダウンを始める。
+            // 設定のキーはtai-hubの「表示設定 > ワイド画面でサイドパネルを表示」と共通（未設定＝オン）。
+            const sideDashMQ = window.matchMedia('(min-width: 1280px)');
+            const sideDashSync = async () => {
+                let enabled = true;
+                try { enabled = localStorage.getItem('sky_hub_side_panels') !== '0'; } catch (e) { /* noop */ }
+                sideDashActive = enabled && sideDashMQ.matches;
+                if (sideDashActive) {
+                    pfDashStartTimer();
+                    if (!dashData.value && !dashLoading.value) {
+                        dashLoading.value = true;
+                        dashError.value = false;
+                        await pfDashFetchData(false);
+                        dashLoading.value = false;
+                    }
+                } else if (!dashOpen.value) {
+                    pfDashStopTimer();
+                }
+            };
+            if (sideDashMQ.addEventListener) sideDashMQ.addEventListener('change', sideDashSync);
+            window.addEventListener('storage', (e) => { if (e.key === 'sky_hub_side_panels') sideDashSync(); });
+            onMounted(sideDashSync);
             // 🔄 手動更新：キャッシュの有無に関わらず必ず再取得する（シーズン境界をまたいでタブを
             // 開きっぱなしにしているユーザーが、ページ全体をリロードせず最新データを取得できるように）
             const pfDashRefresh = async () => {
