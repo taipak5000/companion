@@ -1472,6 +1472,39 @@
         .dash-cal-bar.half-start { width: 50%; justify-self: end; }
 
         /* 🔥📅 連続記録（ストリーク）カレンダー/ヒートマップ */
+        .wr-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; }
+        .wr-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .wr-title { font-size: 13px; font-weight: 700; color: var(--text-color); }
+        .wr-today { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--input-bg); color: var(--text-gray); }
+        .wr-today.done { background: rgba(52,199,89,0.14); color: var(--success-text, var(--accent-green)); }
+        .wr-strip { font-size: 12.5px; color: var(--text-gray); display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 10px; }
+        .wr-strip .wr-streak { font-weight: 700; color: var(--accent-orange); }
+        .wr-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .wr-actions-label { font-size: 11.5px; font-weight: 700; color: var(--text-gray); }
+        .wr-scroll { overflow-x: auto; padding-bottom: 4px; }
+        .wr-months { --hm-cell: 14px; display: grid; grid-auto-rows: 13px; column-gap: 3px; margin-bottom: 2px; width: max-content; }
+        .wr-month { font-size: 9.5px; color: var(--text-gray); white-space: nowrap; align-self: end; }
+        .wr-grid { --hm-cell: 14px; display: grid; gap: 3px; width: max-content; }
+        .wr-cell { width: var(--hm-cell); height: var(--hm-cell); border-radius: 3px; background: var(--border-color); border: 0; padding: 0; margin: 0; cursor: pointer; display: block; }
+        .wr-cell.is-recorded { background: var(--accent-green); }
+        .wr-cell.is-future { visibility: hidden; pointer-events: none; }
+        .wr-cell.is-today { box-shadow: inset 0 0 0 1.5px var(--accent-blue); }
+        .wr-cell.is-selected { outline: 2px solid var(--accent-orange); outline-offset: 1px; }
+        .wr-cell:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+        .wr-legend { display: flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11px; color: var(--text-gray); flex-wrap: wrap; }
+        .wr-legend-swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--border-color); display: inline-block; }
+        .wr-legend-swatch.is-recorded { background: var(--accent-green); margin-left: 8px; }
+        .wr-tap-hint { font-size: 11px; color: var(--text-gray); margin: 6px 0 0; line-height: 1.5; }
+        .wr-edit { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--input-bg); }
+        .wr-edit-title { font-size: 13px; font-weight: 700; color: var(--text-color); }
+        .wr-edit-status { font-size: 11.5px; color: var(--text-gray); margin: 2px 0 8px; }
+        .wr-edit-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .wr-pick { border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; }
+        .wr-pick.is-active { background: var(--accent-green); border-color: var(--accent-green); color: #fff; }
+        .wr-edit-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .wr-del { border: 1px solid var(--danger-text, #ff3b30); background: transparent; color: var(--danger-text, #ff3b30); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; }
+        .wr-close { border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-gray); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-family: inherit; cursor: pointer; }
+        .wr-edit-hint { font-size: 11px; color: var(--text-gray); margin: 8px 0 0; line-height: 1.5; }
         .walk-cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
         .walk-cal-nav-btn { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color);
             border-radius: 6px; padding: 4px 12px; font-size: 14px; line-height: 1.2; cursor: pointer; }
@@ -2375,6 +2408,52 @@
     <div class="pf-bar">
         <span class="pf-bar-text" @click="pfOpenModal"><b>{{ activeRecordName }}</b> {{ t('record_bar_suffix') }}</span>
         <button type="button" class="pf-dash-btn" @click="pfDashOpen" :title="t('dash_btn_title')"><svg class="inline-icon" width="13" height="13"><use href="#i-calendar"/></svg></button>
+    </div>
+
+    <!-- 📅 連れ歩きの記録カード: 記録できているか・毎日続いているかを一目で分かるように、メイン画面に常時表示する。
+         日付のマスをタップすると、過去の記録の追加・変更・削除ができる（連れ歩き日数カウンターも連動） -->
+    <div class="wr-card">
+        <div class="wr-head">
+            <span class="wr-title">{{ t('wr_title') }}</span>
+            <span class="wr-today" :class="{ done: hasLoggedWalkToday }">{{ hasLoggedWalkToday ? t('wr_today_done', { name: todayWalkLogSpiritName }) : t('wr_today_todo') }}</span>
+        </div>
+        <div class="wr-strip">
+            <span v-if="currentWalkStreak > 0" class="wr-streak">{{ t('wr_streak_active', { n: currentWalkStreak }) }}</span>
+            <span v-else>{{ t('wr_streak_empty') }}</span>
+            <span v-if="longestWalkStreak > 0 && longestWalkStreak !== currentWalkStreak">{{ t('wr_streak_best', { n: longestWalkStreak }) }}</span>
+        </div>
+        <div v-if="!hasLoggedWalkToday" class="wr-actions">
+            <span class="wr-actions-label">{{ t('wr_log_today') }}</span>
+            <button type="button" class="wr-pick" v-for="spirit in spirits" :key="'wrlog' + spirit.id" @click="logTodayWalk(spirit.id)">{{ spiritName(spirit) }}</button>
+        </div>
+        <div class="wr-scroll" id="wrScroll">
+            <div class="wr-months" :style="{ gridTemplateColumns: 'repeat(' + walkHeatmap.weeks + ', var(--hm-cell))' }">
+                <span v-for="m in walkHeatmap.monthLabels" :key="'wrm' + m.col" class="wr-month" :style="{ gridColumn: m.col }">{{ m.text }}</span>
+            </div>
+            <div class="wr-grid" role="group" :aria-label="t('wr_aria')" :style="{ gridTemplateColumns: 'repeat(' + walkHeatmap.weeks + ', var(--hm-cell))', gridTemplateRows: 'repeat(7, var(--hm-cell))' }">
+                <button v-for="c in walkHeatmap.cells" :key="c.dateStr" type="button" class="wr-cell"
+                        :class="{ 'is-recorded': c.recorded, 'is-future': c.isFuture, 'is-today': c.isToday, 'is-selected': walkEditDate === c.dateStr }"
+                        :style="{ gridColumn: c.col, gridRow: c.row }" :title="c.title" :aria-label="c.title" :tabindex="c.isFuture ? -1 : 0"
+                        @click="openWalkEdit(c.dateStr)"></button>
+            </div>
+        </div>
+        <div class="wr-legend">
+            <span class="wr-legend-swatch"></span><span>{{ t('wr_legend_empty') }}</span>
+            <span class="wr-legend-swatch is-recorded"></span><span>{{ t('wr_legend_recorded') }}</span>
+        </div>
+        <div v-if="walkEditDate" class="wr-edit">
+            <div class="wr-edit-title">{{ walkEditLabel }}</div>
+            <div class="wr-edit-status">{{ walkEditEntry ? t('wr_edit_recorded', { name: walkEditSpiritName }) : t('wr_edit_none') }}</div>
+            <div class="wr-edit-btns" role="group" :aria-label="t('wr_edit_pick')">
+                <button type="button" class="wr-pick" v-for="spirit in spirits" :key="'wredit' + spirit.id" :class="{ 'is-active': walkEditEntry && walkEditEntry.spiritId === spirit.id }" @click="setWalkLogFor(walkEditDate, spirit.id)">{{ spiritName(spirit) }}</button>
+            </div>
+            <div class="wr-edit-foot">
+                <button v-if="walkEditEntry" type="button" class="wr-del" @click="removeWalkLogFor(walkEditDate)">{{ t('wr_edit_delete') }}</button>
+                <button type="button" class="wr-close" @click="walkEditDate = null">{{ t('wr_edit_close') }}</button>
+            </div>
+            <p class="wr-edit-hint">{{ t('wr_edit_hint') }}</p>
+        </div>
+        <p v-else class="wr-tap-hint">{{ t('wr_tap_hint') }}</p>
     </div>
 
     <div id="pfModalOverlay" class="pf-modal-overlay" :class="{ 'is-visible': showProfileModal }" @click.self="pfCloseModal">
@@ -4742,6 +4821,28 @@
             dash_walk_cal_toggle: '今月のカレンダー',
             dash_walk_cal_month_label: '{year}年{month}月',
             dash_walk_cal_dow: '日,月,火,水,木,金,土',
+            wr_title: '連れ歩きの記録',
+            wr_today_done: '今日は{name}と記録済み',
+            wr_today_todo: '今日はまだ記録していません',
+            wr_streak_active: '連続{n}日目の記録中',
+            wr_streak_best: '最長{n}日',
+            wr_streak_empty: '記録するとストリークが貯まります',
+            wr_log_today: '今日の記録：',
+            wr_aria: '連れ歩き記録のカレンダー',
+            wr_legend_empty: '未記録',
+            wr_legend_recorded: '記録した日',
+            wr_tap_hint: '日付をタップすると、過去の記録の追加・変更・削除ができます',
+            wr_cell_recorded: '{date}：{name}と記録',
+            wr_cell_empty: '{date}：記録なし',
+            wr_date_label: '{m}月{d}日({dow})',
+            wr_edit_title_date: '{y}年{m}月{d}日({dow})',
+            wr_edit_recorded: '記録済み：{name}',
+            wr_edit_none: 'この日は記録がありません',
+            wr_edit_pick: '連れ歩いた精霊を選ぶ',
+            wr_edit_delete: 'この日の記録を削除',
+            wr_edit_close: '閉じる',
+            wr_edit_hint: '追加・変更・削除に合わせて、連れ歩き日数のカウンターも増減します。',
+            wr_month: '{m}月',
             dash_walk_cal_prev_title: '前の月',
             dash_walk_cal_next_title: '次の月',
 
@@ -5142,6 +5243,28 @@
             dash_walk_cal_toggle: 'This Month\'s Calendar',
             dash_walk_cal_month_label: '{month}/{year}',
             dash_walk_cal_dow: 'Su,Mo,Tu,We,Th,Fr,Sa',
+            wr_title: 'Walk Log',
+            wr_today_done: 'Logged today: {name}',
+            wr_today_todo: 'Not logged today',
+            wr_streak_active: '{n}-day streak',
+            wr_streak_best: 'Best: {n} days',
+            wr_streak_empty: 'Log a walk to start a streak',
+            wr_log_today: 'Log today:',
+            wr_aria: 'Walk log calendar',
+            wr_legend_empty: 'No record',
+            wr_legend_recorded: 'Logged day',
+            wr_tap_hint: 'Tap a day to add, change or delete a past record',
+            wr_cell_recorded: '{date}: {name}',
+            wr_cell_empty: '{date}: No record',
+            wr_date_label: '{dow}, {m}/{d}',
+            wr_edit_title_date: '{dow}, {y}/{m}/{d}',
+            wr_edit_recorded: 'Logged: {name}',
+            wr_edit_none: 'No record for this day',
+            wr_edit_pick: 'Pick the spirit you walked with',
+            wr_edit_delete: 'Delete this day’s record',
+            wr_edit_close: 'Close',
+            wr_edit_hint: 'The walk-day counter changes along with additions, changes and deletions.',
+            wr_month: '{m}',
             dash_walk_cal_prev_title: 'Previous month',
             dash_walk_cal_next_title: 'Next month',
 
@@ -5542,6 +5665,28 @@
             dash_walk_cal_toggle: '本月行事曆',
             dash_walk_cal_month_label: '{year}年{month}月',
             dash_walk_cal_dow: '日,一,二,三,四,五,六',
+            wr_title: '同行記錄',
+            wr_today_done: '今天已記錄：{name}',
+            wr_today_todo: '今天尚未記錄',
+            wr_streak_active: '連續記錄第{n}天',
+            wr_streak_best: '最長{n}天',
+            wr_streak_empty: '記錄後會累積連續天數',
+            wr_log_today: '記錄今天：',
+            wr_aria: '同行記錄日曆',
+            wr_legend_empty: '未記錄',
+            wr_legend_recorded: '已記錄的日子',
+            wr_tap_hint: '點選日期即可補記、修改或刪除過去的記錄',
+            wr_cell_recorded: '{date}：與{name}同行',
+            wr_cell_empty: '{date}：無記錄',
+            wr_date_label: '{m}月{d}日({dow})',
+            wr_edit_title_date: '{y}年{m}月{d}日({dow})',
+            wr_edit_recorded: '已記錄：{name}',
+            wr_edit_none: '這天沒有記錄',
+            wr_edit_pick: '選擇同行的精靈',
+            wr_edit_delete: '刪除這天的記錄',
+            wr_edit_close: '關閉',
+            wr_edit_hint: '新增、修改、刪除時，同行天數計數也會一併增減。',
+            wr_month: '{m}月',
             dash_walk_cal_prev_title: '上個月',
             dash_walk_cal_next_title: '下個月',
 
@@ -5942,6 +6087,28 @@
             dash_walk_cal_toggle: '이번 달 캘린더',
             dash_walk_cal_month_label: '{year}년 {month}월',
             dash_walk_cal_dow: '일,월,화,수,목,금,토',
+            wr_title: '동행 기록',
+            wr_today_done: '오늘 기록 완료: {name}',
+            wr_today_todo: '오늘은 아직 기록하지 않았어요',
+            wr_streak_active: '{n}일 연속 기록 중',
+            wr_streak_best: '최장 {n}일',
+            wr_streak_empty: '기록하면 연속 일수가 쌓여요',
+            wr_log_today: '오늘 기록:',
+            wr_aria: '동행 기록 달력',
+            wr_legend_empty: '미기록',
+            wr_legend_recorded: '기록한 날',
+            wr_tap_hint: '날짜를 누르면 지난 기록을 추가·변경·삭제할 수 있어요',
+            wr_cell_recorded: '{date}: {name}',
+            wr_cell_empty: '{date}: 기록 없음',
+            wr_date_label: '{m}월 {d}일({dow})',
+            wr_edit_title_date: '{y}년 {m}월 {d}일({dow})',
+            wr_edit_recorded: '기록됨: {name}',
+            wr_edit_none: '이 날은 기록이 없어요',
+            wr_edit_pick: '함께 걸은 정령 선택',
+            wr_edit_delete: '이 날의 기록 삭제',
+            wr_edit_close: '닫기',
+            wr_edit_hint: '추가·변경·삭제에 맞춰 동행 일수 카운터도 함께 늘거나 줄어요.',
+            wr_month: '{m}월',
             dash_walk_cal_prev_title: '이전 달',
             dash_walk_cal_next_title: '다음 달',
 
@@ -7034,6 +7201,93 @@
                 }
                 return cells;
             });
+
+            // 📅 連れ歩きの記録カード（メイン画面）: 直近の週を右端に、日付ごとの記録の有無を草グラフ風に表示し、
+            // マスをタップして過去の記録を追加・変更・削除できる。連れ歩き日数カウンター(walkDays)は記録の増減に連動させる。
+            const WR_MIN_WEEKS = 18; // 使い始めでも極端に小さいグリッドにならない下限
+            const WR_MAX_WEEKS = 53; // 直近1年ぶん
+            const wrParse = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+            const walkDateLabel = (date) => t('wr_date_label', { m: date.getMonth() + 1, d: date.getDate(), dow: t('dash_walk_cal_dow').split(',')[date.getDay()] });
+            const walkEditDate = ref(null);
+            const walkHeatmap = computed(() => {
+                const today = wrParse(pfLocalDateStr());
+                const byDate = new Map(walkLog.value.map(e => [e.date, e]));
+                let minDate = today;
+                walkLog.value.forEach(e => { const dt = wrParse(e.date); if (!isNaN(dt.getTime()) && dt < minDate) minDate = dt; });
+                const daysSince = Math.max(0, Math.round((today - minDate) / 86400000));
+                const weeks = Math.min(WR_MAX_WEEKS, Math.max(WR_MIN_WEEKS, Math.ceil((daysSince + 1) / 7) + 1));
+                const end = new Date(today); end.setDate(end.getDate() + (6 - today.getDay())); // 右端＝今週の土曜（未来日は隠す）
+                const start = new Date(end); start.setDate(start.getDate() - (weeks * 7 - 1));
+                const todayStr = pfLocalDateStr();
+                const cells = [];
+                const monthLabels = [];
+                let lastMonth = null, lastLabelCol = -99;
+                for (let w = 0; w < weeks; w++) {
+                    const colDate = new Date(start); colDate.setDate(colDate.getDate() + w * 7);
+                    if (colDate.getMonth() !== lastMonth) {
+                        lastMonth = colDate.getMonth();
+                        if (w - lastLabelCol >= 2) { monthLabels.push({ col: w + 1, text: t('wr_month', { m: colDate.getMonth() + 1 }) }); lastLabelCol = w; }
+                    }
+                    for (let d = 0; d < 7; d++) {
+                        const date = new Date(start); date.setDate(date.getDate() + w * 7 + d);
+                        const dateStr = pfLocalDateStr(date);
+                        const entry = byDate.get(dateStr);
+                        const sp = entry ? spirits.value.find(s => s.id === entry.spiritId) : null;
+                        const isFuture = date > today;
+                        cells.push({
+                            dateStr, col: w + 1, row: d + 1, isFuture, recorded: !!entry, isToday: dateStr === todayStr,
+                            title: isFuture ? '' : (entry ? t('wr_cell_recorded', { date: walkDateLabel(date), name: sp ? spiritName(sp) : '?' }) : t('wr_cell_empty', { date: walkDateLabel(date) }))
+                        });
+                    }
+                }
+                return { weeks, cells, monthLabels };
+            });
+            const walkEditEntry = computed(() => walkEditDate.value ? (walkLog.value.find(e => e.date === walkEditDate.value) || null) : null);
+            const walkEditSpiritName = computed(() => {
+                if (!walkEditEntry.value) return '';
+                const sp = spirits.value.find(s => s.id === walkEditEntry.value.spiritId);
+                return sp ? spiritName(sp) : '?';
+            });
+            const walkEditLabel = computed(() => {
+                if (!walkEditDate.value) return '';
+                const date = wrParse(walkEditDate.value);
+                return t('wr_edit_title_date', { y: date.getFullYear(), m: date.getMonth() + 1, d: date.getDate(), dow: t('dash_walk_cal_dow').split(',')[date.getDay()] });
+            });
+            const openWalkEdit = (dateStr) => {
+                if (dateStr > pfLocalDateStr()) return; // 未来の日付は記録できない
+                walkEditDate.value = (walkEditDate.value === dateStr) ? null : dateStr;
+            };
+            const wrAdjustWalkDays = (spiritId, delta) => {
+                const sp = spirits.value.find(s => s.id === spiritId);
+                if (!sp) return;
+                sp.walkDays = Math.min(77, Math.max(0, sp.walkDays + delta));
+                sp.currentPreset = 'custom';
+            };
+            const setWalkLogFor = (dateStr, spiritId) => {
+                if (dateStr > pfLocalDateStr()) return;
+                const existing = walkLog.value.find(e => e.date === dateStr);
+                if (existing) {
+                    if (existing.spiritId === spiritId) return;
+                    wrAdjustWalkDays(existing.spiritId, -1);
+                    wrAdjustWalkDays(spiritId, +1);
+                    existing.spiritId = spiritId;
+                    return;
+                }
+                wrAdjustWalkDays(spiritId, +1);
+                walkLog.value.push({ date: dateStr, spiritId });
+                walkLog.value.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)); // 新しい順を保つ
+                if (walkLog.value.length > WALK_LOG_KEEP_MAX) walkLog.value.length = WALK_LOG_KEEP_MAX;
+            };
+            const removeWalkLogFor = (dateStr) => {
+                const idx = walkLog.value.findIndex(e => e.date === dateStr);
+                if (idx < 0) return;
+                wrAdjustWalkDays(walkLog.value[idx].spiritId, -1);
+                walkLog.value.splice(idx, 1);
+            };
+            // 直近（グリッドの右端）がまず目に入るよう、横スクロールは右端に寄せておく
+            const wrScrollToEnd = () => nextTick(() => { const el = document.getElementById('wrScroll'); if (el) el.scrollLeft = el.scrollWidth; });
+            onMounted(wrScrollToEnd);
+            watch(() => walkHeatmap.value.weeks, wrScrollToEnd);
 
             // 🎉 「1年前の今日」通知: walkLogに、ちょうど1年前（年-1・月日は今日と同じ）の記録があれば
             // その精霊名を通知バナーに表示する。Dateのロールオーバー（例: 2/29→3/1）で誤った日付と
@@ -9120,6 +9374,7 @@
                 walkLog, showWalkHistory, walkLogDisplay, hasLoggedWalkToday, todayWalkLogSpiritName, logTodayWalk, activeSpiritLoggedWalkDays,
                 currentWalkStreak, longestWalkStreak,
                 showWalkCalendar, walkCalendarLabel, walkCalendarDowLabels, walkCalendarDays, walkCalendarPrevMonth, walkCalendarNextMonth,
+                walkHeatmap, walkEditDate, walkEditEntry, walkEditSpiritName, walkEditLabel, openWalkEdit, setWalkLogFor, removeWalkLogFor,
                 showOneYearAgoBanner, oneYearAgoSpiritName, dismissOneYearAgoBanner,
                 spiritForecasts, grandTotalCandles, getForecastIconId, forecastEtaText,
                 records, activeRecordId, activeRecordName, recordDisplayName, showProfileModal, newRecordName,
