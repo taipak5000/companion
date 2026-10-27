@@ -4098,14 +4098,14 @@
         return new Intl.DateTimeFormat(locale, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
     };
     // 日替わり大キャンドル（キャンドルのかたまり）の出現エリア予測。
-    // 太平洋時間0時に、草原→雨林→峡谷→書庫→荒野の順で毎日切り替わる固定ローテーション
+    // 太平洋時間0時に、草原→雨林→峡谷→捨てられた地→書庫の順で毎日切り替わる固定ローテーション
     // （Sky公式Xアカウント@thatskygameJPが「太平洋標準時の0時に更新」と明言済み）。
     // 2026-08-13（太平洋時間の日付）が荒野だったことを起点に計算する。
-    // 大キャンドルの地域の並び（草原→雨林→峡谷→書庫→荒野の順で毎日切り替わる）。起点は「2026/10/27(太平洋時間)が書庫」（前日の10/26が峡谷）。
-    // ※ 闇の破片のレルム順(SHARD_REALMS)とは別の並びなので、共用しないこと。クエスト・シーズンキャンドルは大キャンドルの前日として計算する。
-    const GRAND_CANDLE_ORDER = ['prairie', 'forest', 'valley', 'vault', 'wasteland'];
+    // 大キャンドルの地域の並び（草原→雨林→峡谷→捨てられた地→書庫の順で毎日切り替わる）。起点は「2026/10/27(太平洋時間)が書庫」（翌日10/28は草原）。
+    // ※ クエスト・シーズンキャンドルは「2日前の大キャンドル」と同じ地域になる（10/27=峡谷、10/28=捨てられた地で確認）。
+    const GRAND_CANDLE_ORDER = ['prairie', 'forest', 'valley', 'wasteland', 'vault'];
     const GRAND_CANDLE_ANCHOR_DATE = new Date(2026, 9, 27); // 月は0始まりなので9=10月
-    const GRAND_CANDLE_ANCHOR_REALM_IDX = 3; // 書庫（GRAND_CANDLE_ORDERの添字）
+    const GRAND_CANDLE_ANCHOR_REALM_IDX = 4; // 書庫（GRAND_CANDLE_ORDERの添字）
     const pfDashGrandCandleRealm = (dayOffset = 0) => {
         const pacNow = pfDashPacificNow();
         const today = new Date(pacNow);
@@ -6517,7 +6517,7 @@
             });
             const dashCandleRealmLabel = computed(() => dashOpen.value ? dashRealmName(pfDashGrandCandleRealm()) : '');
             const dashCandleCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextPacificMidnight(), t('countdown_day_suffix')) : ''; });
-            const dashQuestCandleRealmLabel = computed(() => dashOpen.value ? dashRealmName(pfDashGrandCandleRealm(-1)) : '');
+            const dashQuestCandleRealmLabel = computed(() => dashOpen.value ? dashRealmName(pfDashGrandCandleRealm(-2)) : '');
             const dashUniCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(5), t('countdown_day_suffix')) : ''; });
             const dashPanCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(35), t('countdown_day_suffix')) : ''; });
             const dashKameCountdown = computed(() => { dashNow.value; return dashOpen.value ? pfDashCountdown(pfDashNextEvenHourEvent(50), t('countdown_day_suffix')) : ''; });
